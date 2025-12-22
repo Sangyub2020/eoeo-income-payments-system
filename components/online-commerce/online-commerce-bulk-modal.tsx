@@ -152,24 +152,37 @@ export function OnlineCommerceBulkModal({ isOpen, onClose, onSuccess }: OnlineCo
           count: get(16) ? Number(get(16)) : undefined,
           expectedDepositDate: get(17),
           // 온라인 커머스팀은 oneTimeExpenseAmount가 없지만, CSV 데이터에는 포함되어 있을 수 있음
-          // 인덱스 18: oneTimeExpenseAmount (온라인 커머스팀에는 없지만 CSV에 있을 수 있음)
+          // 인덱스 18: oneTimeExpenseAmount (온라인 커머스팀에는 없지만 CSV에 있을 수 있음 - 빈칸)
           // 인덱스 19: expectedDepositAmount (₩3,300,000 형식)
-          expectedDepositAmount: parseNumber(get(19) || '') || parseNumber(get(18) || ''),
-          description: get(20) || get(19),
-          depositDate: get(21) || get(20),
-          // 입금액은 인덱스 22 (3,300,000 형식, 쉼표 포함 가능)
-          depositAmount: parseNumber(get(22) || '') || parseNumber(get(21) || ''),
-          exchangeGainLoss: parseNumber(get(23) || '') || parseNumber(get(22) || ''),
-          difference: parseNumber(get(24) || '') || parseNumber(get(23) || ''),
-          createdDate: get(25) || get(24),
-          invoiceIssued: get(26) || get(25),
-          invoiceCopy: get(27) || get(26),
-          issueNotes: get(28) || get(27),
-          year: (get(29) || get(28)) ? Number(get(29) || get(28)) : undefined,
-          expectedDepositMonth: (get(30) || get(29)) ? Number(get(30) || get(29)) : undefined,
-          depositMonth: (get(31) || get(30)) ? Number(get(31) || get(30)) : undefined,
-          taxStatus: get(32) || get(31),
-          invoiceSupplyPrice: parseNumber((get(33) || get(32)) || ''),
+          expectedDepositAmount: parseNumber(get(19) || ''),
+          // 인덱스 20: description (적요) - "아마존 마케팅 서비스"
+          description: get(20),
+          // 인덱스 21: depositDate (입금일) - 빈칸
+          depositDate: get(21),
+          // 인덱스 22: depositAmount (입금액) - "3,300,000"
+          depositAmount: parseNumber(get(22) || ''),
+          // 인덱스 23: exchangeGainLoss (환차손익) - "확인중"
+          exchangeGainLoss: get(23) ? (get(23).toLowerCase() === '확인중' || get(23).toLowerCase() === 'x' ? undefined : parseNumber(get(23) || '')) : undefined,
+          // 인덱스 24: difference (차액) - "X"
+          difference: get(24) ? (get(24).toLowerCase() === 'x' ? undefined : parseNumber(get(24) || '')) : undefined,
+          // 인덱스 25: createdDate (작성일자) - 빈칸
+          createdDate: get(25),
+          // 인덱스 26: invoiceIssued (세금계산서 발행 여부) - 빈칸
+          invoiceIssued: get(26),
+          // 인덱스 27: invoiceCopy (세금계산서 사본) - 빈칸
+          invoiceCopy: get(27),
+          // 인덱스 28: issueNotes (ISSUE사항) - 빈칸
+          issueNotes: get(28),
+          // 인덱스 29: year (년) - "2024"
+          year: get(29) ? Number(get(29)) : undefined,
+          // 인덱스 30: expectedDepositMonth (입금 예정월) - "9"
+          expectedDepositMonth: get(30) ? Number(get(30)) : undefined,
+          // 인덱스 31: depositMonth (입금 월) - "NA"
+          depositMonth: get(31) && get(31).toUpperCase() !== 'NA' ? Number(get(31)) : undefined,
+          // 인덱스 32: taxStatus (과/면세/영세) - 빈칸
+          taxStatus: get(32),
+          // 인덱스 33: invoiceSupplyPrice (세금계산서발행공급가) - "₩3,000,000"
+          invoiceSupplyPrice: parseNumber(get(33) || ''),
         });
       }
     }
