@@ -178,6 +178,46 @@ export interface GlobalMarketingTeam {
   hasWarning?: boolean;
 }
 
+export interface OtherIncome {
+  id?: string;
+  category?: string;
+  vendorCode?: string;
+  companyName?: string;
+  brandName?: string;
+  businessRegistrationNumber?: string;
+  invoiceEmail?: string;
+  projectCode?: string;
+  project?: string;
+  projectName?: string;
+  eoeoManager?: string;
+  contractLink?: string;
+  estimateLink?: string;
+  installmentNumber?: number;
+  attributionYearMonth?: string;
+  advanceBalance?: string;
+  ratio?: number;
+  count?: number;
+  expectedDepositDate?: string;
+  expectedDepositAmount?: number;
+  description?: string;
+  depositDate?: string;
+  depositAmount?: number;
+  exchangeGainLoss?: number;
+  difference?: number;
+  createdDate?: string;
+  invoiceIssued?: string;
+  invoiceCopy?: string;
+  issueNotes?: string;
+  year?: number;
+  expectedDepositMonth?: number;
+  depositMonth?: number;
+  taxStatus?: string;
+  invoiceSupplyPrice?: number;
+  createdAt?: string;
+  updatedAt?: string;
+  hasWarning?: boolean; // 필수 항목 누락 경고 플래그
+}
+
 export interface GlobalSalesTeam {
   id?: string;
   category?: string;
@@ -219,6 +259,46 @@ export interface GlobalSalesTeam {
   hasWarning?: boolean;
 }
 
+export interface OtherIncome {
+  id?: string;
+  category?: string;
+  vendorCode?: string;
+  companyName?: string;
+  brandName?: string;
+  businessRegistrationNumber?: string;
+  invoiceEmail?: string;
+  projectCode?: string;
+  project?: string;
+  projectName?: string;
+  eoeoManager?: string;
+  contractLink?: string;
+  estimateLink?: string;
+  installmentNumber?: number;
+  attributionYearMonth?: string;
+  advanceBalance?: string;
+  ratio?: number;
+  count?: number;
+  expectedDepositDate?: string;
+  expectedDepositAmount?: number;
+  description?: string;
+  depositDate?: string;
+  depositAmount?: number;
+  exchangeGainLoss?: number;
+  difference?: number;
+  createdDate?: string;
+  invoiceIssued?: string;
+  invoiceCopy?: string;
+  issueNotes?: string;
+  year?: number;
+  expectedDepositMonth?: number;
+  depositMonth?: number;
+  taxStatus?: string;
+  invoiceSupplyPrice?: number;
+  createdAt?: string;
+  updatedAt?: string;
+  hasWarning?: boolean; // 필수 항목 누락 경고 플래그
+}
+
 export interface BrandPlanningTeam {
   id?: string;
   category?: string;
@@ -258,5 +338,45 @@ export interface BrandPlanningTeam {
   createdAt?: string;
   updatedAt?: string;
   hasWarning?: boolean;
+}
+
+export interface OtherIncome {
+  id?: string;
+  category?: string;
+  vendorCode?: string;
+  companyName?: string;
+  brandName?: string;
+  businessRegistrationNumber?: string;
+  invoiceEmail?: string;
+  projectCode?: string;
+  project?: string;
+  projectName?: string;
+  eoeoManager?: string;
+  contractLink?: string;
+  estimateLink?: string;
+  installmentNumber?: number;
+  attributionYearMonth?: string;
+  advanceBalance?: string;
+  ratio?: number;
+  count?: number;
+  expectedDepositDate?: string;
+  expectedDepositAmount?: number;
+  description?: string;
+  depositDate?: string;
+  depositAmount?: number;
+  exchangeGainLoss?: number;
+  difference?: number;
+  createdDate?: string;
+  invoiceIssued?: string;
+  invoiceCopy?: string;
+  issueNotes?: string;
+  year?: number;
+  expectedDepositMonth?: number;
+  depositMonth?: number;
+  taxStatus?: string;
+  invoiceSupplyPrice?: number;
+  createdAt?: string;
+  updatedAt?: string;
+  hasWarning?: boolean; // 필수 항목 누락 경고 플래그
 }
 

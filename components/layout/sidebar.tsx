@@ -21,6 +21,7 @@ const sections = [
       { name: '글로벌마케팅솔루션팀', href: '/dashboard/income/global-marketing', icon: DollarSign },
       { name: '글로벌세일즈팀', href: '/dashboard/income/global-sales', icon: DollarSign },
       { name: '브랜드기획팀', href: '/dashboard/income/brand-planning', icon: DollarSign },
+      { name: '기타 income', href: '/dashboard/income/other-income', icon: DollarSign },
     ],
   },
   {
