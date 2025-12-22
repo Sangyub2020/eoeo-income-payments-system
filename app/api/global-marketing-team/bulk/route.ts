@@ -23,6 +23,15 @@ export async function POST(request: Request) {
       project_code: r.projectCode || null,
       project: r.project || null,
       project_name: r.projectName || null,
+      project_name2: r.projectName2 || null,
+      project_name3: r.projectName3 || null,
+      project_name4: r.projectName4 || null,
+      project_name5: r.projectName5 || null,
+      project_name6: r.projectName6 || null,
+      project_name7: r.projectName7 || null,
+      project_name8: r.projectName8 || null,
+      project_name9: r.projectName9 || null,
+      project_name10: r.projectName10 || null,
       eoeo_manager: r.eoeoManager || null,
       contract_link: r.contractLink || null,
       estimate_link: r.estimateLink || null,
@@ -72,7 +81,9 @@ export async function POST(request: Request) {
                 .insert(record);
 
               if (singleError) {
-                errors.push(`${record.vendor_code || record.company_name || 'Unknown'}: ${singleError.message}`);
+                const errorMsg = `${record.vendor_code || record.company_name || 'Unknown'}: ${singleError.message || JSON.stringify(singleError)}`;
+                errors.push(errorMsg);
+                console.error('레코드 삽입 실패:', record, singleError);
                 failedCount++;
               } else {
                 successCount++;
@@ -93,7 +104,9 @@ export async function POST(request: Request) {
               .insert(record);
 
             if (singleError) {
-              errors.push(`${record.vendor_code || record.company_name || 'Unknown'}: ${singleError.message}`);
+              const errorMsg = `${record.vendor_code || record.company_name || 'Unknown'}: ${singleError.message || JSON.stringify(singleError)}`;
+              errors.push(errorMsg);
+              console.error('레코드 삽입 실패:', record, singleError);
               failedCount++;
             } else {
               successCount++;

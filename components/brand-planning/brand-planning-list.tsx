@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { BrandPlanningTeam } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Pagination } from '@/components/ui/pagination';
-import { Trash2, Plus, Upload, Edit2, Search, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
+import { Trash2, Plus, Upload, Edit2, Search, ArrowUp, ArrowDown, ArrowUpDown, Settings } from 'lucide-react';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { BrandPlanningFormModal } from './brand-planning-form-modal';
 import { BrandPlanningBulkModal } from './brand-planning-bulk-modal';
@@ -33,6 +33,45 @@ export function BrandPlanningList({ onSuccess }: BrandPlanningListProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortField, setSortField] = useState<SortField>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  const [isColumnSelectorOpen, setIsColumnSelectorOpen] = useState(false);
+  
+  // 모든 열 정의
+  const allColumns = [
+    { key: 'checkbox', label: '선택', alwaysVisible: true },
+    { key: 'number', label: '번호', alwaysVisible: true },
+    { key: 'category', label: '거래 유형', alwaysVisible: false },
+    { key: 'projectCode', label: '프로젝트 유형 코드', alwaysVisible: false },
+    { key: 'project', label: '프로젝트 유형', alwaysVisible: false },
+    { key: 'vendorCode', label: '거래처코드', alwaysVisible: false },
+    { key: 'companyName', label: '회사명', alwaysVisible: false },
+    { key: 'brandName', label: '브랜드명', alwaysVisible: false },
+    { key: 'expectedDepositDate', label: '입금예정일', alwaysVisible: false },
+    { key: 'expectedDepositAmount', label: '예정금액', alwaysVisible: false },
+    { key: 'oneTimeExpenseAmount', label: '실비금액', alwaysVisible: false },
+    { key: 'depositDate', label: '입금일', alwaysVisible: false },
+    { key: 'depositAmount', label: '입금액', alwaysVisible: false },
+    { key: 'invoiceIssued', label: '세금계산서', alwaysVisible: false },
+    { key: 'businessRegistrationNumber', label: '사업자번호', alwaysVisible: false },
+    { key: 'invoiceEmail', label: '이메일', alwaysVisible: false },
+    { key: 'eoeoManager', label: '담당자', alwaysVisible: false },
+    { key: 'contractLink', label: '계약서', alwaysVisible: false },
+    { key: 'invoiceLink', label: '인보이스', alwaysVisible: false },
+    { key: 'installmentNumber', label: '차수', alwaysVisible: false },
+    { key: 'attributionYearMonth', label: '귀속년월', alwaysVisible: false },
+    { key: 'advanceBalance', label: '선/잔금', alwaysVisible: false },
+    { key: 'ratio', label: '비율', alwaysVisible: false },
+    { key: 'count', label: '건수', alwaysVisible: false },
+    { key: 'description', label: '적요', alwaysVisible: false },
+    { key: 'createdDate', label: '작성일', alwaysVisible: false },
+    { key: 'invoiceCopy', label: '세금계산서 첨부', alwaysVisible: false },
+    { key: 'issueNotes', label: '이슈', alwaysVisible: false },
+    { key: 'actions', label: '작업', alwaysVisible: true },
+  ];
+  
+  // 선택된 열 관리 (디폴트는 모든 열 선택)
+  const [visibleColumns, setVisibleColumns] = useState<Set<string>>(
+    new Set(allColumns.map(col => col.key))
+  );
 
   const fetchRecords = async () => {
     setIsLoading(true);
@@ -273,6 +312,65 @@ export function BrandPlanningList({ onSuccess }: BrandPlanningListProps) {
         <div className="p-4 border-b flex items-center justify-between">
           <h3 className="text-lg font-semibold">입금 목록 ({filteredRecords.length}개)</h3>
           <div className="flex gap-2">
+            <div className="relative">
+              <Button 
+                onClick={() => setIsColumnSelectorOpen(!isColumnSelectorOpen)} 
+                variant="outline"
+              >
+                <Settings className="h-4 w-4 mr-2" />
+                열 선택
+              </Button>
+              {isColumnSelectorOpen && (
+                <div className="absolute right-0 top-full mt-2 bg-white border border-gray-300 rounded-lg shadow-lg z-50 p-4 min-w-[250px] max-h-[400px] overflow-y-auto">
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="font-semibold text-sm">표시할 열 선택</h4>
+                    <button
+                      onClick={() => {
+                        setVisibleColumns(new Set(allColumns.map(col => col.key)));
+                      }}
+                      className="text-xs text-blue-600 hover:text-blue-800"
+                    >
+                      모두 선택
+                    </button>
+                  </div>
+                  <div className="space-y-2 mb-4">
+                    {allColumns.map((column) => (
+                      <label
+                        key={column.key}
+                        className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-1 rounded"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={visibleColumns.has(column.key)}
+                          onChange={(e) => {
+                            if (column.alwaysVisible) return;
+                            const newVisible = new Set(visibleColumns);
+                            if (e.target.checked) {
+                              newVisible.add(column.key);
+                            } else {
+                              newVisible.delete(column.key);
+                            }
+                            setVisibleColumns(newVisible);
+                          }}
+                          disabled={column.alwaysVisible}
+                          className="rounded border-gray-300"
+                        />
+                        <span className="text-sm">{column.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                  <div className="flex justify-end pt-3 border-t">
+                    <Button
+                      onClick={() => setIsColumnSelectorOpen(false)}
+                      size="sm"
+                      className="px-4"
+                    >
+                      확인
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
             <Button onClick={() => setIsModalOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
               데이터 추가
@@ -320,37 +418,70 @@ export function BrandPlanningList({ onSuccess }: BrandPlanningListProps) {
         <table className="w-full text-sm">
             <thead className="bg-gray-50 sticky top-0 z-10">
               <tr className="border-b">
-                <th className="text-left p-2 font-medium text-gray-700 w-12">
-                  <input
-                    type="checkbox"
-                    checked={allSelected}
-                    onChange={(e) => handleSelectAll(e.target.checked)}
-                    className="rounded border-gray-300"
-                  />
-                </th>
-                <th className="text-left p-2 font-medium text-gray-700 w-16 whitespace-nowrap">번호</th>
-                <th 
-                  className="text-left p-2 font-medium text-gray-700 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap"
-                  onClick={() => handleSort('category')}
-                >
-                  <div className="flex items-center gap-1">
-                    <span>구분</span>
-                    <span className="text-xs text-yellow-600" title="필수 항목 누락 경고">⚠️</span>
-                    {sortField === 'category' ? (
-                      sortDirection === 'asc' ? (
-                        <ArrowUp className="h-3 w-3" />
+                {visibleColumns.has('checkbox') && (
+                  <th className="text-left p-2 font-medium text-gray-700 w-12">
+                    <input
+                      type="checkbox"
+                      checked={allSelected}
+                      onChange={(e) => handleSelectAll(e.target.checked)}
+                      className="rounded border-gray-300"
+                    />
+                  </th>
+                )}
+                {visibleColumns.has('number') && (
+                  <th className="text-left p-2 font-medium text-gray-700 whitespace-nowrap">
+                    번호
+                  </th>
+                )}
+                {visibleColumns.has('category') && (
+                  <th 
+                    className="text-left p-2 font-medium text-gray-700 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap"
+                    onClick={() => handleSort('category')}
+                  >
+                    <div className="flex items-center gap-1">
+                      <span>거래 유형</span>
+                      <span className="text-xs text-yellow-600" title="필수 항목 누락 경고">⚠️</span>
+                      {sortField === 'category' ? (
+                        sortDirection === 'asc' ? (
+                          <ArrowUp className="h-3 w-3" />
+                        ) : (
+                          <ArrowDown className="h-3 w-3" />
+                        )
                       ) : (
-                        <ArrowDown className="h-3 w-3" />
-                      )
-                    ) : (
-                      <ArrowUpDown className="h-3 w-3 text-gray-400" />
-                    )}
-                  </div>
-                </th>
-                <th 
-                  className="text-left p-2 font-medium text-gray-700 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap"
-                  onClick={() => handleSort('vendorCode')}
-                >
+                        <ArrowUpDown className="h-3 w-3 text-gray-400" />
+                      )}
+                    </div>
+                  </th>
+                )}
+                {visibleColumns.has('projectCode') && (
+                  <th className="text-left p-2 font-medium text-gray-700 whitespace-nowrap">
+                    프로젝트 유형 코드
+                  </th>
+                )}
+                {visibleColumns.has('project') && (
+                  <th 
+                    className="text-left p-2 font-medium text-gray-700 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap"
+                    onClick={() => handleSort('projectName')}
+                  >
+                    <div className="flex items-center gap-1">
+                      <span>프로젝트 유형</span>
+                      {sortField === 'projectName' ? (
+                        sortDirection === 'asc' ? (
+                          <ArrowUp className="h-3 w-3" />
+                        ) : (
+                          <ArrowDown className="h-3 w-3" />
+                        )
+                      ) : (
+                        <ArrowUpDown className="h-3 w-3 text-gray-400" />
+                      )}
+                    </div>
+                  </th>
+                )}
+                {visibleColumns.has('vendorCode') && (
+                  <th 
+                    className="text-left p-2 font-medium text-gray-700 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap"
+                    onClick={() => handleSort('vendorCode')}
+                  >
                   <div className="flex items-center gap-1">
                     <span>거래처코드</span>
                     {sortField === 'vendorCode' ? (
@@ -363,11 +494,13 @@ export function BrandPlanningList({ onSuccess }: BrandPlanningListProps) {
                       <ArrowUpDown className="h-3 w-3 text-gray-400" />
                     )}
                   </div>
-                </th>
-                <th 
-                  className="text-left p-2 font-medium text-gray-700 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap"
-                  onClick={() => handleSort('companyName')}
-                >
+                  </th>
+                )}
+                {visibleColumns.has('companyName') && (
+                  <th 
+                    className="text-left p-2 font-medium text-gray-700 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap"
+                    onClick={() => handleSort('companyName')}
+                  >
                   <div className="flex items-center gap-1">
                     <span>회사명</span>
                     {sortField === 'companyName' ? (
@@ -380,11 +513,13 @@ export function BrandPlanningList({ onSuccess }: BrandPlanningListProps) {
                       <ArrowUpDown className="h-3 w-3 text-gray-400" />
                     )}
                   </div>
-                </th>
-                <th 
-                  className="text-left p-2 font-medium text-gray-700 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap"
-                  onClick={() => handleSort('brandName')}
-                >
+                  </th>
+                )}
+                {visibleColumns.has('brandName') && (
+                  <th 
+                    className="text-left p-2 font-medium text-gray-700 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap"
+                    onClick={() => handleSort('brandName')}
+                  >
                   <div className="flex items-center gap-1">
                     <span>브랜드명</span>
                     {sortField === 'brandName' ? (
@@ -397,28 +532,13 @@ export function BrandPlanningList({ onSuccess }: BrandPlanningListProps) {
                       <ArrowUpDown className="h-3 w-3 text-gray-400" />
                     )}
                   </div>
-                </th>
-                <th 
-                  className="text-left p-2 font-medium text-gray-700 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap"
-                  onClick={() => handleSort('projectName')}
-                >
-                  <div className="flex items-center gap-1">
-                    <span>프로젝트명</span>
-                    {sortField === 'projectName' ? (
-                      sortDirection === 'asc' ? (
-                        <ArrowUp className="h-3 w-3" />
-                      ) : (
-                        <ArrowDown className="h-3 w-3" />
-                      )
-                    ) : (
-                      <ArrowUpDown className="h-3 w-3 text-gray-400" />
-                    )}
-                  </div>
-                </th>
-                <th 
-                  className="text-left p-2 font-medium text-gray-700 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap"
-                  onClick={() => handleSort('expectedDepositDate')}
-                >
+                  </th>
+                )}
+                {visibleColumns.has('expectedDepositDate') && (
+                  <th 
+                    className="text-left p-2 font-medium text-gray-700 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap"
+                    onClick={() => handleSort('expectedDepositDate')}
+                  >
                   <div className="flex items-center gap-1">
                     <span>입금예정일</span>
                     {sortField === 'expectedDepositDate' ? (
@@ -431,99 +551,141 @@ export function BrandPlanningList({ onSuccess }: BrandPlanningListProps) {
                       <ArrowUpDown className="h-3 w-3 text-gray-400" />
                     )}
                   </div>
-                </th>
-                <th 
-                  className="text-right p-2 font-medium text-gray-700 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap"
-                  onClick={() => handleSort('expectedDepositAmount')}
-                >
-                  <div className="flex items-center justify-end gap-1">
-                    <span>예정금액</span>
-                    {sortField === 'expectedDepositAmount' ? (
-                      sortDirection === 'asc' ? (
-                        <ArrowUp className="h-3 w-3" />
+                  </th>
+                )}
+                {visibleColumns.has('expectedDepositAmount') && (
+                  <th 
+                    className="text-right p-2 font-medium text-gray-700 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap"
+                    onClick={() => handleSort('expectedDepositAmount')}
+                  >
+                    <div className="flex items-center justify-end gap-1">
+                      <span>예정금액</span>
+                      {sortField === 'expectedDepositAmount' ? (
+                        sortDirection === 'asc' ? (
+                          <ArrowUp className="h-3 w-3" />
+                        ) : (
+                          <ArrowDown className="h-3 w-3" />
+                        )
                       ) : (
-                        <ArrowDown className="h-3 w-3" />
-                      )
-                    ) : (
-                      <ArrowUpDown className="h-3 w-3 text-gray-400" />
-                    )}
-                  </div>
-                </th>
-                <th 
-                  className="text-left p-2 font-medium text-gray-700 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap"
-                  onClick={() => handleSort('depositDate')}
-                >
-                  <div className="flex items-center gap-1">
-                    <span>입금일</span>
-                    {sortField === 'depositDate' ? (
-                      sortDirection === 'asc' ? (
-                        <ArrowUp className="h-3 w-3" />
+                        <ArrowUpDown className="h-3 w-3 text-gray-400" />
+                      )}
+                    </div>
+                  </th>
+                )}
+                {visibleColumns.has('depositDate') && (
+                  <th 
+                    className="text-left p-2 font-medium text-gray-700 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap"
+                    onClick={() => handleSort('depositDate')}
+                  >
+                    <div className="flex items-center gap-1">
+                      <span>입금일</span>
+                      {sortField === 'depositDate' ? (
+                        sortDirection === 'asc' ? (
+                          <ArrowUp className="h-3 w-3" />
+                        ) : (
+                          <ArrowDown className="h-3 w-3" />
+                        )
                       ) : (
-                        <ArrowDown className="h-3 w-3" />
-                      )
-                    ) : (
-                      <ArrowUpDown className="h-3 w-3 text-gray-400" />
-                    )}
-                  </div>
-                </th>
-                <th 
-                  className="text-right p-2 font-medium text-gray-700 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap"
-                  onClick={() => handleSort('depositAmount')}
-                >
-                  <div className="flex items-center justify-end gap-1">
-                    <span>입금액</span>
-                    {sortField === 'depositAmount' ? (
-                      sortDirection === 'asc' ? (
-                        <ArrowUp className="h-3 w-3" />
+                        <ArrowUpDown className="h-3 w-3 text-gray-400" />
+                      )}
+                    </div>
+                  </th>
+                )}
+                {visibleColumns.has('depositAmount') && (
+                  <th 
+                    className="text-right p-2 font-medium text-gray-700 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap"
+                    onClick={() => handleSort('depositAmount')}
+                  >
+                    <div className="flex items-center justify-end gap-1">
+                      <span>입금액</span>
+                      {sortField === 'depositAmount' ? (
+                        sortDirection === 'asc' ? (
+                          <ArrowUp className="h-3 w-3" />
+                        ) : (
+                          <ArrowDown className="h-3 w-3" />
+                        )
                       ) : (
-                        <ArrowDown className="h-3 w-3" />
-                      )
-                    ) : (
-                      <ArrowUpDown className="h-3 w-3 text-gray-400" />
-                    )}
-                  </div>
-                </th>
-                <th 
-                  className="text-left p-2 font-medium text-gray-700 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap"
-                  onClick={() => handleSort('invoiceIssued')}
-                >
-                  <div className="flex items-center gap-1">
-                    <span>세금계산서</span>
-                    {sortField === 'invoiceIssued' ? (
-                      sortDirection === 'asc' ? (
-                        <ArrowUp className="h-3 w-3" />
+                        <ArrowUpDown className="h-3 w-3 text-gray-400" />
+                      )}
+                    </div>
+                  </th>
+                )}
+                {visibleColumns.has('invoiceIssued') && (
+                  <th 
+                    className="text-left p-2 font-medium text-gray-700 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap"
+                    onClick={() => handleSort('invoiceIssued')}
+                  >
+                    <div className="flex items-center gap-1">
+                      <span>세금계산서</span>
+                      {sortField === 'invoiceIssued' ? (
+                        sortDirection === 'asc' ? (
+                          <ArrowUp className="h-3 w-3" />
+                        ) : (
+                          <ArrowDown className="h-3 w-3" />
+                        )
                       ) : (
-                        <ArrowDown className="h-3 w-3" />
-                      )
-                    ) : (
-                      <ArrowUpDown className="h-3 w-3 text-gray-400" />
-                    )}
-                  </div>
-                </th>
-                <th className="text-left p-2 font-medium text-gray-700 whitespace-nowrap">사업자번호</th>
-                <th className="text-left p-2 font-medium text-gray-700 whitespace-nowrap">이메일</th>
-                <th className="text-left p-2 font-medium text-gray-700 whitespace-nowrap">프로젝트코드</th>
-                <th className="text-left p-2 font-medium text-gray-700 whitespace-nowrap">프로젝트</th>
-                <th className="text-left p-2 font-medium text-gray-700 whitespace-nowrap">담당자</th>
-                <th className="text-left p-2 font-medium text-gray-700 whitespace-nowrap">계약서</th>
-                <th className="text-left p-2 font-medium text-gray-700 whitespace-nowrap">인보이스 링크</th>
-                <th className="text-left p-2 font-medium text-gray-700 whitespace-nowrap">차수</th>
-                <th className="text-left p-2 font-medium text-gray-700 whitespace-nowrap">귀속년월</th>
-                <th className="text-left p-2 font-medium text-gray-700 whitespace-nowrap">선/잔금</th>
-                <th className="text-left p-2 font-medium text-gray-700 whitespace-nowrap">비율</th>
-                <th className="text-left p-2 font-medium text-gray-700 whitespace-nowrap">건수</th>
-                <th className="text-left p-2 font-medium text-gray-700 whitespace-nowrap">실비금액</th>
-                <th className="text-left p-2 font-medium text-gray-700 whitespace-nowrap">적요</th>
-                <th className="text-left p-2 font-medium text-gray-700 whitespace-nowrap">작성일</th>
-                <th className="text-left p-2 font-medium text-gray-700 whitespace-nowrap">세금계산서 첨부</th>
-                <th className="text-left p-2 font-medium text-gray-700 whitespace-nowrap">이슈</th>
-                <th className="text-left p-2 font-medium text-gray-700 w-24 whitespace-nowrap">작업</th>
+                        <ArrowUpDown className="h-3 w-3 text-gray-400" />
+                      )}
+                    </div>
+                  </th>
+                )}
+                {visibleColumns.has('businessRegistrationNumber') && (
+                  <th className="text-left p-2 font-medium text-gray-700 whitespace-nowrap">사업자번호</th>
+                )}
+                {visibleColumns.has('invoiceEmail') && (
+                  <th className="text-left p-2 font-medium text-gray-700 whitespace-nowrap">이메일</th>
+                )}
+                {visibleColumns.has('project') && (
+                  <th className="text-left p-2 font-medium text-gray-700 whitespace-nowrap">프로젝트</th>
+                )}
+                {visibleColumns.has('eoeoManager') && (
+                  <th className="text-left p-2 font-medium text-gray-700 whitespace-nowrap">담당자</th>
+                )}
+                {visibleColumns.has('contractLink') && (
+                  <th className="text-left p-2 font-medium text-gray-700 whitespace-nowrap">계약서</th>
+                )}
+                {visibleColumns.has('invoiceLink') && (
+                  <th className="text-left p-2 font-medium text-gray-700 whitespace-nowrap">인보이스 링크</th>
+                )}
+                {visibleColumns.has('installmentNumber') && (
+                  <th className="text-left p-2 font-medium text-gray-700 whitespace-nowrap">차수</th>
+                )}
+                {visibleColumns.has('attributionYearMonth') && (
+                  <th className="text-left p-2 font-medium text-gray-700 whitespace-nowrap">귀속년월</th>
+                )}
+                {visibleColumns.has('advanceBalance') && (
+                  <th className="text-left p-2 font-medium text-gray-700 whitespace-nowrap">선/잔금</th>
+                )}
+                {visibleColumns.has('ratio') && (
+                  <th className="text-left p-2 font-medium text-gray-700 whitespace-nowrap">비율</th>
+                )}
+                {visibleColumns.has('count') && (
+                  <th className="text-left p-2 font-medium text-gray-700 whitespace-nowrap">건수</th>
+                )}
+                {visibleColumns.has('oneTimeExpenseAmount') && (
+                  <th className="text-left p-2 font-medium text-gray-700 whitespace-nowrap">실비금액</th>
+                )}
+                {visibleColumns.has('description') && (
+                  <th className="text-left p-2 font-medium text-gray-700 whitespace-nowrap">적요</th>
+                )}
+                {visibleColumns.has('createdDate') && (
+                  <th className="text-left p-2 font-medium text-gray-700 whitespace-nowrap">작성일</th>
+                )}
+                {visibleColumns.has('invoiceCopy') && (
+                  <th className="text-left p-2 font-medium text-gray-700 whitespace-nowrap">세금계산서 첨부</th>
+                )}
+                {visibleColumns.has('issueNotes') && (
+                  <th className="text-left p-2 font-medium text-gray-700 whitespace-nowrap">이슈</th>
+                )}
+                {visibleColumns.has('actions') && (
+                  <th className="text-left p-2 font-medium text-gray-700 w-24 whitespace-nowrap">작업</th>
+                )}
               </tr>
             </thead>
           <tbody>
             {currentPageRecords.length === 0 ? (
               <tr>
-                <td colSpan={29} className="p-8 text-center text-gray-500">
+                <td colSpan={visibleColumns.size} className="p-8 text-center text-gray-500">
                   {searchQuery ? '검색 결과가 없습니다.' : '등록된 입금 정보가 없습니다.'}
                 </td>
               </tr>
@@ -544,70 +706,70 @@ export function BrandPlanningList({ onSuccess }: BrandPlanningListProps) {
                   <td className="p-2 text-gray-600">
                     {(currentPage - 1) * ITEMS_PER_PAGE + index + 1}
                   </td>
-                  <td className="p-2 whitespace-nowrap">
-                    <div className="flex items-center gap-1">
-                      <span className="truncate max-w-[80px]">{record.category || '-'}</span>
+                  <td className="p-2 whitespace-nowrap truncate overflow-hidden" title={record.category || ''}>
+                    <div className="flex items-center gap-1 min-w-0">
+                      <span className="truncate">{record.category || '-'}</span>
                       {(record as any).hasWarning && (
                         <span className="text-xs text-yellow-600 font-medium flex-shrink-0" title="필수 항목 누락">⚠️</span>
                       )}
                     </div>
                   </td>
-                  <td className="p-2 whitespace-nowrap">{record.vendorCode || '-'}</td>
-                  <td className="p-2 whitespace-nowrap truncate max-w-[120px]" title={record.companyName || ''}>{record.companyName || '-'}</td>
-                  <td className="p-2 whitespace-nowrap truncate max-w-[100px]" title={record.brandName || ''}>{record.brandName || '-'}</td>
-                  <td className="p-2 whitespace-nowrap truncate max-w-[120px]" title={record.projectName || ''}>{record.projectName || '-'}</td>
-                  <td className="p-2 whitespace-nowrap">{record.expectedDepositDate ? formatDate(record.expectedDepositDate) : '-'}</td>
-                  <td className="p-2 text-right whitespace-nowrap">{record.expectedDepositAmount ? formatCurrency(record.expectedDepositAmount) : '-'}</td>
-                  <td className="p-2 whitespace-nowrap">{record.depositDate ? formatDate(record.depositDate) : '-'}</td>
-                  <td className="p-2 text-right font-medium whitespace-nowrap">{record.depositAmount ? formatCurrency(record.depositAmount) : '-'}</td>
-                  <td className="p-2 whitespace-nowrap">{record.invoiceIssued || '-'}</td>
-                  <td className="p-2 whitespace-nowrap truncate max-w-[100px]" title={record.businessRegistrationNumber || ''}>{record.businessRegistrationNumber || '-'}</td>
-                  <td className="p-2 whitespace-nowrap truncate max-w-[150px]" title={record.invoiceEmail || ''}>{record.invoiceEmail || '-'}</td>
-                  <td className="p-2 whitespace-nowrap">{record.projectCode || '-'}</td>
-                  <td className="p-2 whitespace-nowrap truncate max-w-[100px]" title={record.project || ''}>{record.project || '-'}</td>
-                  <td className="p-2 whitespace-nowrap truncate max-w-[80px]" title={record.eoeoManager || ''}>{record.eoeoManager || '-'}</td>
-                  <td className="p-2 whitespace-nowrap">
+                  <td className="p-2 whitespace-nowrap truncate overflow-hidden" title={record.projectCode || ''}>{record.projectCode || '-'}</td>
+                  <td className="p-2 whitespace-nowrap truncate overflow-hidden" title={record.project || ''}>{record.project || '-'}</td>
+                  <td className="p-2 whitespace-nowrap truncate overflow-hidden" title={record.vendorCode || ''}>{record.vendorCode || '-'}</td>
+                  <td className="p-2 whitespace-nowrap truncate overflow-hidden" title={record.companyName || ''}>{record.companyName || '-'}</td>
+                  <td className="p-2 whitespace-nowrap truncate overflow-hidden" title={record.brandName || ''}>{record.brandName || '-'}</td>
+                  <td className="p-2 whitespace-nowrap truncate overflow-hidden" title={record.expectedDepositDate ? formatDate(record.expectedDepositDate) : ''}>{record.expectedDepositDate ? formatDate(record.expectedDepositDate) : '-'}</td>
+                  <td className="p-2 text-right whitespace-nowrap truncate overflow-hidden" title={record.expectedDepositAmount ? formatCurrency(record.expectedDepositAmount) : ''}>{record.expectedDepositAmount ? formatCurrency(record.expectedDepositAmount) : '-'}</td>
+                  <td className="p-2 whitespace-nowrap truncate overflow-hidden" title={record.depositDate ? formatDate(record.depositDate) : ''}>{record.depositDate ? formatDate(record.depositDate) : '-'}</td>
+                  <td className="p-2 text-right font-medium whitespace-nowrap truncate overflow-hidden" title={record.depositAmount ? formatCurrency(record.depositAmount) : ''}>{record.depositAmount ? formatCurrency(record.depositAmount) : '-'}</td>
+                  <td className="p-2 whitespace-nowrap truncate overflow-hidden" title={record.invoiceIssued || ''}>{record.invoiceIssued || '-'}</td>
+                  <td className="p-2 whitespace-nowrap truncate overflow-hidden" title={record.businessRegistrationNumber || ''}>{record.businessRegistrationNumber || '-'}</td>
+                  <td className="p-2 whitespace-nowrap truncate overflow-hidden" title={record.invoiceEmail || ''}>{record.invoiceEmail || '-'}</td>
+                  <td className="p-2 whitespace-nowrap truncate overflow-hidden" title={record.project || ''}>{record.project || '-'}</td>
+                  <td className="p-2 whitespace-nowrap truncate overflow-hidden" title={record.eoeoManager || ''}>{record.eoeoManager || '-'}</td>
+                  <td className="p-2 whitespace-nowrap truncate overflow-hidden">
                     {record.contractLink ? (
                       <a 
                         href={record.contractLink} 
                         target="_blank" 
                         rel="noopener noreferrer" 
-                        className="text-blue-600 hover:underline truncate max-w-[100px] block"
+                        className="text-blue-600 hover:underline truncate block"
                         title={record.contractLink}
                       >
                         링크
                       </a>
                     ) : '-'}
                   </td>
-                  <td className="p-2 whitespace-nowrap">
+                  <td className="p-2 whitespace-nowrap truncate overflow-hidden">
                     {record.invoiceLink ? (
                       <a 
                         href={record.invoiceLink} 
                         target="_blank" 
                         rel="noopener noreferrer" 
-                        className="text-blue-600 hover:underline truncate max-w-[100px] block"
+                        className="text-blue-600 hover:underline truncate block"
                         title={record.invoiceLink}
                       >
                         링크
                       </a>
                     ) : '-'}
                   </td>
-                  <td className="p-2 whitespace-nowrap">{record.installmentNumber || '-'}</td>
-                  <td className="p-2 whitespace-nowrap">{record.attributionYearMonth || '-'}</td>
-                  <td className="p-2 whitespace-nowrap">{record.advanceBalance || '-'}</td>
-                  <td className="p-2 whitespace-nowrap">{record.ratio || '-'}</td>
-                  <td className="p-2 whitespace-nowrap">{record.count || '-'}</td>
-                  <td className="p-2 text-right whitespace-nowrap">{record.oneTimeExpenseAmount ? formatCurrency(record.oneTimeExpenseAmount) : '-'}</td>
-                  <td className="p-2 whitespace-nowrap truncate max-w-[100px]" title={record.description || ''}>{record.description || '-'}</td>
-                  <td className="p-2 whitespace-nowrap">{record.createdDate ? formatDate(record.createdDate) : '-'}</td>
-                  <td className="p-2 whitespace-nowrap">
+                  <td className="p-2 whitespace-nowrap truncate overflow-hidden" title={record.installmentNumber || ''}>{record.installmentNumber || '-'}</td>
+                  <td className="p-2 whitespace-nowrap truncate overflow-hidden" title={record.attributionYearMonth || ''}>{record.attributionYearMonth || '-'}</td>
+                  <td className="p-2 whitespace-nowrap truncate overflow-hidden" title={record.advanceBalance || ''}>{record.advanceBalance || '-'}</td>
+                  <td className="p-2 whitespace-nowrap truncate overflow-hidden" title={record.ratio || ''}>{record.ratio || '-'}</td>
+                  <td className="p-2 whitespace-nowrap truncate overflow-hidden" title={record.count || ''}>{record.count || '-'}</td>
+                  <td className="p-2 text-right whitespace-nowrap truncate overflow-hidden" title={record.oneTimeExpenseAmount ? formatCurrency(record.oneTimeExpenseAmount) : ''}>{record.oneTimeExpenseAmount ? formatCurrency(record.oneTimeExpenseAmount) : '-'}</td>
+                  <td className="p-2 whitespace-nowrap truncate overflow-hidden" title={record.description || ''}>{record.description || '-'}</td>
+                  <td className="p-2 whitespace-nowrap truncate overflow-hidden" title={record.createdDate ? formatDate(record.createdDate) : ''}>{record.createdDate ? formatDate(record.createdDate) : '-'}</td>
+                  <td className="p-2 whitespace-nowrap truncate overflow-hidden">
                     {record.invoiceCopy ? (
-                      <a href={record.invoiceCopy} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                      <a href={record.invoiceCopy} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline truncate block" title={record.invoiceCopy}>
                         보기
                       </a>
                     ) : '-'}
                   </td>
-                  <td className="p-2 whitespace-nowrap truncate max-w-[100px]" title={record.issueNotes || ''}>{record.issueNotes || '-'}</td>
+                  <td className="p-2 whitespace-nowrap truncate overflow-hidden" title={record.issueNotes || ''}>{record.issueNotes || '-'}</td>
                   <td className="p-2">
                     <div className="flex gap-2">
                       <button

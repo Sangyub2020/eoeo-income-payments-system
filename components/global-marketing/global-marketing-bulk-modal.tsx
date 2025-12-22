@@ -71,108 +71,241 @@ export function GlobalMarketingBulkModal({ isOpen, onClose, onSuccess }: GlobalM
   };
 
   const parseCsvText = (text: string): Partial<GlobalMarketingTeam>[] => {
-    const lines = text.trim().split('\n').filter(line => line.trim());
     const parsedRecords: Partial<GlobalMarketingTeam>[] = [];
 
-    if (lines.length === 0) return parsedRecords;
+    if (!text.trim()) return parsedRecords;
 
-    // 구분자 확인 (첫 번째 비어있지 않은 행 기준)
-    const firstDataLine = lines.find(line => line.trim());
-    if (!firstDataLine) return parsedRecords;
-    
-    const delimiter = firstDataLine.includes('\t') ? '\t' : ',';
+    // 구분자 확인
+    const delimiter = text.includes('\t') ? '\t' : ',';
     const expectedColumnCount = 34; // 고정된 컬럼 수
 
-    for (const line of lines) {
-      // 탭으로 split하면 빈 칸도 빈 문자열로 배열에 포함됨
-      let parts = line.split(delimiter);
+    // 허용된 구분 값 목록
+    const validCategories = [
+      'ONE-TIME',
+      '파트너십/마케팅지원비',
+      '기재고사입',
+      '정부지원사업',
+      'other',
+      'B2B',
+      '배송비',
+      '기재고판매',
+    ];
+
+    // 따옴표를 고려한 CSV 파싱 함수
+    function parseCsvLine(text: string, delimiter: string): string[] {
+      const parts: string[] = [];
+      let currentPart = '';
+      let inQuotes = false;
+      let i = 0;
+
+      while (i < text.length) {
+        const char = text[i];
+        const nextChar = text[i + 1];
+
+        if (char === '"') {
+          if (inQuotes && nextChar === '"') {
+            // 이스케이프된 따옴표
+            currentPart += '"';
+            i += 2;
+          } else {
+            // 따옴표 시작/끝
+            inQuotes = !inQuotes;
+            i++;
+          }
+        } else if (char === delimiter && !inQuotes) {
+          // 구분자 (따옴표 밖에서만)
+          parts.push(currentPart);
+          currentPart = '';
+          i++;
+        } else if (char === '\n' && !inQuotes) {
+          // 줄바꿈 (따옴표 밖에서만)
+          parts.push(currentPart);
+          break;
+        } else {
+          currentPart += char;
+          i++;
+        }
+      }
+
+      // 마지막 부분 추가
+      if (currentPart || parts.length > 0) {
+        parts.push(currentPart);
+      }
+
+      return parts;
+    }
+
+    // 전체 텍스트를 레코드 단위로 분리 (따옴표 고려)
+    const allLines = text.split('\n');
+    let currentRecord = '';
+    let inQuotes = false;
+    let quoteCount = 0;
+
+    for (let i = 0; i < allLines.length; i++) {
+      const line = allLines[i];
       
-      // 부족한 컬럼은 빈 문자열로 채움 (빈 칸도 올바른 인덱스에 매핑되도록)
+      // 따옴표 개수 세기
+      const lineQuoteCount = (line.match(/"/g) || []).length;
+      quoteCount += lineQuoteCount;
+      inQuotes = quoteCount % 2 === 1;
+
+      // 현재 레코드에 줄 추가
+      currentRecord = currentRecord ? currentRecord + '\n' + line : line;
+
+      // 따옴표가 닫혔고, 탭으로 구분된 열이 예상 개수에 도달했는지 확인
+      if (!inQuotes) {
+        const parts = parseCsvLine(currentRecord, delimiter);
+        
+        // 첫 번째 열이 유효한 category인지 확인
+        const firstColumn = parts[0]?.trim().replace(/^"|"$/g, '') || '';
+        const categoryUpper = firstColumn.toUpperCase();
+        const isValidCategory = validCategories.some(valid => 
+          categoryUpper === valid.toUpperCase() || categoryUpper.includes(valid.toUpperCase())
+        );
+
+        // 유효한 category이고 열 수가 충분하면 레코드로 파싱
+        if (isValidCategory && parts.length >= expectedColumnCount * 0.8) {
+          // 부족한 컬럼은 빈 문자열로 채움
+          while (parts.length < expectedColumnCount) {
+            parts.push('');
+          }
+          
+          // 따옴표 제거 및 trim
+          const cleanedParts = parts.map(p => {
+            let cleaned = p.trim();
+            // 앞뒤 따옴표 제거
+            if (cleaned.startsWith('"') && cleaned.endsWith('"')) {
+              cleaned = cleaned.slice(1, -1);
+            }
+            // 이스케이프된 따옴표 복원
+            cleaned = cleaned.replace(/""/g, '"');
+            return cleaned;
+          });
+
+          const record = parseRecord(cleanedParts);
+          if (record) {
+            parsedRecords.push(record);
+          }
+          currentRecord = '';
+          quoteCount = 0;
+        }
+      }
+    }
+
+    // 마지막 레코드 처리 (따옴표가 닫히지 않았어도)
+    if (currentRecord) {
+      const parts = parseCsvLine(currentRecord, delimiter);
       while (parts.length < expectedColumnCount) {
         parts.push('');
       }
       
-      // 각 셀의 앞뒤 공백만 제거 (빈 문자열은 유지)
-      parts = parts.map(p => p.trim());
-      
-      // 허용된 구분 값 목록
-      const validCategories = [
-        'ONE-TIME',
-        '파트너십/마케팅지원비',
-        '기재고사입',
-        '정부지원사업',
-        'other',
-        'B2B',
-        '배송비',
-        '기재고판매',
-      ];
-      
-      // '구분' 열(첫 번째 컬럼)이 허용된 값 중 하나인 경우만 새 레코드로 인식
+      const cleanedParts = parts.map(p => {
+        let cleaned = p.trim();
+        if (cleaned.startsWith('"') && cleaned.endsWith('"')) {
+          cleaned = cleaned.slice(1, -1);
+        }
+        cleaned = cleaned.replace(/""/g, '"');
+        return cleaned;
+      });
+
+      const record = parseRecord(cleanedParts);
+      if (record) parsedRecords.push(record);
+    }
+
+    function parseRecord(parts: string[]): Partial<GlobalMarketingTeam> | null {
+      // '구분' 열(첫 번째 컬럼)이 허용된 값 중 하나인 경우만 레코드로 인식
       const category = parts[0] || '';
       const categoryUpper = category.toUpperCase();
       const isValidCategory = validCategories.some(valid => 
         categoryUpper === valid.toUpperCase() || categoryUpper.includes(valid.toUpperCase())
       );
       
-      if (!isValidCategory) {
-        continue; // 허용된 구분이 없으면 이 행은 건너뜀
+      if (!isValidCategory || parts.length < 2) {
+        return null;
       }
+
+      const parseNumber = (val: string) => {
+        if (!val || val === '') return undefined;
+        const numStr = val.replace(/[₩,\s]/g, '');
+        return numStr ? Number(numStr) : undefined;
+      };
+
+      // 안전하게 인덱스 접근
+      const get = (index: number) => {
+        const value = index < parts.length ? parts[index] : '';
+        return value === '' ? undefined : value;
+      };
+
+      // 사용자 제공 열 순서에 맞게 매핑:
+      // 0: 거래 유형, 1: 거래처코드, 2: Company Name, 3: Brand Name, 4: 사업자등록번호,
+      // 5: 세금계산서 발행 이메일, 6: 거래 유형 코드, 7: 거래유형 세부, 8: Project name,
+      // 9: EOEO 담당자, 10: 계약서 (LINK), 11: 견적서 (LINK), 12: 차수, 13: 귀속년월,
+      // 14: 선/잔금, 15: 비율, 16: 건수, 17: 입금예정일, 18: One-time 실비 금액,
+      // 19: 입금 예정금액 (부가세 포함), 20: 적요, 21: 입금일, 22: 입금액,
+      // 23: 환차손익, 24: 차액, 25: 작성일자, 26: 세금계산서 발행 여부,
+      // 27: 세금계산서 사본, 28: ISSUE사항, 29: 년, 30: 입금 예정월,
+      // 31: 입금 월, 32: 과/면세/영세, 33: 세금계산서발행공급가
+      // 주의: 7번 "거래유형 세부"는 project 필드에, 8번 "Project name"은 projectName 필드에 매핑
+      // Project Name 셀에 줄바꿈이 있으면 각 줄을 projectName, projectName2, ...로 분리
+      const projectNameCell = get(8) || '';
+      const projectNames = projectNameCell.split('\n').map(name => name.trim()).filter(name => name);
       
-      // 최소 2개 컬럼은 있어야 데이터로 인식 (구분, 거래처코드)
-      if (parts.length >= 2) {
-        const parseNumber = (val: string) => {
-          if (!val || val === '') return undefined;
-          const numStr = val.replace(/[₩,\s]/g, '');
-          return numStr ? Number(numStr) : undefined;
-        };
+      const record: Partial<GlobalMarketingTeam> = {
+        category: get(0),                    // 거래 유형
+        vendorCode: get(1),                  // 거래처코드
+        companyName: get(2),                 // Company Name
+        brandName: get(3),                   // Brand Name
+        businessRegistrationNumber: get(4),  // 사업자등록번호
+        invoiceEmail: get(5),                 // 세금계산서 발행 이메일
+        projectCode: get(6),                 // 거래 유형 코드
+        project: get(7),                     // 거래유형 세부 (더 이상 사용하지 않지만 호환성을 위해 유지)
+        eoeoManager: get(9),                 // EOEO 담당자
+        contractLink: get(10),               // 계약서 (LINK)
+        estimateLink: get(11),               // 견적서 (LINK)
+        installmentNumber: get(12) ? Number(get(12)) : undefined,  // 차수
+        attributionYearMonth: get(13),       // 귀속년월
+        advanceBalance: get(14),             // 선/잔금
+        ratio: get(15) ? Number(get(15)) : undefined,  // 비율
+        count: get(16) ? Number(get(16)) : undefined,  // 건수
+        expectedDepositDate: get(17),        // 입금예정일
+        oneTimeExpenseAmount: parseNumber(get(18) || ''),  // One-time 실비 금액
+        expectedDepositAmount: parseNumber(get(19) || ''),  // 입금 예정금액 (부가세 포함)
+        description: get(20),                // 적요
+        depositDate: get(21),                 // 입금일
+        depositAmount: parseNumber(get(22) || ''),  // 입금액
+        exchangeGainLoss: parseNumber(get(23) || ''),  // 환차손익
+        difference: parseNumber(get(24) || ''),  // 차액
+        createdDate: get(25),                // 작성일자
+        invoiceIssued: get(26),               // 세금계산서 발행 여부
+        invoiceCopy: get(27),                // 세금계산서 사본
+        issueNotes: get(28),                 // ISSUE사항
+        year: get(29) ? Number(get(29)) : undefined,  // 년
+        expectedDepositMonth: get(30) ? Number(get(30)) : undefined,  // 입금 예정월
+        depositMonth: get(31) ? Number(get(31)) : undefined,  // 입금 월
+        taxStatus: get(32),                  // 과/면세/영세
+        invoiceSupplyPrice: parseNumber(get(33) || ''),  // 세금계산서발행공급가
+      };
 
-        // 안전하게 인덱스 접근
-        const get = (index: number) => {
-          const value = index < parts.length ? parts[index] : '';
-          return value === '' ? undefined : value;
-        };
-
-        parsedRecords.push({
-          category: get(0),
-          vendorCode: get(1),
-          companyName: get(2),
-          brandName: get(3),
-          businessRegistrationNumber: get(4),
-          invoiceEmail: get(5),
-          projectCode: get(6),
-          project: get(7),
-          projectName: get(8),
-          eoeoManager: get(9),
-          contractLink: get(10),
-          estimateLink: get(11),
-          installmentNumber: get(12) ? Number(get(12)) : undefined,
-          attributionYearMonth: get(13),
-          advanceBalance: get(14),
-          ratio: get(15) ? Number(get(15)) : undefined,
-          count: get(16) ? Number(get(16)) : undefined,
-          expectedDepositDate: get(17),
-          oneTimeExpenseAmount: parseNumber(get(18) || ''),
-          expectedDepositAmount: parseNumber(get(19) || ''),
-          description: get(20),
-          depositDate: get(21),
-          depositAmount: parseNumber(get(22) || ''),
-          exchangeGainLoss: parseNumber(get(23) || ''),
-          difference: parseNumber(get(24) || ''),
-          createdDate: get(25),
-          invoiceIssued: get(26),
-          invoiceCopy: get(27),
-          issueNotes: get(28),
-          year: get(29) ? Number(get(29)) : undefined,
-          expectedDepositMonth: get(30) ? Number(get(30)) : undefined,
-          depositMonth: get(31) ? Number(get(31)) : undefined,
-          taxStatus: get(32),
-          invoiceSupplyPrice: parseNumber(get(33) || ''),
-        });
+      // Project Name들을 각 필드에 할당 (최대 10개)
+      if (projectNames.length > 0) {
+        record.projectName = projectNames[0] || undefined;
+        if (projectNames.length > 1) record.projectName2 = projectNames[1] || undefined;
+        if (projectNames.length > 2) record.projectName3 = projectNames[2] || undefined;
+        if (projectNames.length > 3) record.projectName4 = projectNames[3] || undefined;
+        if (projectNames.length > 4) record.projectName5 = projectNames[4] || undefined;
+        if (projectNames.length > 5) record.projectName6 = projectNames[5] || undefined;
+        if (projectNames.length > 6) record.projectName7 = projectNames[6] || undefined;
+        if (projectNames.length > 7) record.projectName8 = projectNames[7] || undefined;
+        if (projectNames.length > 8) record.projectName9 = projectNames[8] || undefined;
+        if (projectNames.length > 9) record.projectName10 = projectNames[9] || undefined;
       }
+
+      return record;
     }
 
     return parsedRecords;
   };
+
 
   const handleParseCsv = () => {
     if (!csvText.trim()) {
@@ -199,7 +332,9 @@ export function GlobalMarketingBulkModal({ isOpen, onClose, onSuccess }: GlobalM
           }
         }
 
-        if (record.projectCode) {
+        // projectName은 CSV에서 직접 입력한 값을 우선 사용
+        // CSV에 projectName이 없을 때만 프로젝트 마스터 데이터에서 가져옴
+        if (record.projectCode && !record.projectName) {
           const project = projects.find(p => p.code === record.projectCode);
           if (project) {
             enriched.projectName = project.name;
@@ -314,14 +449,33 @@ export function GlobalMarketingBulkModal({ isOpen, onClose, onSuccess }: GlobalM
         body: JSON.stringify({ records: recordsToSubmit }),
       });
 
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || '일괄 등록에 실패했습니다.');
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        // 에러 상세 정보 표시
+        const errorDetails = data.result?.errors || [];
+        const errorMessage = errorDetails.length > 0
+          ? `일괄 등록 중 ${data.result?.failed || 0}개 실패:\n${errorDetails.slice(0, 10).join('\n')}${errorDetails.length > 10 ? `\n... 외 ${errorDetails.length - 10}개` : ''}`
+          : (data.error || '일괄 등록에 실패했습니다.');
+        throw new Error(errorMessage);
       }
 
-      onSuccess();
-      onClose();
+      // 성공/실패 통계 표시
+      if (data.result) {
+        const { success, failed, errors } = data.result;
+        if (failed > 0) {
+          const errorDetails = errors.slice(0, 10).join('\n');
+          setError(`성공: ${success}개, 실패: ${failed}개\n\n실패한 항목:\n${errorDetails}${errors.length > 10 ? `\n... 외 ${errors.length - 10}개` : ''}`);
+        } else {
+          onSuccess();
+          onClose();
+        }
+      } else {
+        onSuccess();
+        onClose();
+      }
     } catch (err) {
+      console.error('일괄 등록 오류:', err);
       setError(err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.');
     } finally {
       setIsSubmitting(false);

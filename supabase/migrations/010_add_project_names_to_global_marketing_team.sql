@@ -1,0 +1,12 @@
+-- 글로벌 마케팅솔루션팀 테이블에 project_name2 ~ project_name10 컬럼 추가
+ALTER TABLE global_marketing_team
+ADD COLUMN IF NOT EXISTS project_name2 VARCHAR(255),
+ADD COLUMN IF NOT EXISTS project_name3 VARCHAR(255),
+ADD COLUMN IF NOT EXISTS project_name4 VARCHAR(255),
+ADD COLUMN IF NOT EXISTS project_name5 VARCHAR(255),
+ADD COLUMN IF NOT EXISTS project_name6 VARCHAR(255),
+ADD COLUMN IF NOT EXISTS project_name7 VARCHAR(255),
+ADD COLUMN IF NOT EXISTS project_name8 VARCHAR(255),
+ADD COLUMN IF NOT EXISTS project_name9 VARCHAR(255),
+ADD COLUMN IF NOT EXISTS project_name10 VARCHAR(255);
+

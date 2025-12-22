@@ -151,21 +151,25 @@ export function OnlineCommerceBulkModal({ isOpen, onClose, onSuccess }: OnlineCo
           ratio: get(15) ? Number(get(15)) : undefined,
           count: get(16) ? Number(get(16)) : undefined,
           expectedDepositDate: get(17),
-          expectedDepositAmount: parseNumber(get(18) || ''),
-          description: get(19),
-          depositDate: get(20),
-          depositAmount: parseNumber(get(21) || ''),
-          exchangeGainLoss: parseNumber(get(22) || ''),
-          difference: parseNumber(get(23) || ''),
-          createdDate: get(24),
-          invoiceIssued: get(25),
-          invoiceCopy: get(26),
-          issueNotes: get(27),
-          year: get(28) ? Number(get(28)) : undefined,
-          expectedDepositMonth: get(29) ? Number(get(29)) : undefined,
-          depositMonth: get(30) ? Number(get(30)) : undefined,
-          taxStatus: get(31),
-          invoiceSupplyPrice: parseNumber(get(32) || ''),
+          // 온라인 커머스팀은 oneTimeExpenseAmount가 없지만, CSV 데이터에는 포함되어 있을 수 있음
+          // 인덱스 18: oneTimeExpenseAmount (온라인 커머스팀에는 없지만 CSV에 있을 수 있음)
+          // 인덱스 19: expectedDepositAmount
+          expectedDepositAmount: parseNumber(get(19) || '') || parseNumber(get(18) || ''),
+          description: get(20) || get(19),
+          depositDate: get(21) || get(20),
+          // 입금액은 인덱스 22 (CSV에 oneTimeExpenseAmount가 포함된 경우)
+          depositAmount: parseNumber(get(22) || '') || parseNumber(get(21) || ''),
+          exchangeGainLoss: parseNumber(get(23) || '') || parseNumber(get(22) || ''),
+          difference: parseNumber(get(24) || '') || parseNumber(get(23) || ''),
+          createdDate: get(25) || get(24),
+          invoiceIssued: get(26) || get(25),
+          invoiceCopy: get(27) || get(26),
+          issueNotes: get(28) || get(27),
+          year: (get(29) || get(28)) ? Number(get(29) || get(28)) : undefined,
+          expectedDepositMonth: (get(30) || get(29)) ? Number(get(30) || get(29)) : undefined,
+          depositMonth: (get(31) || get(30)) ? Number(get(31) || get(30)) : undefined,
+          taxStatus: get(32) || get(31),
+          invoiceSupplyPrice: parseNumber((get(33) || get(32)) || ''),
         });
       }
     }

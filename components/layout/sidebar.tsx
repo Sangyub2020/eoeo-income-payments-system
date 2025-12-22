@@ -33,7 +33,7 @@ const sections = [
     icon: Database,
     children: [
       { name: '거래처 관리', href: '/dashboard/vendors', icon: Building2 },
-      { name: '프로젝트 형식', href: '/dashboard/projects', icon: FolderKanban },
+      { name: '프로젝트 유형', href: '/dashboard/projects', icon: FolderKanban },
       { name: '인플루언서 계좌 등록', href: '/dashboard/influencer-accounts', icon: User },
     ],
   },
@@ -65,7 +65,10 @@ export function Sidebar() {
           const hasActiveChild = section.children?.some(
             (child) => pathname === child.href || pathname?.startsWith(child.href + '/')
           );
-          const isSectionActive = pathname === section.href || pathname?.startsWith(section.href + '/');
+          // Home은 정확히 '/dashboard'일 때만 활성화
+          const isSectionActive = section.href === '/dashboard' 
+            ? pathname === '/dashboard'
+            : pathname === section.href || pathname?.startsWith(section.href + '/');
 
           if (section.children) {
             return (

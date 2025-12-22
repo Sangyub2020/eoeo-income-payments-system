@@ -139,6 +139,15 @@ export interface GlobalMarketingTeam {
   projectCode?: string;
   project?: string;
   projectName?: string;
+  projectName2?: string;
+  projectName3?: string;
+  projectName4?: string;
+  projectName5?: string;
+  projectName6?: string;
+  projectName7?: string;
+  projectName8?: string;
+  projectName9?: string;
+  projectName10?: string;
   eoeoManager?: string;
   contractLink?: string;
   estimateLink?: string;
