@@ -755,11 +755,11 @@ export function GlobalMarketingList({ onSuccess }: GlobalMarketingListProps) {
                       </a>
                     ) : '-'}
                   </td>
-                  <td className="p-2 whitespace-nowrap truncate overflow-hidden" title={record.installmentNumber || ''}>{record.installmentNumber || '-'}</td>
+                  <td className="p-2 whitespace-nowrap truncate overflow-hidden" title={record.installmentNumber ? String(record.installmentNumber) : ''}>{record.installmentNumber || '-'}</td>
                   <td className="p-2 whitespace-nowrap truncate overflow-hidden" title={record.attributionYearMonth || ''}>{record.attributionYearMonth || '-'}</td>
                   <td className="p-2 whitespace-nowrap truncate overflow-hidden" title={record.advanceBalance || ''}>{record.advanceBalance || '-'}</td>
-                  <td className="p-2 whitespace-nowrap truncate overflow-hidden" title={record.ratio || ''}>{record.ratio || '-'}</td>
-                  <td className="p-2 whitespace-nowrap truncate overflow-hidden" title={record.count || ''}>{record.count || '-'}</td>
+                  <td className="p-2 whitespace-nowrap truncate overflow-hidden" title={record.ratio ? String(record.ratio) : ''}>{record.ratio || '-'}</td>
+                  <td className="p-2 whitespace-nowrap truncate overflow-hidden" title={record.count ? String(record.count) : ''}>{record.count || '-'}</td>
                   <td className="p-2 text-right whitespace-nowrap truncate overflow-hidden" title={record.oneTimeExpenseAmount ? formatCurrency(record.oneTimeExpenseAmount) : ''}>{record.oneTimeExpenseAmount ? formatCurrency(record.oneTimeExpenseAmount) : '-'}</td>
                   <td className="p-2 whitespace-nowrap truncate overflow-hidden" title={record.description || ''}>{record.description || '-'}</td>
                   <td className="p-2 whitespace-nowrap truncate overflow-hidden" title={record.createdDate ? formatDate(record.createdDate) : ''}>{record.createdDate ? formatDate(record.createdDate) : '-'}</td>

@@ -800,7 +800,7 @@ export function OnlineCommerceList({ onSuccess }: OnlineCommerceListProps) {
                     </td>
                   )}
                   {visibleColumns.has('installmentNumber') && (
-                    <td className="p-2 whitespace-nowrap truncate overflow-hidden" title={record.installmentNumber || ''}>{record.installmentNumber || '-'}</td>
+                    <td className="p-2 whitespace-nowrap truncate overflow-hidden" title={record.installmentNumber ? String(record.installmentNumber) : ''}>{record.installmentNumber || '-'}</td>
                   )}
                   {visibleColumns.has('attributionYearMonth') && (
                     <td className="p-2 whitespace-nowrap truncate overflow-hidden" title={record.attributionYearMonth || ''}>{record.attributionYearMonth || '-'}</td>
@@ -809,10 +809,10 @@ export function OnlineCommerceList({ onSuccess }: OnlineCommerceListProps) {
                     <td className="p-2 whitespace-nowrap truncate overflow-hidden" title={record.advanceBalance || ''}>{record.advanceBalance || '-'}</td>
                   )}
                   {visibleColumns.has('ratio') && (
-                    <td className="p-2 whitespace-nowrap truncate overflow-hidden" title={record.ratio || ''}>{record.ratio || '-'}</td>
+                    <td className="p-2 whitespace-nowrap truncate overflow-hidden" title={record.ratio ? String(record.ratio) : ''}>{record.ratio || '-'}</td>
                   )}
                   {visibleColumns.has('count') && (
-                    <td className="p-2 whitespace-nowrap truncate overflow-hidden" title={record.count || ''}>{record.count || '-'}</td>
+                    <td className="p-2 whitespace-nowrap truncate overflow-hidden" title={record.count ? String(record.count) : ''}>{record.count || '-'}</td>
                   )}
                   {visibleColumns.has('description') && (
                     <td className="p-2 whitespace-nowrap truncate overflow-hidden" title={record.description || ''}>{record.description || '-'}</td>
