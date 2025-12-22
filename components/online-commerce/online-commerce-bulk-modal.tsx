@@ -153,11 +153,11 @@ export function OnlineCommerceBulkModal({ isOpen, onClose, onSuccess }: OnlineCo
           expectedDepositDate: get(17),
           // 온라인 커머스팀은 oneTimeExpenseAmount가 없지만, CSV 데이터에는 포함되어 있을 수 있음
           // 인덱스 18: oneTimeExpenseAmount (온라인 커머스팀에는 없지만 CSV에 있을 수 있음)
-          // 인덱스 19: expectedDepositAmount
+          // 인덱스 19: expectedDepositAmount (₩3,300,000 형식)
           expectedDepositAmount: parseNumber(get(19) || '') || parseNumber(get(18) || ''),
           description: get(20) || get(19),
           depositDate: get(21) || get(20),
-          // 입금액은 인덱스 22 (CSV에 oneTimeExpenseAmount가 포함된 경우)
+          // 입금액은 인덱스 22 (3,300,000 형식, 쉼표 포함 가능)
           depositAmount: parseNumber(get(22) || '') || parseNumber(get(21) || ''),
           exchangeGainLoss: parseNumber(get(23) || '') || parseNumber(get(22) || ''),
           difference: parseNumber(get(24) || '') || parseNumber(get(23) || ''),
@@ -313,6 +313,8 @@ export function OnlineCommerceBulkModal({ isOpen, onClose, onSuccess }: OnlineCo
         })
       );
 
+      console.log('일괄 등록 요청 데이터:', { recordsCount: recordsToSubmit.length, firstRecord: recordsToSubmit[0] });
+
       const response = await fetch('/api/online-commerce-team/bulk', {
         method: 'POST',
         headers: {
@@ -321,15 +323,41 @@ export function OnlineCommerceBulkModal({ isOpen, onClose, onSuccess }: OnlineCo
         body: JSON.stringify({ records: recordsToSubmit }),
       });
 
+      const data = await response.json();
+      console.log('일괄 등록 API 응답:', data);
+
       if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || '일괄 등록에 실패했습니다.');
+        const errorMsg = data.error || data.message || '일괄 등록에 실패했습니다.';
+        console.error('일괄 등록 API 오류:', { status: response.status, data });
+        throw new Error(`일괄 등록 실패 (HTTP ${response.status}): ${errorMsg}`);
+      }
+
+      // API가 성공했더라도 일부 항목이 실패했을 수 있음
+      if (data.result && data.result.failed > 0) {
+        const errorDetails = data.result.errors && data.result.errors.length > 0
+          ? data.result.errors.join('\n')
+          : `${data.result.failed}개의 항목이 등록에 실패했습니다.`;
+        console.error('일부 항목 등록 실패:', data.result);
+        throw new Error(`일부 항목 등록 실패 (성공: ${data.result.success}개, 실패: ${data.result.failed}개):\n${errorDetails}`);
+      }
+
+      // 모든 항목이 성공한 경우
+      if (data.result) {
+        console.log(`일괄 등록 완료: 성공 ${data.result.success}개, 실패 ${data.result.failed || 0}개`);
+        if (data.result.success === 0 && recordsToSubmit.length > 0) {
+          throw new Error('모든 항목이 등록에 실패했습니다. 에러 메시지를 확인해주세요.');
+        }
       }
 
       onSuccess();
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.');
+      console.error('일괄 등록 오류:', err);
+      const errorMessage = err instanceof Error 
+        ? err.message 
+        : (typeof err === 'string' ? err : '알 수 없는 오류가 발생했습니다.');
+      setError(errorMessage);
+      // 에러가 발생해도 모달을 닫지 않음 (사용자가 에러를 확인하고 수정할 수 있도록)
     } finally {
       setIsSubmitting(false);
     }
@@ -367,8 +395,9 @@ export function OnlineCommerceBulkModal({ isOpen, onClose, onSuccess }: OnlineCo
               </div>
 
               {error && (
-                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-                  {error}
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded whitespace-pre-wrap">
+                  <div className="font-semibold mb-1">오류 발생:</div>
+                  <div>{error}</div>
                 </div>
               )}
 
@@ -384,8 +413,9 @@ export function OnlineCommerceBulkModal({ isOpen, onClose, onSuccess }: OnlineCo
           ) : (
             <div className="space-y-4">
               {error && (
-                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-                  {error}
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded whitespace-pre-wrap">
+                  <div className="font-semibold mb-1">오류 발생:</div>
+                  <div>{error}</div>
                 </div>
               )}
 

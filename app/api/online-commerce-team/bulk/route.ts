@@ -71,14 +71,16 @@ export async function POST(request: Request) {
                 .insert(record);
 
               if (singleError) {
-                errors.push(`${record.vendor_code || record.company_name || 'Unknown'}: ${singleError.message}`);
+                const recordInfo = `거래처코드: ${record.vendor_code || '없음'}, 회사명: ${record.company_name || '없음'}, 입금액: ${record.deposit_amount || '없음'}`;
+                errors.push(`${recordInfo}\n오류: ${singleError.message}\n상세: ${JSON.stringify(singleError)}`);
                 failedCount++;
               } else {
                 successCount++;
               }
             } catch (err) {
-              errors.push(`${record.vendor_code || record.company_name || 'Unknown'}: ${err instanceof Error ? err.message : '알 수 없는 오류'}`);
-              failedCount++;
+            const recordInfo = `거래처코드: ${record.vendor_code || '없음'}, 회사명: ${record.company_name || '없음'}, 입금액: ${record.deposit_amount || '없음'}`;
+            errors.push(`${recordInfo}\n오류: ${err instanceof Error ? err.message : '알 수 없는 오류'}`);
+            failedCount++;
             }
           }
         } else {
@@ -92,7 +94,8 @@ export async function POST(request: Request) {
               .insert(record);
 
             if (singleError) {
-              errors.push(`${record.vendor_code || record.company_name || 'Unknown'}: ${singleError.message}`);
+              const recordInfo = `거래처코드: ${record.vendor_code || '없음'}, 회사명: ${record.company_name || '없음'}, 입금액: ${record.deposit_amount || '없음'}`;
+              errors.push(`${recordInfo}\n오류: ${singleError.message}\n상세: ${JSON.stringify(singleError)}`);
               failedCount++;
             } else {
               successCount++;
