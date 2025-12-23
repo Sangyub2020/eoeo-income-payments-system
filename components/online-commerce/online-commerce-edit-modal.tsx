@@ -227,7 +227,7 @@ export function OnlineCommerceEditModal({ record, onClose, onSuccess }: OnlineCo
           <div className="grid grid-cols-3 gap-4">
             <div>
               <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">
-                구분 <span className="text-red-500">*</span>
+                거래유형 <span className="text-red-500">*</span>
               </label>
               <SearchableSelect
                 value={formData.category || ''}

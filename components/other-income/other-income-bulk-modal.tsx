@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
@@ -52,7 +52,7 @@ export function OtherIncomeBulkModal({ isOpen, onClose, onSuccess }: OtherIncome
         }
       }
     } catch (err) {
-      console.error('거래�?조회 ?�류:', err);
+      console.error('거래처 조회 오류:', err);
     }
   };
 
@@ -66,7 +66,7 @@ export function OtherIncomeBulkModal({ isOpen, onClose, onSuccess }: OtherIncome
         }
       }
     } catch (err) {
-      console.error('?�로?�트 조회 ?�류:', err);
+      console.error('프로젝트 조회 오류:', err);
     }
   };
 
@@ -76,36 +76,38 @@ export function OtherIncomeBulkModal({ isOpen, onClose, onSuccess }: OtherIncome
 
     if (lines.length === 0) return parsedRecords;
 
-    // ?�용??구분 �?목록
+    // 허용된 구분 값 목록
     const validCategories = [
       'ONE-TIME',
-      '?�트?�십/마�??��??�비',
-      '기재고사??,
-      '?��?지?�사??,
+      '파트너십/마케팅지원비',
+      '기재고사입',
+      '정부지원사업',
       'other',
       'B2B',
-      '배송�?,
-      '기재고판�?,
+      '배송비',
+      '기재고판매',
     ];
 
-    // 구분???�인 (�?번째 비어?��? ?��? ??기�?)
+    // 구분자 확인 (첫 번째 비어있지 않은 행 기준)
     const firstDataLine = lines.find(line => line.trim());
     if (!firstDataLine) return parsedRecords;
     
     const delimiter = firstDataLine.includes('\t') ? '\t' : ',';
-    const expectedColumnCount = 33; // ?�라?�커머스?�?� oneTimeExpenseAmount가 ?�어??33�?
+    const expectedColumnCount = 33; // 기타 income은 oneTimeExpenseAmount가 없어서 33개
+
     for (const line of lines) {
-      // ??���?split?�면 �?칸도 �?문자?�로 배열???�함??      let parts = line.split(delimiter);
+      // 탭으로 split하면 빈 칸도 빈 문자열로 배열에 포함됨
+      let parts = line.split(delimiter);
       
-      // 부족한 컬럼?� �?문자?�로 채�? (�?칸도 ?�바�??�덱?�에 매핑?�도�?
+      // 부족한 컬럼은 빈 문자열로 채움 (빈 칸도 올바른 인덱스에 매핑되도록)
       while (parts.length < expectedColumnCount) {
         parts.push('');
       }
       
-      // �??�???�뒤 공백�??�거 (�?문자?��? ?��?)
+      // 각 셀의 앞뒤 공백만 제거 (빈 문자열은 유지)
       parts = parts.map(p => p.trim());
       
-      // '구분' ??�?번째 컬럼)???�용??�?�??�나??경우�????�코?�로 ?�식
+      // '구분' 열(첫 번째 컬럼)이 허용된 값 중 하나인 경우만 새 레코드로 인식
       const category = parts[0] || '';
       const categoryUpper = category.toUpperCase();
       const isValidCategory = validCategories.some(valid => 
@@ -113,18 +115,18 @@ export function OtherIncomeBulkModal({ isOpen, onClose, onSuccess }: OtherIncome
       );
       
       if (!isValidCategory) {
-        continue; // ?�용??구분???�으�????��? 건너?�
+        continue; // 허용된 구분이 없으면 이 행은 건너뜀
       }
       
-      // 최소 2�?컬럼?� ?�어???�이?�로 ?�식 (구분, 거래처코??
+      // 최소 2개 컬럼은 있어야 데이터로 인식 (구분, 거래처코드)
       if (parts.length >= 2) {
         const parseNumber = (val: string) => {
           if (!val || val === '') return undefined;
-          const numStr = val.replace(/[??\s]/g, '');
+          const numStr = val.replace(/[₩,\s]/g, '');
           return numStr ? Number(numStr) : undefined;
         };
 
-        // ?�전?�게 ?�덱???�근
+        // 안전하게 인덱스 접근
         const get = (index: number) => {
           const value = index < parts.length ? parts[index] : '';
           return value === '' ? undefined : value;
@@ -149,37 +151,49 @@ export function OtherIncomeBulkModal({ isOpen, onClose, onSuccess }: OtherIncome
           ratio: get(15) ? Number(get(15)) : undefined,
           count: get(16) ? Number(get(16)) : undefined,
           expectedDepositDate: get(17),
-          // ?�라??커머?��??� oneTimeExpenseAmount가 ?��?�? CSV ?�이?�에???�함?�어 ?�을 ???�음
-          // ?�덱??18: oneTimeExpenseAmount (?�라??커머?��??�는 ?��?�?CSV???�을 ???�음 - 빈칸)
-          // ?�덱??19: expectedDepositAmount (??,300,000 ?�식)
+          // 온라인 커머스팀은 oneTimeExpenseAmount가 없지만, CSV 데이터에는 포함되어 있을 수 있음
+          // 인덱스 18: oneTimeExpenseAmount (온라인 커머스팀에는 없지만 CSV에 있을 수 있음 - 빈칸)
+          // 인덱스 19: expectedDepositAmount (₩3,300,000 형식)
           expectedDepositAmount: parseNumber(get(19) || ''),
-          // ?�덱??20: description (?�요) - "?�마�?마�????�비??
+          // 인덱스 20: description (적요) - "아마존 마케팅 서비스"
           description: get(20),
-          // ?�덱??21: depositDate (?�금?? - 빈칸
+          // 인덱스 21: depositDate (입금일) - 빈칸
           depositDate: get(21),
-          // ?�덱??22: depositAmount (?�금?? - "3,300,000"
+          // 인덱스 22: depositAmount (입금액) - "3,300,000"
           depositAmount: parseNumber(get(22) || ''),
-          // ?�덱??23: exchangeGainLoss (?�차?�익) - "?�인�?
-          exchangeGainLoss: get(23) ? (get(23).toLowerCase() === '?�인�? || get(23).toLowerCase() === 'x' ? undefined : parseNumber(get(23) || '')) : undefined,
-          // ?�덱??24: difference (차액) - "X"
-          difference: get(24) ? (get(24).toLowerCase() === 'x' ? undefined : parseNumber(get(24) || '')) : undefined,
-          // ?�덱??25: createdDate (?�성?�자) - 빈칸
+          // 인덱스 23: exchangeGainLoss (환차손익) - 빈칸 또는 숫자    
+          exchangeGainLoss: (() => {
+            const value = get(23);
+            if (!value) return undefined;
+            const lowerValue = value.toLowerCase();
+            return lowerValue === '확인중' || lowerValue === 'x' || value.trim() === '' ? undefined : parseNumber(value || '');
+          })(),
+          // 인덱스 24: difference (차액) - 숫자 또는 "X"
+          difference: (() => {
+            const value = get(24);
+            if (!value) return undefined;
+            return value.toLowerCase() === 'x' || value.trim() === '' ? undefined : parseNumber(value || '');
+          })(),
+          // 인덱스 25: createdDate (작성일자)
           createdDate: get(25),
-          // ?�덱??26: invoiceIssued (?�금계산??발행 ?��?) - 빈칸
+          // 인덱스 26: invoiceIssued (세금계산서 발행 여부) - "O" 또는 "X"
           invoiceIssued: get(26),
-          // ?�덱??27: invoiceCopy (?�금계산???�본) - 빈칸
+          // 인덱스 27: invoiceCopy (세금계산서 사본) - 빈칸
           invoiceCopy: get(27),
-          // ?�덱??28: issueNotes (ISSUE?�항) - 빈칸
+          // 인덱스 28: issueNotes (ISSUE사항) - 긴 텍스트 가능
           issueNotes: get(28),
-          // ?�덱??29: year (?? - "2024"
+          // 인덱스 29: year (년)
           year: get(29) ? Number(get(29)) : undefined,
-          // ?�덱??30: expectedDepositMonth (?�금 ?�정?? - "9"
+          // 인덱스 30: expectedDepositMonth (입금 예정월)
           expectedDepositMonth: get(30) ? Number(get(30)) : undefined,
-          // ?�덱??31: depositMonth (?�금 ?? - "NA"
-          depositMonth: get(31) && get(31).toUpperCase() !== 'NA' ? Number(get(31)) : undefined,
-          // ?�덱??32: taxStatus (�?면세/?�세) - 빈칸
+          // 인덱스 31: depositMonth (입금 월) - 숫자 또는 "NA"
+          depositMonth: (() => {
+            const value = get(31);
+            return value && value.toUpperCase() !== 'NA' && value.trim() !== '' ? Number(value) : undefined;
+          })(),
+          // 인덱스 32: taxStatus (과/면세/영세) - 빈칸
           taxStatus: get(32),
-          // ?�덱??33: invoiceSupplyPrice (?�금계산?�발?�공급�?) - "??,000,000"
+          // 인덱스 33: invoiceSupplyPrice (세금계산서발행공급가)
           invoiceSupplyPrice: parseNumber(get(33) || ''),
         });
       }
@@ -190,36 +204,50 @@ export function OtherIncomeBulkModal({ isOpen, onClose, onSuccess }: OtherIncome
 
   const handleParseCsv = () => {
     if (!csvText.trim()) {
-      setError('CSV ?�이?��? ?�력?�주?�요.');
+      setError('CSV 데이터를 입력해주세요.');
       return;
     }
 
     try {
       const parsed = parseCsvText(csvText);
       if (parsed.length === 0) {
-        setError('?�싱???�이?��? ?�습?�다.');
+        setError('파싱된 데이터가 없습니다.');
         return;
       }
 
-      // 거래�?코드?� ?�로?�트 코드�??�동 ?�동
+      // 거래처 코드와 프로젝트 코드로 자동 연동
       const enrichedRecords = parsed.map(record => {
         let enriched = { ...record };
 
-        // 거래�?코드�??�동
+        // 거래처 코드로 연동 (CSV에 값이 없을 때만 자동 채우기)
         if (record.vendorCode) {
           const vendor = vendors.find(v => v.code === record.vendorCode);
           if (vendor) {
-            enriched.companyName = vendor.name;
-            enriched.businessRegistrationNumber = vendor.business_number || '';
-            enriched.invoiceEmail = vendor.invoice_email || '';
+            // CSV에 값이 없을 때만 마스터 데이터에서 가져옴
+            if (!enriched.companyName) {
+              enriched.companyName = vendor.name;
+            }
+            if (!enriched.businessRegistrationNumber) {
+              enriched.businessRegistrationNumber = vendor.business_number || '';
+            }
+            if (!enriched.invoiceEmail) {
+              enriched.invoiceEmail = vendor.invoice_email || '';
+            }
           }
         }
 
-        // ?�로?�트 코드�??�동
+        // 프로젝트 코드로 연동 (CSV에 값이 없을 때만 자동 채우기)
         if (record.projectCode) {
           const project = projects.find(p => p.code === record.projectCode);
           if (project) {
-            enriched.projectName = project.name;
+            // project (거래유형 세부)는 CSV에 값이 없을 때만 자동 채우기
+            if (!enriched.project) {
+              enriched.project = project.name;
+            }
+            // projectName은 CSV에 값이 없을 때만 자동 채우기
+            if (!enriched.projectName) {
+              enriched.projectName = project.name;
+            }
           }
         }
 
@@ -230,7 +258,7 @@ export function OtherIncomeBulkModal({ isOpen, onClose, onSuccess }: OtherIncome
       setShowCsvInput(false);
       setError(null);
     } catch (err) {
-      setError('CSV ?�싱 �??�류가 발생?�습?�다.');
+      setError('CSV 파싱 중 오류가 발생했습니다.');
     }
   };
 
@@ -290,7 +318,7 @@ export function OtherIncomeBulkModal({ isOpen, onClose, onSuccess }: OtherIncome
     setError(null);
 
     try {
-      // ?�일 ?�로??처리
+      // 파일 업로드 처리
       const recordsToSubmit = await Promise.all(
         records.map(async (record, index) => {
           const fileData = invoiceFiles.get(index);
@@ -309,8 +337,8 @@ export function OtherIncomeBulkModal({ isOpen, onClose, onSuccess }: OtherIncome
             const uploadData = await uploadResponse.json();
             
             if (!uploadResponse.ok || !uploadData.success) {
-              const errorMsg = uploadData.error || uploadData.details?.message || `?�일 ?�로?�에 ?�패?�습?�다. (??�� ${index + 1})`;
-              console.error(`?�일 ?�로???�패 (??�� ${index + 1}):`, uploadData);
+              const errorMsg = uploadData.error || uploadData.details?.message || `파일 업로드에 실패했습니다. (항목 ${index + 1})`;
+              console.error(`파일 업로드 실패 (항목 ${index + 1}):`, uploadData);
               throw new Error(errorMsg);
             }
             
@@ -324,9 +352,9 @@ export function OtherIncomeBulkModal({ isOpen, onClose, onSuccess }: OtherIncome
         })
       );
 
-      console.log('?�괄 ?�록 ?�청 ?�이??', { recordsCount: recordsToSubmit.length, firstRecord: recordsToSubmit[0] });
+      console.log('일괄 등록 요청 데이터:', { recordsCount: recordsToSubmit.length, firstRecord: recordsToSubmit[0] });
 
-      const response = await fetch('/api/other-income-team/bulk', {
+      const response = await fetch('/api/other-income/bulk', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -335,40 +363,40 @@ export function OtherIncomeBulkModal({ isOpen, onClose, onSuccess }: OtherIncome
       });
 
       const data = await response.json();
-      console.log('?�괄 ?�록 API ?�답:', data);
+      console.log('일괄 등록 API 응답:', data);
 
       if (!response.ok) {
-        const errorMsg = data.error || data.message || '?�괄 ?�록???�패?�습?�다.';
-        console.error('?�괄 ?�록 API ?�류:', { status: response.status, data });
-        throw new Error(`?�괄 ?�록 ?�패 (HTTP ${response.status}): ${errorMsg}`);
+        const errorMsg = data.error || data.message || '일괄 등록에 실패했습니다.';
+        console.error('일괄 등록 API 오류:', { status: response.status, data });
+        throw new Error(`일괄 등록 실패 (HTTP ${response.status}): ${errorMsg}`);
       }
 
-      // API가 ?�공?�더?�도 ?��? ??��???�패?�을 ???�음
+      // API가 성공했더라도 일부 항목이 실패했을 수 있음
       if (data.result && data.result.failed > 0) {
         const errorDetails = data.result.errors && data.result.errors.length > 0
           ? data.result.errors.join('\n')
-          : `${data.result.failed}개의 ??��???�록???�패?�습?�다.`;
-        console.error('?��? ??�� ?�록 ?�패:', data.result);
-        throw new Error(`?��? ??�� ?�록 ?�패 (?�공: ${data.result.success}�? ?�패: ${data.result.failed}�?:\n${errorDetails}`);
+          : `${data.result.failed}개의 항목이 등록에 실패했습니다.`;
+        console.error('일부 항목 등록 실패:', data.result);
+        throw new Error(`일부 항목 등록 실패 (성공: ${data.result.success}개, 실패: ${data.result.failed}개):\n${errorDetails}`);
       }
 
-      // 모든 ??��???�공??경우
+      // 모든 항목이 성공한 경우
       if (data.result) {
-        console.log(`?�괄 ?�록 ?�료: ?�공 ${data.result.success}�? ?�패 ${data.result.failed || 0}�?);
+        console.log(`일괄 등록 완료: 성공 ${data.result.success}개, 실패 ${data.result.failed || 0}개`);
         if (data.result.success === 0 && recordsToSubmit.length > 0) {
-          throw new Error('모든 ??��???�록???�패?�습?�다. ?�러 메시지�??�인?�주?�요.');
+          throw new Error('모든 항목이 등록에 실패했습니다. 에러 메시지를 확인해주세요.');
         }
       }
 
       onSuccess();
       onClose();
     } catch (err) {
-      console.error('?�괄 ?�록 ?�류:', err);
+      console.error('일괄 등록 오류:', err);
       const errorMessage = err instanceof Error 
         ? err.message 
-        : (typeof err === 'string' ? err : '?????�는 ?�류가 발생?�습?�다.');
+        : (typeof err === 'string' ? err : '알 수 없는 오류가 발생했습니다.');
       setError(errorMessage);
-      // ?�러가 발생?�도 모달???��? ?�음 (?�용?��? ?�러�??�인?�고 ?�정?????�도�?
+      // 에러가 발생해도 모달을 닫지 않음 (사용자가 에러를 확인하고 수정할 수 있도록)
     } finally {
       setIsSubmitting(false);
     }
@@ -380,7 +408,7 @@ export function OtherIncomeBulkModal({ isOpen, onClose, onSuccess }: OtherIncome
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 overflow-y-auto p-4">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-7xl my-8 max-h-[90vh] overflow-hidden flex flex-col">
         <div className="sticky top-0 bg-white border-b p-6 flex items-center justify-between z-10">
-          <h2 className="text-xl font-semibold">?�괄 추�?</h2>
+          <h2 className="text-xl font-semibold">일괄 추가</h2>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 transition-colors"
@@ -394,20 +422,20 @@ export function OtherIncomeBulkModal({ isOpen, onClose, onSuccess }: OtherIncome
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  CSV ?�이??붙여?�기 (??���?구분)
+                  CSV 데이터 붙여넣기 (탭으로 구분)
                 </label>
                 <textarea
                   value={csvText}
                   onChange={(e) => setCsvText(e.target.value)}
                   rows={15}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
-                  placeholder="CSV ?�일?�서 복사?�여 붙여?�기 ?�세??
+                  placeholder="CSV 파일에서 복사하여 붙여넣기 하세요"
                 />
               </div>
 
               {error && (
                 <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded whitespace-pre-wrap">
-                  <div className="font-semibold mb-1">?�류 발생:</div>
+                  <div className="font-semibold mb-1">오류 발생:</div>
                   <div>{error}</div>
                 </div>
               )}
@@ -417,7 +445,7 @@ export function OtherIncomeBulkModal({ isOpen, onClose, onSuccess }: OtherIncome
                   취소
                 </Button>
                 <Button type="button" onClick={handleParseCsv}>
-                  ?�싱 �??�인
+                  파싱 및 확인
                 </Button>
               </div>
             </div>
@@ -425,15 +453,15 @@ export function OtherIncomeBulkModal({ isOpen, onClose, onSuccess }: OtherIncome
             <div className="space-y-4">
               {error && (
                 <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded whitespace-pre-wrap">
-                  <div className="font-semibold mb-1">?�류 발생:</div>
+                  <div className="font-semibold mb-1">오류 발생:</div>
                   <div>{error}</div>
                 </div>
               )}
 
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold">?�싱???�이??({records.length}�?</h3>
+                <h3 className="text-lg font-semibold">파싱된 데이터 ({records.length}개)</h3>
                 <Button type="button" variant="outline" size="sm" onClick={() => setShowCsvInput(true)}>
-                  CSV ?�시 ?�력
+                  CSV 다시 입력
                 </Button>
               </div>
 
@@ -445,13 +473,13 @@ export function OtherIncomeBulkModal({ isOpen, onClose, onSuccess }: OtherIncome
                         <div className="grid grid-cols-3 gap-4">
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
-                              거래처코??<span className="text-red-500">*</span>
+                              거래처코드 <span className="text-red-500">*</span>
                             </label>
                             <SearchableSelect
                               value={record.vendorCode || ''}
                               onChange={(value) => handleVendorCodeChange(index, value)}
                               options={vendors.map(v => ({ value: v.code, label: `${v.code} - ${v.name}` }))}
-                              placeholder="?�택?�세??
+                              placeholder="선택하세요"
                               required
                             />
                           </div>
@@ -464,7 +492,7 @@ export function OtherIncomeBulkModal({ isOpen, onClose, onSuccess }: OtherIncome
                               value={record.category || ''}
                               onChange={(value) => updateRecord(index, { category: value })}
                               options={CATEGORIES.map(cat => ({ value: cat, label: cat }))}
-                              placeholder="?�택?�세??
+                              placeholder="선택하세요"
                               required
                             />
                           </div>
@@ -477,7 +505,7 @@ export function OtherIncomeBulkModal({ isOpen, onClose, onSuccess }: OtherIncome
                               value={record.projectCode || ''}
                               onChange={(value) => handleProjectCodeChange(index, value)}
                               options={projects.map(p => ({ value: p.code, label: `${p.code} - ${p.name}` }))}
-                              placeholder="?�택?�세??
+                              placeholder="선택하세요"
                               required
                             />
                           </div>
@@ -522,7 +550,7 @@ export function OtherIncomeBulkModal({ isOpen, onClose, onSuccess }: OtherIncome
 
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
-                              ?�금 ?�정금액
+                              입금 예정금액
                             </label>
                             <input
                               type="number"
@@ -534,7 +562,8 @@ export function OtherIncomeBulkModal({ isOpen, onClose, onSuccess }: OtherIncome
 
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
-                              ?�금??                            </label>
+                              입금액
+                            </label>
                             <input
                               type="number"
                               value={record.depositAmount || ''}
@@ -545,27 +574,27 @@ export function OtherIncomeBulkModal({ isOpen, onClose, onSuccess }: OtherIncome
 
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
-                              ?�금계산??발행 ?��?
+                              세금계산서 발행 여부
                             </label>
                             <SearchableSelect
                               value={record.invoiceIssued || ''}
                               onChange={(value) => updateRecord(index, { invoiceIssued: value })}
                               options={[
                                 { value: 'O', label: 'O (발행)' },
-                                { value: 'X', label: 'X (미발??' },
+                                { value: 'X', label: 'X (미발행)' },
                               ]}
-                              placeholder="?�택?�세??
+                              placeholder="선택하세요"
                             />
                           </div>
 
                           <div className="col-span-3">
                             <label className="block text-sm font-medium text-gray-700 mb-1">
-                              ?�금계산???�본 (?�크린샷)
+                              세금계산서 사본 (스크린샷)
                             </label>
                             <div className="flex items-center gap-4">
                               {invoiceFiles.has(index) ? (
                                 <div className="flex items-center gap-2">
-                                  <img src={invoiceFiles.get(index)!.url} alt="?�금계산?? className="max-w-xs max-h-32 border rounded" />
+                                  <img src={invoiceFiles.get(index)!.url} alt="세금계산서" className="max-w-xs max-h-32 border rounded" />
                                   <button
                                     type="button"
                                     onClick={() => removeFile(index)}
@@ -577,7 +606,7 @@ export function OtherIncomeBulkModal({ isOpen, onClose, onSuccess }: OtherIncome
                               ) : (
                                 <label className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md cursor-pointer hover:bg-gray-50 w-fit">
                                   <UploadIcon className="h-4 w-4" />
-                                  <span className="text-sm">?�일 ?�택</span>
+                                  <span className="text-sm">파일 선택</span>
                                   <input
                                     type="file"
                                     accept="image/*"
@@ -596,14 +625,15 @@ export function OtherIncomeBulkModal({ isOpen, onClose, onSuccess }: OtherIncome
                           </Button>
                           <Button type="button" onClick={() => handleSaveEdit(index)}>
                             <Save className="h-4 w-4 mr-1" />
-                            ?�??                          </Button>
+                            저장
+                          </Button>
                         </div>
                       </div>
                     ) : (
                       <div className="flex items-center justify-between">
                         <div className="flex-1 grid grid-cols-4 gap-4 text-sm">
                           <div>
-                            <span className="text-gray-500">거래처코??</span>
+                            <span className="text-gray-500">거래처코드:</span>
                             <span className="ml-2 font-medium">{record.vendorCode || '-'}</span>
                           </div>
                           <div>
@@ -615,7 +645,7 @@ export function OtherIncomeBulkModal({ isOpen, onClose, onSuccess }: OtherIncome
                             <span className="ml-2 font-medium">{record.projectCode || '-'}</span>
                           </div>
                           <div>
-                            <span className="text-gray-500">?�금??</span>
+                            <span className="text-gray-500">입금액:</span>
                             <span className="ml-2 font-medium">{record.depositAmount ? new Intl.NumberFormat('ko-KR').format(record.depositAmount) : '-'}</span>
                           </div>
                         </div>
@@ -626,7 +656,7 @@ export function OtherIncomeBulkModal({ isOpen, onClose, onSuccess }: OtherIncome
                           onClick={() => setEditingIndex(index)}
                         >
                           <Edit2 className="h-4 w-4 mr-1" />
-                          ?�정
+                          수정
                         </Button>
                       </div>
                     )}
@@ -649,7 +679,7 @@ export function OtherIncomeBulkModal({ isOpen, onClose, onSuccess }: OtherIncome
               취소
             </Button>
             <Button type="button" onClick={handleSubmit} className="flex-1" disabled={isSubmitting}>
-              {isSubmitting ? '?�록 �?..' : `?�괄 ?�록 (${records.length}�?`}
+              {isSubmitting ? '등록 중...' : `일괄 등록 (${records.length}개)`}
             </Button>
           </div>
         )}

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { DollarSign, CreditCard, Database, Building2, FolderKanban, User, Home } from 'lucide-react';
+import { DollarSign, CreditCard, Database, Building2, FolderKanban, User, Home, Gamepad2 } from 'lucide-react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 
 const sections = [
@@ -37,6 +37,11 @@ const sections = [
       { name: '프로젝트 유형', href: '/dashboard/projects', icon: FolderKanban },
       { name: '인플루언서 계좌 등록', href: '/dashboard/influencer-accounts', icon: User },
     ],
+  },
+  {
+    name: '스트레스 해소 게임',
+    href: '/dashboard/stress-game',
+    icon: Gamepad2,
   },
 ];
 

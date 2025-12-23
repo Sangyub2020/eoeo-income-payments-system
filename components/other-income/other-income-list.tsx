@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { OtherIncome } from '@/lib/types';
@@ -35,40 +35,40 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [isColumnSelectorOpen, setIsColumnSelectorOpen] = useState(false);
   
-  // 모든 ???�의
+  // 모든 열 정의
   const allColumns = [
-    { key: 'checkbox', label: '?�택', alwaysVisible: true },
+    { key: 'checkbox', label: '선택', alwaysVisible: true },
     { key: 'number', label: '번호', alwaysVisible: true },
-    { key: 'category', label: '거래 ?�형', alwaysVisible: false },
-    { key: 'projectCode', label: '?�로?�트 ?�형 코드', alwaysVisible: false },
-    { key: 'project', label: '?�로?�트 ?�형', alwaysVisible: false },
+    { key: 'category', label: '거래 유형', alwaysVisible: false },
+    { key: 'projectCode', label: '프로젝트 유형 코드', alwaysVisible: false },
+    { key: 'project', label: '프로젝트 유형', alwaysVisible: false },
     { key: 'projectName', label: 'Project Name', alwaysVisible: false },
-    { key: 'vendorCode', label: '거래처코??, alwaysVisible: false },
-    { key: 'companyName', label: '?�사�?, alwaysVisible: false },
-    { key: 'brandName', label: '브랜?�명', alwaysVisible: false },
-    { key: 'expectedDepositDate', label: '?�금?�정??, alwaysVisible: false },
-    { key: 'expectedDepositAmount', label: '?�정금액', alwaysVisible: false },
-    { key: 'depositDate', label: '?�금??, alwaysVisible: false },
-    { key: 'depositAmount', label: '?�금??, alwaysVisible: false },
-    { key: 'invoiceIssued', label: '?�금계산??, alwaysVisible: false },
-    { key: 'businessRegistrationNumber', label: '?�업?�번??, alwaysVisible: false },
-    { key: 'invoiceEmail', label: '?�메??, alwaysVisible: false },
-    { key: 'eoeoManager', label: '?�당??, alwaysVisible: false },
-    { key: 'contractLink', label: '계약??, alwaysVisible: false },
-    { key: 'estimateLink', label: '견적??, alwaysVisible: false },
+    { key: 'vendorCode', label: '거래처코드', alwaysVisible: false },
+    { key: 'companyName', label: '회사명', alwaysVisible: false },
+    { key: 'brandName', label: '브랜드명', alwaysVisible: false },
+    { key: 'expectedDepositDate', label: '입금예정일', alwaysVisible: false },
+    { key: 'expectedDepositAmount', label: '예정금액', alwaysVisible: false },
+    { key: 'depositDate', label: '입금일', alwaysVisible: false },
+    { key: 'depositAmount', label: '입금액', alwaysVisible: false },
+    { key: 'invoiceIssued', label: '세금계산서', alwaysVisible: false },
+    { key: 'businessRegistrationNumber', label: '사업자번호', alwaysVisible: false },
+    { key: 'invoiceEmail', label: '이메일', alwaysVisible: false },
+    { key: 'eoeoManager', label: '담당자', alwaysVisible: false },
+    { key: 'contractLink', label: '계약서', alwaysVisible: false },
+    { key: 'estimateLink', label: '견적서', alwaysVisible: false },
     { key: 'installmentNumber', label: '차수', alwaysVisible: false },
-    { key: 'attributionYearMonth', label: '귀?�년??, alwaysVisible: false },
-    { key: 'advanceBalance', label: '???�금', alwaysVisible: false },
+    { key: 'attributionYearMonth', label: '귀속년월', alwaysVisible: false },
+    { key: 'advanceBalance', label: '선/잔금', alwaysVisible: false },
     { key: 'ratio', label: '비율', alwaysVisible: false },
     { key: 'count', label: '건수', alwaysVisible: false },
-    { key: 'description', label: '?�요', alwaysVisible: false },
-    { key: 'createdDate', label: '?�성??, alwaysVisible: false },
-    { key: 'invoiceCopy', label: '?�금계산??첨�?', alwaysVisible: false },
-    { key: 'issueNotes', label: '?�슈', alwaysVisible: false },
-    { key: 'actions', label: '?�업', alwaysVisible: true },
+    { key: 'description', label: '적요', alwaysVisible: false },
+    { key: 'createdDate', label: '작성일', alwaysVisible: false },
+    { key: 'invoiceCopy', label: '세금계산서 첨부', alwaysVisible: false },
+    { key: 'issueNotes', label: '이슈', alwaysVisible: false },
+    { key: 'actions', label: '작업', alwaysVisible: true },
   ];
   
-  // ?�택????관�?(?�폴?�는 모든 ???�택)
+  // 선택된 열 관리 (디폴트는 모든 열 선택)
   const [visibleColumns, setVisibleColumns] = useState<Set<string>>(
     new Set(allColumns.map(col => col.key))
   );
@@ -78,9 +78,9 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
     setError(null);
 
     try {
-      const response = await fetch('/api/other-income-team');
+      const response = await fetch('/api/other-income');
       if (!response.ok) {
-        throw new Error('?�금 목록??불러?�는???�패?�습?�다.');
+        throw new Error('입금 목록을 불러오는데 실패했습니다.');
       }
 
       const data = await response.json();
@@ -122,13 +122,14 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
           invoiceSupplyPrice: r.invoice_supply_price,
           createdAt: r.created_at,
           updatedAt: r.updated_at,
-          // ?�수 ?�드 검�??�래�?          hasWarning: !r.vendor_code || !r.category || !r.project_code,
+          // 필수 필드 검증 플래그
+          hasWarning: !r.vendor_code || !r.category || !r.project_code,
         }));
         setRecords(formattedRecords);
         setFilteredRecords(formattedRecords);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : '?????�는 ?�류가 발생?�습?�다.');
+      setError(err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.');
     } finally {
       setIsLoading(false);
     }
@@ -140,14 +141,14 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
-      // 같�? ?�드�??�릭?�면 ?�렬 방향 ?��?
+      // 같은 필드를 클릭하면 정렬 방향 토글
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
     } else {
-      // ?�른 ?�드�??�릭?�면 ?�름차순?�로 ?�작
+      // 다른 필드를 클릭하면 오름차순으로 시작
       setSortField(field);
       setSortDirection('asc');
     }
-    setCurrentPage(1); // ?�렬 ??�??�이지�?리셋
+    setCurrentPage(1); // 정렬 시 첫 페이지로 리셋
   };
 
   const sortRecords = (recordsToSort: OtherIncome[]): OtherIncome[] => {
@@ -161,21 +162,21 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
       if (aValue == null) aValue = '';
       if (bValue == null) bValue = '';
 
-      // ?�자 ?�드 처리
+      // 숫자 필드 처리
       if (sortField === 'expectedDepositAmount' || sortField === 'depositAmount') {
         aValue = Number(aValue) || 0;
         bValue = Number(bValue) || 0;
         return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
       }
 
-      // ?�짜 ?�드 처리
+      // 날짜 필드 처리
       if (sortField === 'expectedDepositDate' || sortField === 'depositDate') {
         aValue = aValue ? new Date(aValue).getTime() : 0;
         bValue = bValue ? new Date(bValue).getTime() : 0;
         return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
       }
 
-      // 문자???�드 처리
+      // 문자열 필드 처리
       aValue = String(aValue).toLowerCase();
       bValue = String(bValue).toLowerCase();
       
@@ -192,7 +193,8 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
   useEffect(() => {
     let filtered = records;
 
-    // 검???�터�?    if (searchQuery.trim() !== '') {
+    // 검색 필터링
+    if (searchQuery.trim() !== '') {
       const query = searchQuery.toLowerCase();
       filtered = records.filter(record => 
         record.companyName?.toLowerCase().includes(query) ||
@@ -201,10 +203,10 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
       );
     }
 
-    // ?�렬 ?�용
+    // 정렬 적용
     const sorted = sortRecords(filtered);
     setFilteredRecords(sorted);
-    setCurrentPage(1); // 검???�렬 ??�??�이지�?리셋
+    setCurrentPage(1); // 검색/정렬 시 첫 페이지로 리셋
   }, [searchQuery, records, sortField, sortDirection]);
 
   const handleSelectAll = (checked: boolean) => {
@@ -227,13 +229,13 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
   };
 
   const handleDelete = async (ids: string[]) => {
-    if (!confirm(`?�택??${ids.length}개의 ?�금 ?�보�???��?�시겠습?�까?`)) {
+    if (!confirm(`선택한 ${ids.length}개의 입금 정보를 삭제하시겠습니까?`)) {
       return;
     }
 
     setIsDeleting(true);
     try {
-      const response = await fetch('/api/other-income-team', {
+      const response = await fetch('/api/other-income', {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -243,14 +245,14 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
 
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.error || '??��???�패?�습?�다.');
+        throw new Error(data.error || '삭제에 실패했습니다.');
       }
 
       await fetchRecords();
       setSelectedIds(new Set());
       if (onSuccess) onSuccess();
     } catch (err) {
-      alert(err instanceof Error ? err.message : '??�� �??�류가 발생?�습?�다.');
+      alert(err instanceof Error ? err.message : '삭제 중 오류가 발생했습니다.');
     } finally {
       setIsDeleting(false);
     }
@@ -293,7 +295,7 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
       <div className="bg-white rounded-lg border p-6">
         <div className="flex items-center justify-center py-8">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <span className="ml-2 text-gray-600">?�금 목록??불러?�는 �?..</span>
+          <span className="ml-2 text-gray-600">입금 목록을 불러오는 중...</span>
         </div>
       </div>
     );
@@ -306,7 +308,7 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
           {error}
         </div>
         <Button onClick={fetchRecords} className="mt-4" variant="outline">
-          ?�시 ?�도
+          다시 시도
         </Button>
       </div>
     );
@@ -316,7 +318,7 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
     <>
       <div className="bg-white rounded-lg border">
         <div className="p-4 border-b flex items-center justify-between">
-          <h3 className="text-lg font-semibold">?�금 목록 ({filteredRecords.length}�?</h3>
+          <h3 className="text-lg font-semibold">입금 목록 ({filteredRecords.length}개)</h3>
           <div className="flex gap-2">
             <div className="relative">
               <Button 
@@ -324,19 +326,19 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
                 variant="outline"
               >
                 <Settings className="h-4 w-4 mr-2" />
-                ???�택
+                열 선택
               </Button>
               {isColumnSelectorOpen && (
                 <div className="absolute right-0 top-full mt-2 bg-white border border-gray-300 rounded-lg shadow-lg z-50 p-4 min-w-[250px] max-h-[400px] overflow-y-auto">
                   <div className="flex items-center justify-between mb-3">
-                    <h4 className="font-semibold text-sm">?�시?????�택</h4>
+                    <h4 className="font-semibold text-sm">표시할 열 선택</h4>
                     <button
                       onClick={() => {
                         setVisibleColumns(new Set(allColumns.map(col => col.key)));
                       }}
                       className="text-xs text-blue-600 hover:text-blue-800"
                     >
-                      모두 ?�택
+                      모두 선택
                     </button>
                   </div>
                   <div className="space-y-2 mb-4">
@@ -371,7 +373,7 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
                       size="sm"
                       className="px-4"
                     >
-                      ?�인
+                      확인
                     </Button>
                   </div>
                 </div>
@@ -379,11 +381,11 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
             </div>
             <Button onClick={() => setIsModalOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
-              ?�이??추�?
+              데이터 추가
             </Button>
             <Button onClick={() => setIsBulkModalOpen(true)} variant="outline">
               <Upload className="h-4 w-4 mr-2" />
-              ?�괄 추�?
+              일괄 추가
             </Button>
           </div>
         </div>
@@ -393,7 +395,7 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <input
               type="text"
-              placeholder="?�사?�름, 거래처코?? 브랜?�명?�로 검??.."
+              placeholder="회사이름, 거래처코드, 브랜드명으로 검색..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -404,7 +406,8 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
         {selectedIds.size > 0 && (
         <div className="p-4 bg-blue-50 border-b flex items-center justify-between">
           <span className="text-sm font-medium text-blue-700">
-            {selectedIds.size}�??�택??          </span>
+            {selectedIds.size}개 선택됨
+          </span>
           <div className="flex gap-2">
             <Button
               variant="outline"
@@ -413,7 +416,7 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
               disabled={isDeleting}
             >
               <Trash2 className="h-4 w-4 mr-1" />
-              ?�택 ??��
+              선택 삭제
             </Button>
           </div>
         </div>
@@ -444,8 +447,8 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
                     onClick={() => handleSort('category')}
                   >
                     <div className="flex items-center gap-1">
-                      <span>거래 ?�형</span>
-                      <span className="text-xs text-yellow-600" title="?�수 ??�� ?�락 경고">?�️</span>
+                      <span>거래 유형</span>
+                      <span className="text-xs text-yellow-600" title="필수 항목 누락 경고">⚠️</span>
                       {sortField === 'category' ? (
                         sortDirection === 'asc' ? (
                           <ArrowUp className="h-3 w-3" />
@@ -460,7 +463,7 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
                 )}
                 {visibleColumns.has('projectCode') && (
                   <th className="text-left p-2 font-medium text-gray-700 whitespace-nowrap">
-                    ?�로?�트 ?�형 코드
+                    프로젝트 유형 코드
                   </th>
                 )}
                 {visibleColumns.has('project') && (
@@ -469,7 +472,7 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
                     onClick={() => handleSort('projectName')}
                   >
                     <div className="flex items-center gap-1">
-                      <span>?�로?�트 ?�형</span>
+                      <span>프로젝트 유형</span>
                       {sortField === 'projectName' ? (
                         sortDirection === 'asc' ? (
                           <ArrowUp className="h-3 w-3" />
@@ -493,7 +496,7 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
                     onClick={() => handleSort('vendorCode')}
                   >
                     <div className="flex items-center gap-1">
-                      <span>거래처코??/span>
+                      <span>거래처코드</span>
                       {sortField === 'vendorCode' ? (
                         sortDirection === 'asc' ? (
                           <ArrowUp className="h-3 w-3" />
@@ -512,7 +515,7 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
                     onClick={() => handleSort('companyName')}
                   >
                     <div className="flex items-center gap-1">
-                      <span>?�사�?/span>
+                      <span>회사명</span>
                       {sortField === 'companyName' ? (
                         sortDirection === 'asc' ? (
                           <ArrowUp className="h-3 w-3" />
@@ -531,7 +534,7 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
                     onClick={() => handleSort('brandName')}
                   >
                     <div className="flex items-center gap-1">
-                      <span>브랜?�명</span>
+                      <span>브랜드명</span>
                       {sortField === 'brandName' ? (
                         sortDirection === 'asc' ? (
                           <ArrowUp className="h-3 w-3" />
@@ -550,7 +553,7 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
                     onClick={() => handleSort('expectedDepositDate')}
                   >
                     <div className="flex items-center gap-1">
-                      <span>?�금?�정??/span>
+                      <span>입금예정일</span>
                       {sortField === 'expectedDepositDate' ? (
                         sortDirection === 'asc' ? (
                           <ArrowUp className="h-3 w-3" />
@@ -569,7 +572,7 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
                     onClick={() => handleSort('expectedDepositAmount')}
                   >
                     <div className="flex items-center justify-end gap-1">
-                      <span>?�정금액</span>
+                      <span>예정금액</span>
                       {sortField === 'expectedDepositAmount' ? (
                         sortDirection === 'asc' ? (
                           <ArrowUp className="h-3 w-3" />
@@ -588,7 +591,7 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
                     onClick={() => handleSort('depositDate')}
                   >
                     <div className="flex items-center gap-1">
-                      <span>?�금??/span>
+                      <span>입금일</span>
                       {sortField === 'depositDate' ? (
                         sortDirection === 'asc' ? (
                           <ArrowUp className="h-3 w-3" />
@@ -607,7 +610,7 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
                     onClick={() => handleSort('depositAmount')}
                   >
                     <div className="flex items-center justify-end gap-1">
-                      <span>?�금??/span>
+                      <span>입금액</span>
                       {sortField === 'depositAmount' ? (
                         sortDirection === 'asc' ? (
                           <ArrowUp className="h-3 w-3" />
@@ -626,7 +629,7 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
                     onClick={() => handleSort('invoiceIssued')}
                   >
                     <div className="flex items-center gap-1">
-                      <span>?�금계산??/span>
+                      <span>세금계산서</span>
                       {sortField === 'invoiceIssued' ? (
                         sortDirection === 'asc' ? (
                           <ArrowUp className="h-3 w-3" />
@@ -640,28 +643,28 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
                   </th>
                 )}
                 {visibleColumns.has('businessRegistrationNumber') && (
-                  <th className="text-left p-2 font-medium text-gray-700 whitespace-nowrap">?�업?�번??/th>
+                  <th className="text-left p-2 font-medium text-gray-700 whitespace-nowrap">사업자번호</th>
                 )}
                 {visibleColumns.has('invoiceEmail') && (
-                  <th className="text-left p-2 font-medium text-gray-700 whitespace-nowrap">?�메??/th>
+                  <th className="text-left p-2 font-medium text-gray-700 whitespace-nowrap">이메일</th>
                 )}
                 {visibleColumns.has('eoeoManager') && (
-                  <th className="text-left p-2 font-medium text-gray-700 whitespace-nowrap">?�당??/th>
+                  <th className="text-left p-2 font-medium text-gray-700 whitespace-nowrap">담당자</th>
                 )}
                 {visibleColumns.has('contractLink') && (
-                  <th className="text-left p-2 font-medium text-gray-700 whitespace-nowrap">계약??/th>
+                  <th className="text-left p-2 font-medium text-gray-700 whitespace-nowrap">계약서</th>
                 )}
                 {visibleColumns.has('estimateLink') && (
-                  <th className="text-left p-2 font-medium text-gray-700 whitespace-nowrap">견적??/th>
+                  <th className="text-left p-2 font-medium text-gray-700 whitespace-nowrap">견적서</th>
                 )}
                 {visibleColumns.has('installmentNumber') && (
                   <th className="text-left p-2 font-medium text-gray-700 whitespace-nowrap">차수</th>
                 )}
                 {visibleColumns.has('attributionYearMonth') && (
-                  <th className="text-left p-2 font-medium text-gray-700 whitespace-nowrap">귀?�년??/th>
+                  <th className="text-left p-2 font-medium text-gray-700 whitespace-nowrap">귀속년월</th>
                 )}
                 {visibleColumns.has('advanceBalance') && (
-                  <th className="text-left p-2 font-medium text-gray-700 whitespace-nowrap">???�금</th>
+                  <th className="text-left p-2 font-medium text-gray-700 whitespace-nowrap">선/잔금</th>
                 )}
                 {visibleColumns.has('ratio') && (
                   <th className="text-left p-2 font-medium text-gray-700 whitespace-nowrap">비율</th>
@@ -670,19 +673,19 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
                   <th className="text-left p-2 font-medium text-gray-700 whitespace-nowrap">건수</th>
                 )}
                 {visibleColumns.has('description') && (
-                  <th className="text-left p-2 font-medium text-gray-700 whitespace-nowrap">?�요</th>
+                  <th className="text-left p-2 font-medium text-gray-700 whitespace-nowrap">적요</th>
                 )}
                 {visibleColumns.has('createdDate') && (
-                  <th className="text-left p-2 font-medium text-gray-700 whitespace-nowrap">?�성??/th>
+                  <th className="text-left p-2 font-medium text-gray-700 whitespace-nowrap">작성일</th>
                 )}
                 {visibleColumns.has('invoiceCopy') && (
-                  <th className="text-left p-2 font-medium text-gray-700 whitespace-nowrap">?�금계산??첨�?</th>
+                  <th className="text-left p-2 font-medium text-gray-700 whitespace-nowrap">세금계산서 첨부</th>
                 )}
                 {visibleColumns.has('issueNotes') && (
-                  <th className="text-left p-2 font-medium text-gray-700 whitespace-nowrap">?�슈</th>
+                  <th className="text-left p-2 font-medium text-gray-700 whitespace-nowrap">이슈</th>
                 )}
                 {visibleColumns.has('actions') && (
-                  <th className="text-left p-2 font-medium text-gray-700 w-24 whitespace-nowrap">?�업</th>
+                  <th className="text-left p-2 font-medium text-gray-700 w-24 whitespace-nowrap">작업</th>
                 )}
               </tr>
             </thead>
@@ -690,7 +693,7 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
             {currentPageRecords.length === 0 ? (
               <tr>
                 <td colSpan={visibleColumns.size} className="p-8 text-center text-gray-500">
-                  {searchQuery ? '검??결과가 ?�습?�다.' : '?�록???�금 ?�보가 ?�습?�다.'}
+                  {searchQuery ? '검색 결과가 없습니다.' : '등록된 입금 정보가 없습니다.'}
                 </td>
               </tr>
             ) : (
@@ -719,7 +722,7 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
                       <div className="flex items-center gap-1 min-w-0">
                         <span className="truncate">{record.category || '-'}</span>
                         {(record as any).hasWarning && (
-                          <span className="text-xs text-yellow-600 font-medium flex-shrink-0" title="?�수 ??�� ?�락">?�️</span>
+                          <span className="text-xs text-yellow-600 font-medium flex-shrink-0" title="필수 항목 누락">⚠️</span>
                         )}
                       </div>
                     </td>
@@ -835,14 +838,14 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
                         <button
                           onClick={() => handleEdit(record)}
                           className="text-blue-600 hover:text-blue-800"
-                          title="?�정"
+                          title="수정"
                         >
                           <Edit2 className="h-4 w-4" />
                         </button>
                         <button
                           onClick={() => handleDelete([record.id!])}
                           className="text-red-600 hover:text-red-800"
-                          title="??��"
+                          title="삭제"
                           disabled={isDeleting}
                         >
                           <Trash2 className="h-4 w-4" />

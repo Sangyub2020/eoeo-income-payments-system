@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { X, Upload as UploadIcon } from 'lucide-react';
 import { GlobalMarketingTeam } from '@/lib/types';
 import { SearchableSelect } from '@/components/ui/searchable-select';
-import { CATEGORIES } from '@/lib/constants';
+import { GLOBAL_MARKETING_CATEGORIES } from '@/lib/constants';
 
 interface GlobalMarketingFormModalProps {
   isOpen: boolean;
@@ -108,13 +108,14 @@ export function GlobalMarketingFormModal({ isOpen, onClose, onSuccess }: GlobalM
       setFormData((prev) => ({
         ...prev,
         projectCode,
-        projectName: project.name,
+        project: project.name,
+        // projectName은 사용자가 직접 입력하므로 자동으로 채우지 않음
       }));
     } else {
       setFormData((prev) => ({
         ...prev,
         projectCode,
-        projectName: '',
+        project: '',
       }));
     }
   };
@@ -223,7 +224,7 @@ export function GlobalMarketingFormModal({ isOpen, onClose, onSuccess }: GlobalM
               <SearchableSelect
                 value={formData.category || ''}
                 onChange={(value) => handleChange({ target: { name: 'category', value } } as any)}
-                options={CATEGORIES.map(cat => ({ value: cat, label: cat }))}
+                options={GLOBAL_MARKETING_CATEGORIES.map(cat => ({ value: cat, label: cat }))}
                 placeholder="선택하세요"
                 required
               />
@@ -338,8 +339,7 @@ export function GlobalMarketingFormModal({ isOpen, onClose, onSuccess }: GlobalM
                 name="projectName"
                 value={formData.projectName || ''}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
-                readOnly
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
 

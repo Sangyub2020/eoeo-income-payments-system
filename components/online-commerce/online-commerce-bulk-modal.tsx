@@ -71,68 +71,128 @@ export function OnlineCommerceBulkModal({ isOpen, onClose, onSuccess }: OnlineCo
   };
 
   const parseCsvText = (text: string): Partial<OnlineCommerceTeam>[] => {
-    const lines = text.trim().split('\n').filter(line => line.trim());
     const parsedRecords: Partial<OnlineCommerceTeam>[] = [];
 
-    if (lines.length === 0) return parsedRecords;
+    if (!text.trim()) return parsedRecords;
 
-    // 허용된 구분 값 목록
+    // 허용된 거래유형 값 목록
     const validCategories = [
-      'ONE-TIME',
-      '파트너십/마케팅지원비',
-      '기재고사입',
-      '정부지원사업',
-      'other',
+      '파트너십 - 서비스매출',
+      '파트너십 - 수출바우처',
       'B2B',
+      '재고 바이백',
       '배송비',
-      '기재고판매',
+      'other',
     ];
 
-    // 구분자 확인 (첫 번째 비어있지 않은 행 기준)
-    const firstDataLine = lines.find(line => line.trim());
-    if (!firstDataLine) return parsedRecords;
-    
-    const delimiter = firstDataLine.includes('\t') ? '\t' : ',';
+    // 구분자 확인
+    const delimiter = text.includes('\t') ? '\t' : ',';
     const expectedColumnCount = 33; // 온라인커머스팀은 oneTimeExpenseAmount가 없어서 33개
 
-    for (const line of lines) {
-      // 탭으로 split하면 빈 칸도 빈 문자열로 배열에 포함됨
-      let parts = line.split(delimiter);
-      
-      // 부족한 컬럼은 빈 문자열로 채움 (빈 칸도 올바른 인덱스에 매핑되도록)
-      while (parts.length < expectedColumnCount) {
-        parts.push('');
-      }
-      
-      // 각 셀의 앞뒤 공백만 제거 (빈 문자열은 유지)
-      parts = parts.map(p => p.trim());
-      
-      // '구분' 열(첫 번째 컬럼)이 허용된 값 중 하나인 경우만 새 레코드로 인식
-      const category = parts[0] || '';
-      const categoryUpper = category.toUpperCase();
-      const isValidCategory = validCategories.some(valid => 
-        categoryUpper === valid.toUpperCase() || categoryUpper.includes(valid.toUpperCase())
-      );
-      
-      if (!isValidCategory) {
-        continue; // 허용된 구분이 없으면 이 행은 건너뜀
-      }
-      
-      // 최소 2개 컬럼은 있어야 데이터로 인식 (구분, 거래처코드)
-      if (parts.length >= 2) {
-        const parseNumber = (val: string) => {
-          if (!val || val === '') return undefined;
-          const numStr = val.replace(/[₩,\s]/g, '');
-          return numStr ? Number(numStr) : undefined;
-        };
+    // 따옴표를 고려한 CSV 라인 파싱 함수
+    const parseCsvLine = (line: string, delimiter: string): string[] => {
+      const parts: string[] = [];
+      let currentPart = '';
+      let inQuotes = false;
+      let i = 0;
 
-        // 안전하게 인덱스 접근
-        const get = (index: number) => {
-          const value = index < parts.length ? parts[index] : '';
-          return value === '' ? undefined : value;
-        };
+      while (i < line.length) {
+        const char = line[i];
+        const nextChar = line[i + 1];
 
-        parsedRecords.push({
+        if (char === '"') {
+          if (inQuotes && nextChar === '"') {
+            // 이스케이프된 따옴표
+            currentPart += '"';
+            i += 2;
+          } else {
+            // 따옴표 시작/끝
+            inQuotes = !inQuotes;
+            i++;
+          }
+        } else if (char === delimiter && !inQuotes) {
+          // 구분자 (따옴표 밖에서만)
+          parts.push(currentPart);
+          currentPart = '';
+          i++;
+        } else {
+          currentPart += char;
+          i++;
+        }
+      }
+
+      // 마지막 부분 추가
+      if (currentPart || parts.length > 0) {
+        parts.push(currentPart);
+      }
+
+      return parts;
+    };
+
+    // 전체 텍스트를 레코드 단위로 분리 (따옴표 고려)
+    const allLines = text.split('\n');
+    let currentRecord = '';
+    let inQuotes = false;
+    let quoteCount = 0;
+
+    for (let i = 0; i < allLines.length; i++) {
+      const line = allLines[i];
+      
+      // 따옴표 개수 세기
+      const lineQuoteCount = (line.match(/"/g) || []).length;
+      quoteCount += lineQuoteCount;
+      inQuotes = quoteCount % 2 === 1;
+
+      // 현재 레코드에 줄 추가
+      currentRecord = currentRecord ? currentRecord + '\n' + line : line;
+
+      // 따옴표가 닫혔고, 탭으로 구분된 열이 예상 개수에 도달했는지 확인
+      if (!inQuotes) {
+        let parts = parseCsvLine(currentRecord, delimiter);
+        
+        // 부족한 컬럼은 빈 문자열로 채움
+        while (parts.length < expectedColumnCount) {
+          parts.push('');
+        }
+        
+        // 따옴표 제거 및 trim
+        parts = parts.map(p => {
+          let cleaned = p.trim();
+          // 앞뒤 따옴표 제거
+          if (cleaned.startsWith('"') && cleaned.endsWith('"')) {
+            cleaned = cleaned.slice(1, -1);
+          }
+          return cleaned;
+        });
+        
+        // '거래유형' 열(첫 번째 컬럼)이 허용된 값 중 하나인 경우만 새 레코드로 인식
+        const category = parts[0] || '';
+        const categoryUpper = category.toUpperCase();
+        const isValidCategory = validCategories.some(valid => 
+          categoryUpper === valid.toUpperCase() || categoryUpper.includes(valid.toUpperCase())
+        );
+        
+        if (isValidCategory && parts.length >= 2) {
+          // 레코드 파싱
+          // 이스케이프된 따옴표 복원
+          parts = parts.map(p => p.replace(/""/g, '"'));
+          
+          currentRecord = ''; // 다음 레코드를 위해 초기화
+          quoteCount = 0; // 따옴표 카운터 초기화
+          
+          const parseNumber = (val: string) => {
+            if (!val || val === '') return undefined;
+            const numStr = val.replace(/[₩,\s]/g, '');
+            return numStr ? Number(numStr) : undefined;
+          };
+
+          // 안전하게 인덱스 접근
+          const get = (index: number) => {
+            const value = index < parts.length ? parts[index] : '';
+            return value === '' ? undefined : value;
+          };
+
+          parsedRecords.push({
           category: get(0),
           vendorCode: get(1),
           companyName: get(2),
@@ -162,9 +222,18 @@ export function OnlineCommerceBulkModal({ isOpen, onClose, onSuccess }: OnlineCo
           // 인덱스 22: depositAmount (입금액) - "3,300,000"
           depositAmount: parseNumber(get(22) || ''),
           // 인덱스 23: exchangeGainLoss (환차손익) - "확인중"
-          exchangeGainLoss: get(23) ? (get(23).toLowerCase() === '확인중' || get(23).toLowerCase() === 'x' ? undefined : parseNumber(get(23) || '')) : undefined,
+          exchangeGainLoss: (() => {
+            const value = get(23);
+            if (!value) return undefined;
+            const lowerValue = value.toLowerCase();
+            return lowerValue === '확인중' || lowerValue === 'x' ? undefined : parseNumber(value || '');
+          })(),
           // 인덱스 24: difference (차액) - "X"
-          difference: get(24) ? (get(24).toLowerCase() === 'x' ? undefined : parseNumber(get(24) || '')) : undefined,
+          difference: (() => {
+            const value = get(24);
+            if (!value) return undefined;
+            return value.toLowerCase() === 'x' ? undefined : parseNumber(value || '');
+          })(),
           // 인덱스 25: createdDate (작성일자) - 빈칸
           createdDate: get(25),
           // 인덱스 26: invoiceIssued (세금계산서 발행 여부) - 빈칸
@@ -178,12 +247,16 @@ export function OnlineCommerceBulkModal({ isOpen, onClose, onSuccess }: OnlineCo
           // 인덱스 30: expectedDepositMonth (입금 예정월) - "9"
           expectedDepositMonth: get(30) ? Number(get(30)) : undefined,
           // 인덱스 31: depositMonth (입금 월) - "NA"
-          depositMonth: get(31) && get(31).toUpperCase() !== 'NA' ? Number(get(31)) : undefined,
+          depositMonth: (() => {
+            const value = get(31);
+            return value && value.toUpperCase() !== 'NA' ? Number(value) : undefined;
+          })(),
           // 인덱스 32: taxStatus (과/면세/영세) - 빈칸
           taxStatus: get(32),
           // 인덱스 33: invoiceSupplyPrice (세금계산서발행공급가) - "₩3,000,000"
           invoiceSupplyPrice: parseNumber(get(33) || ''),
         });
+        }
       }
     }
 
@@ -460,7 +533,7 @@ export function OnlineCommerceBulkModal({ isOpen, onClose, onSuccess }: OnlineCo
 
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
-                              구분 <span className="text-red-500">*</span>
+                              거래유형 <span className="text-red-500">*</span>
                             </label>
                             <SearchableSelect
                               value={record.category || ''}
@@ -611,7 +684,7 @@ export function OnlineCommerceBulkModal({ isOpen, onClose, onSuccess }: OnlineCo
                             <span className="ml-2 font-medium">{record.vendorCode || '-'}</span>
                           </div>
                           <div>
-                            <span className="text-gray-500">구분:</span>
+                            <span className="text-gray-500">거래유형:</span>
                             <span className="ml-2 font-medium">{record.category || '-'}</span>
                           </div>
                           <div>

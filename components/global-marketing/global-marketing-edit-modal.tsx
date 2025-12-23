@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { X, Upload as UploadIcon, XCircle } from 'lucide-react';
 import { GlobalMarketingTeam } from '@/lib/types';
 import { SearchableSelect } from '@/components/ui/searchable-select';
-import { CATEGORIES } from '@/lib/constants';
+import { GLOBAL_MARKETING_CATEGORIES } from '@/lib/constants';
 
 interface GlobalMarketingEditModalProps {
   record: GlobalMarketingTeam;
@@ -231,7 +231,7 @@ export function GlobalMarketingEditModal({ record, onClose, onSuccess }: GlobalM
               <SearchableSelect
                 value={formData.category || ''}
                 onChange={(value) => handleChange({ target: { name: 'category', value } } as any)}
-                options={CATEGORIES.map(cat => ({ value: cat, label: cat }))}
+                options={GLOBAL_MARKETING_CATEGORIES.map(cat => ({ value: cat, label: cat }))}
                 placeholder="선택하세요"
                 required
               />

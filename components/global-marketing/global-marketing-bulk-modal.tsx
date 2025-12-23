@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { X, Upload as UploadIcon, Edit2, Save, XCircle } from 'lucide-react';
 import { GlobalMarketingTeam } from '@/lib/types';
 import { SearchableSelect } from '@/components/ui/searchable-select';
-import { CATEGORIES } from '@/lib/constants';
+import { GLOBAL_MARKETING_CATEGORIES } from '@/lib/constants';
 
 interface GlobalMarketingBulkModalProps {
   isOpen: boolean;
@@ -81,10 +81,10 @@ export function GlobalMarketingBulkModal({ isOpen, onClose, onSuccess }: GlobalM
 
     // 허용된 구분 값 목록
     const validCategories = [
-      'ONE-TIME',
+      '용역사업 - 서비스매출',
       '파트너십/마케팅지원비',
       '기재고사입',
-      '정부지원사업',
+      '용역사업 - 수출바우처',
       'other',
       'B2B',
       '배송비',
@@ -569,7 +569,7 @@ export function GlobalMarketingBulkModal({ isOpen, onClose, onSuccess }: GlobalM
                             <SearchableSelect
                               value={record.category || ''}
                               onChange={(value) => updateRecord(index, { category: value })}
-                              options={CATEGORIES.map(cat => ({ value: cat, label: cat }))}
+                              options={GLOBAL_MARKETING_CATEGORIES.map(cat => ({ value: cat, label: cat }))}
                               placeholder="선택하세요"
                               required
                             />

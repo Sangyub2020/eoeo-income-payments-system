@@ -110,13 +110,14 @@ export function OnlineCommerceFormModal({ isOpen, onClose, onSuccess }: OnlineCo
       setFormData((prev) => ({
         ...prev,
         projectCode,
-        projectName: project.name,
+        project: project.name,
+        // projectName은 사용자가 직접 입력하므로 자동으로 채우지 않음
       }));
     } else {
       setFormData((prev) => ({
         ...prev,
         projectCode,
-        projectName: '',
+        project: '',
       }));
     }
   };
@@ -222,7 +223,7 @@ export function OnlineCommerceFormModal({ isOpen, onClose, onSuccess }: OnlineCo
           <div className="grid grid-cols-3 gap-4">
             <div>
               <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">
-                구분 <span className="text-red-500">*</span>
+                거래유형 <span className="text-red-500">*</span>
               </label>
               <SearchableSelect
                 value={formData.category || ''}
@@ -342,8 +343,7 @@ export function OnlineCommerceFormModal({ isOpen, onClose, onSuccess }: OnlineCo
                 name="projectName"
                 value={formData.projectName || ''}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
-                readOnly
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
 

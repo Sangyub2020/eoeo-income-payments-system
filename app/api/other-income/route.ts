@@ -12,48 +12,7 @@ export async function GET() {
       throw error;
     }
 
-    // 데이터 포맷팅 (온라인커머스팀과 동일)
-    const formattedRecords = data.map((r: any) => ({
-      id: r.id,
-      category: r.category,
-      vendorCode: r.vendor_code,
-      companyName: r.company_name,
-      brandName: r.brand_name,
-      businessRegistrationNumber: r.business_registration_number,
-      invoiceEmail: r.invoice_email,
-      projectCode: r.project_code,
-      project: r.project,
-      projectName: r.project_name,
-      eoeoManager: r.eoeo_manager,
-      contractLink: r.contract_link,
-      estimateLink: r.estimate_link,
-      installmentNumber: r.installment_number,
-      attributionYearMonth: r.attribution_year_month,
-      advanceBalance: r.advance_balance,
-      ratio: r.ratio,
-      count: r.count,
-      expectedDepositDate: r.expected_deposit_date,
-      expectedDepositAmount: r.expected_deposit_amount,
-      description: r.description,
-      depositDate: r.deposit_date,
-      depositAmount: r.deposit_amount,
-      exchangeGainLoss: r.exchange_gain_loss,
-      difference: r.difference,
-      createdDate: r.created_date,
-      invoiceIssued: r.invoice_issued,
-      invoiceCopy: r.invoice_copy,
-      issueNotes: r.issue_notes,
-      year: r.year,
-      expectedDepositMonth: r.expected_deposit_month,
-      depositMonth: r.deposit_month,
-      taxStatus: r.tax_status,
-      invoiceSupplyPrice: r.invoice_supply_price,
-      createdAt: r.created_at,
-      updatedAt: r.updated_at,
-      hasWarning: !r.category || !r.vendor_code || !r.project_code,
-    }));
-
-    return NextResponse.json({ success: true, data: formattedRecords });
+    return NextResponse.json({ success: true, data });
   } catch (error) {
     console.error('기타 income 입금 조회 오류:', error);
     return NextResponse.json(

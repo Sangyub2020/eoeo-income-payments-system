@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
@@ -45,7 +45,7 @@ export function OtherIncomeEditModal({ record, onClose, onSuccess }: OtherIncome
         }
       }
     } catch (err) {
-      console.error('거래�?조회 ?�류:', err);
+      console.error('거래처 조회 오류:', err);
     }
   };
 
@@ -59,7 +59,7 @@ export function OtherIncomeEditModal({ record, onClose, onSuccess }: OtherIncome
         }
       }
     } catch (err) {
-      console.error('?�로?�트 조회 ?�류:', err);
+      console.error('프로젝트 조회 오류:', err);
     }
   };
 
@@ -91,7 +91,7 @@ export function OtherIncomeEditModal({ record, onClose, onSuccess }: OtherIncome
         }
       }
     } catch (err) {
-      console.error('거래�??�보 조회 ?�류:', err);
+      console.error('거래처 정보 조회 오류:', err);
     }
   };
 
@@ -146,7 +146,8 @@ export function OtherIncomeEditModal({ record, onClose, onSuccess }: OtherIncome
     try {
       let invoiceCopyUrl = formData.invoiceCopy || null;
 
-      // ???�일 ?�로??      if (invoiceFile) {
+      // 새 파일 업로드
+      if (invoiceFile) {
         const formDataUpload = new FormData();
         formDataUpload.append('file', invoiceFile);
         formDataUpload.append('folder', 'invoice-copies');
@@ -159,15 +160,15 @@ export function OtherIncomeEditModal({ record, onClose, onSuccess }: OtherIncome
         const uploadData = await uploadResponse.json();
         
         if (!uploadResponse.ok || !uploadData.success) {
-          const errorMsg = uploadData.error || uploadData.details?.message || '?�일 ?�로?�에 ?�패?�습?�다.';
-          console.error('?�일 ?�로???�패:', uploadData);
+          const errorMsg = uploadData.error || uploadData.details?.message || '파일 업로드에 실패했습니다.';
+          console.error('파일 업로드 실패:', uploadData);
           throw new Error(errorMsg);
         }
         
         invoiceCopyUrl = uploadData.url;
       }
 
-      const response = await fetch(`/api/other-income-team/${record.id}`, {
+      const response = await fetch(`/api/other-income/${record.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -180,13 +181,13 @@ export function OtherIncomeEditModal({ record, onClose, onSuccess }: OtherIncome
 
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.error || '?�정???�패?�습?�다.');
+        throw new Error(data.error || '수정에 실패했습니다.');
       }
 
       onSuccess();
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : '?????�는 ?�류가 발생?�습?�다.');
+      setError(err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.');
     } finally {
       setIsSubmitting(false);
     }
@@ -207,7 +208,7 @@ export function OtherIncomeEditModal({ record, onClose, onSuccess }: OtherIncome
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 overflow-y-auto p-4">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-6xl my-8 max-h-[90vh] overflow-hidden flex flex-col">
         <div className="sticky top-0 bg-white border-b p-6 flex items-center justify-between z-10">
-          <h2 className="text-xl font-semibold">?�금 ?�보 ?�정</h2>
+          <h2 className="text-xl font-semibold">입금 정보 수정</h2>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 transition-colors"
@@ -232,20 +233,20 @@ export function OtherIncomeEditModal({ record, onClose, onSuccess }: OtherIncome
                 value={formData.category || ''}
                 onChange={(value) => handleChange({ target: { name: 'category', value } } as any)}
                 options={CATEGORIES.map(cat => ({ value: cat, label: cat }))}
-                placeholder="?�택?�세??
+                placeholder="선택하세요"
                 required
               />
             </div>
 
             <div>
               <label htmlFor="vendorCode" className="block text-sm font-medium text-gray-700 mb-1">
-                거래처코??<span className="text-red-500">*</span>
+                거래처코드 <span className="text-red-500">*</span>
               </label>
               <SearchableSelect
                 value={formData.vendorCode || ''}
                 onChange={(value) => handleVendorCodeChange(value)}
                 options={vendors.map(v => ({ value: v.code, label: `${v.code} - ${v.name}` }))}
-                placeholder="?�택?�세??
+                placeholder="선택하세요"
                 required
               />
             </div>
@@ -258,7 +259,7 @@ export function OtherIncomeEditModal({ record, onClose, onSuccess }: OtherIncome
                 value={formData.projectCode || ''}
                 onChange={(value) => handleProjectCodeChange(value)}
                 options={projects.map(p => ({ value: p.code, label: `${p.code} - ${p.name}` }))}
-                placeholder="?�택?�세??
+                placeholder="선택하세요"
                 required
               />
             </div>
@@ -308,7 +309,8 @@ export function OtherIncomeEditModal({ record, onClose, onSuccess }: OtherIncome
 
             <div>
               <label htmlFor="businessRegistrationNumber" className="block text-sm font-medium text-gray-700 mb-1">
-                ?�업?�등록번??              </label>
+                사업자등록번호
+              </label>
               <input
                 type="text"
                 id="businessRegistrationNumber"
@@ -322,7 +324,8 @@ export function OtherIncomeEditModal({ record, onClose, onSuccess }: OtherIncome
 
             <div>
               <label htmlFor="invoiceEmail" className="block text-sm font-medium text-gray-700 mb-1">
-                ?�금계산??발행 ?�메??              </label>
+                세금계산서 발행 이메일
+              </label>
               <input
                 type="email"
                 id="invoiceEmail"
@@ -336,7 +339,8 @@ export function OtherIncomeEditModal({ record, onClose, onSuccess }: OtherIncome
 
             <div>
               <label htmlFor="eoeoManager" className="block text-sm font-medium text-gray-700 mb-1">
-                EOEO ?�당??              </label>
+                EOEO 담당자
+              </label>
               <input
                 type="text"
                 id="eoeoManager"
@@ -349,7 +353,7 @@ export function OtherIncomeEditModal({ record, onClose, onSuccess }: OtherIncome
 
             <div>
               <label htmlFor="contractLink" className="block text-sm font-medium text-gray-700 mb-1">
-                계약??(LINK)
+                계약서 (LINK)
               </label>
               <input
                 type="url"
@@ -367,13 +371,14 @@ export function OtherIncomeEditModal({ record, onClose, onSuccess }: OtherIncome
                   rel="noopener noreferrer" 
                   className="text-xs text-blue-600 hover:underline mt-1 inline-block"
                 >
-                  링크 ?�기 ??                </a>
+                  링크 열기 →
+                </a>
               )}
             </div>
 
             <div>
               <label htmlFor="estimateLink" className="block text-sm font-medium text-gray-700 mb-1">
-                견적??(LINK)
+                견적서 (LINK)
               </label>
               <input
                 type="url"
@@ -391,7 +396,8 @@ export function OtherIncomeEditModal({ record, onClose, onSuccess }: OtherIncome
                   rel="noopener noreferrer" 
                   className="text-xs text-blue-600 hover:underline mt-1 inline-block"
                 >
-                  링크 ?�기 ??                </a>
+                  링크 열기 →
+                </a>
               )}
             </div>
 
@@ -411,7 +417,8 @@ export function OtherIncomeEditModal({ record, onClose, onSuccess }: OtherIncome
 
             <div>
               <label htmlFor="attributionYearMonth" className="block text-sm font-medium text-gray-700 mb-1">
-                귀?�년??              </label>
+                귀속년월
+              </label>
               <input
                 type="text"
                 id="attributionYearMonth"
@@ -424,7 +431,7 @@ export function OtherIncomeEditModal({ record, onClose, onSuccess }: OtherIncome
 
             <div>
               <label htmlFor="advanceBalance" className="block text-sm font-medium text-gray-700 mb-1">
-                ???�금
+                선/잔금
               </label>
               <input
                 type="text"
@@ -467,7 +474,8 @@ export function OtherIncomeEditModal({ record, onClose, onSuccess }: OtherIncome
 
             <div>
               <label htmlFor="expectedDepositDate" className="block text-sm font-medium text-gray-700 mb-1">
-                ?�금?�정??              </label>
+                입금예정일
+              </label>
               <input
                 type="date"
                 id="expectedDepositDate"
@@ -480,7 +488,7 @@ export function OtherIncomeEditModal({ record, onClose, onSuccess }: OtherIncome
 
             <div>
               <label htmlFor="expectedDepositAmount" className="block text-sm font-medium text-gray-700 mb-1">
-                ?�금 ?�정금액 (부가???�함)
+                입금 예정금액 (부가세 포함)
               </label>
               <input
                 type="number"
@@ -494,7 +502,7 @@ export function OtherIncomeEditModal({ record, onClose, onSuccess }: OtherIncome
 
             <div>
               <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
-                ?�요
+                적요
               </label>
               <input
                 type="text"
@@ -508,7 +516,8 @@ export function OtherIncomeEditModal({ record, onClose, onSuccess }: OtherIncome
 
             <div>
               <label htmlFor="depositDate" className="block text-sm font-medium text-gray-700 mb-1">
-                ?�금??              </label>
+                입금일
+              </label>
               <input
                 type="date"
                 id="depositDate"
@@ -521,7 +530,8 @@ export function OtherIncomeEditModal({ record, onClose, onSuccess }: OtherIncome
 
             <div>
               <label htmlFor="depositAmount" className="block text-sm font-medium text-gray-700 mb-1">
-                ?�금??              </label>
+                입금액
+              </label>
               <input
                 type="number"
                 id="depositAmount"
@@ -534,7 +544,7 @@ export function OtherIncomeEditModal({ record, onClose, onSuccess }: OtherIncome
 
             <div>
               <label htmlFor="exchangeGainLoss" className="block text-sm font-medium text-gray-700 mb-1">
-                ?�차?�익
+                환차손익
               </label>
               <input
                 type="number"
@@ -562,7 +572,7 @@ export function OtherIncomeEditModal({ record, onClose, onSuccess }: OtherIncome
 
             <div>
               <label htmlFor="createdDate" className="block text-sm font-medium text-gray-700 mb-1">
-                ?�성?�자
+                작성일자
               </label>
               <input
                 type="date"
@@ -576,27 +586,27 @@ export function OtherIncomeEditModal({ record, onClose, onSuccess }: OtherIncome
 
             <div>
               <label htmlFor="invoiceIssued" className="block text-sm font-medium text-gray-700 mb-1">
-                ?�금계산??발행 ?��?
+                세금계산서 발행 여부
               </label>
               <SearchableSelect
                 value={formData.invoiceIssued || ''}
                 onChange={(value) => handleChange({ target: { name: 'invoiceIssued', value } } as any)}
                 options={[
                   { value: 'O', label: 'O (발행)' },
-                  { value: 'X', label: 'X (미발??' },
+                  { value: 'X', label: 'X (미발행)' },
                 ]}
-                placeholder="?�택?�세??
+                placeholder="선택하세요"
               />
             </div>
 
             <div className="col-span-2">
               <label htmlFor="invoiceCopy" className="block text-sm font-medium text-gray-700 mb-1">
-                ?�금계산???�본 (?�크린샷)
+                세금계산서 사본 (스크린샷)
               </label>
               <div className="space-y-2">
                 {invoiceFileUrl && (
                   <div className="flex items-center gap-2 mb-2">
-                    <img src={invoiceFileUrl} alt="?�금계산?? className="max-w-xs max-h-32 border rounded" />
+                    <img src={invoiceFileUrl} alt="세금계산서" className="max-w-xs max-h-32 border rounded" />
                     <button
                       type="button"
                       onClick={removeFile}
@@ -608,7 +618,7 @@ export function OtherIncomeEditModal({ record, onClose, onSuccess }: OtherIncome
                 )}
                 <label className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md cursor-pointer hover:bg-gray-50 w-fit">
                   <UploadIcon className="h-4 w-4" />
-                  <span className="text-sm">{invoiceFile ? '?�일 변�? : '?�일 ?�택'}</span>
+                  <span className="text-sm">{invoiceFile ? '파일 변경' : '파일 선택'}</span>
                   <input
                     type="file"
                     accept="image/*"
@@ -621,7 +631,7 @@ export function OtherIncomeEditModal({ record, onClose, onSuccess }: OtherIncome
 
             <div>
               <label htmlFor="issueNotes" className="block text-sm font-medium text-gray-700 mb-1">
-                ISSUE?�항
+                ISSUE사항
               </label>
               <input
                 type="text"
@@ -635,7 +645,8 @@ export function OtherIncomeEditModal({ record, onClose, onSuccess }: OtherIncome
 
             <div>
               <label htmlFor="year" className="block text-sm font-medium text-gray-700 mb-1">
-                ??              </label>
+                년
+              </label>
               <input
                 type="number"
                 id="year"
@@ -648,7 +659,8 @@ export function OtherIncomeEditModal({ record, onClose, onSuccess }: OtherIncome
 
             <div>
               <label htmlFor="expectedDepositMonth" className="block text-sm font-medium text-gray-700 mb-1">
-                ?�금 ?�정??              </label>
+                입금 예정월
+              </label>
               <input
                 type="number"
                 min="1"
@@ -663,7 +675,8 @@ export function OtherIncomeEditModal({ record, onClose, onSuccess }: OtherIncome
 
             <div>
               <label htmlFor="depositMonth" className="block text-sm font-medium text-gray-700 mb-1">
-                ?�금 ??              </label>
+                입금 월
+              </label>
               <input
                 type="number"
                 min="1"
@@ -678,7 +691,7 @@ export function OtherIncomeEditModal({ record, onClose, onSuccess }: OtherIncome
 
             <div>
               <label htmlFor="taxStatus" className="block text-sm font-medium text-gray-700 mb-1">
-                �?면세/?�세
+                과/면세/영세
               </label>
               <input
                 type="text"
@@ -692,7 +705,7 @@ export function OtherIncomeEditModal({ record, onClose, onSuccess }: OtherIncome
 
             <div>
               <label htmlFor="invoiceSupplyPrice" className="block text-sm font-medium text-gray-700 mb-1">
-                ?�금계산?�발?�공급�?
+                세금계산서발행공급가
               </label>
               <input
                 type="number"
@@ -716,7 +729,7 @@ export function OtherIncomeEditModal({ record, onClose, onSuccess }: OtherIncome
               취소
             </Button>
             <Button type="submit" className="flex-1" disabled={isSubmitting}>
-              {isSubmitting ? '?�정 �?..' : '?�정'}
+              {isSubmitting ? '수정 중...' : '수정'}
             </Button>
           </div>
         </form>

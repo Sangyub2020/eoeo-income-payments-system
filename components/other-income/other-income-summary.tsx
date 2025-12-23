@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -26,18 +26,18 @@ export function OtherIncomeSummary() {
     setError(null);
 
     try {
-      const response = await fetch('/api/other-income-team');
+      const response = await fetch('/api/other-income');
       if (!response.ok) {
-        throw new Error('?�금 ?�보�?불러?�는???�패?�습?�다.');
+        throw new Error('입금 정보를 불러오는데 실패했습니다.');
       }
 
       const data = await response.json();
       if (data.success) {
-        // Project별로 그룹?�하??총계 계산
+        // Project별로 그룹화하여 총계 계산
         const projectMap = new Map<string, { totalAmount: number; count: number }>();
 
         data.data.forEach((record: any) => {
-          const project = record.project || '미�???;
+          const project = record.project || '미지정';
           const depositAmount = record.deposit_amount || 0;
 
           if (projectMap.has(project)) {
@@ -66,7 +66,7 @@ export function OtherIncomeSummary() {
         setTotalAmount(projectSummary.reduce((sum, item) => sum + item.totalAmount, 0));
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : '?????�는 ?�류가 발생?�습?�다.');
+      setError(err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.');
     } finally {
       setIsLoading(false);
     }
@@ -79,7 +79,7 @@ export function OtherIncomeSummary() {
       <div className="bg-white rounded-lg border p-6">
         <div className="flex items-center justify-center py-8">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <span className="ml-2 text-gray-600">?�이?��? 불러?�는 �?..</span>
+          <span className="ml-2 text-gray-600">데이터를 불러오는 중...</span>
         </div>
       </div>
     );
@@ -99,18 +99,18 @@ export function OtherIncomeSummary() {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>?�체 ?�금??/CardTitle>
+          <CardTitle>전체 입금액</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-3xl font-bold text-blue-600">{formatCurrency(totalAmount)}</div>
-          <p className="text-sm text-gray-500 mt-2">�?{summary.length}�??�로?�트</p>
+          <p className="text-sm text-gray-500 mt-2">총 {summary.length}개 프로젝트</p>
         </CardContent>
       </Card>
 
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Project�??�금??(막�? 그래??</CardTitle>
+            <CardTitle>Project별 입금액 (막대 그래프)</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={400}>
@@ -129,7 +129,7 @@ export function OtherIncomeSummary() {
                   labelStyle={{ color: '#000' }}
                 />
                 <Legend />
-                <Bar dataKey="totalAmount" fill="#3b82f6" name="?�금?? />
+                <Bar dataKey="totalAmount" fill="#3b82f6" name="입금액" />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -137,7 +137,7 @@ export function OtherIncomeSummary() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Project�??�금??(?�이 차트)</CardTitle>
+            <CardTitle>Project별 입금액 (파이 차트)</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={400}>
@@ -165,7 +165,7 @@ export function OtherIncomeSummary() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Project�??�세 ?�황</CardTitle>
+          <CardTitle>Project별 상세 현황</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
@@ -173,9 +173,9 @@ export function OtherIncomeSummary() {
               <thead>
                 <tr className="border-b bg-gray-50">
                   <th className="text-left p-4 font-medium text-gray-700">Project</th>
-                  <th className="text-right p-4 font-medium text-gray-700">?�금??/th>
+                  <th className="text-right p-4 font-medium text-gray-700">입금액</th>
                   <th className="text-right p-4 font-medium text-gray-700">건수</th>
-                  <th className="text-right p-4 font-medium text-gray-700">?�균 ?�금??/th>
+                  <th className="text-right p-4 font-medium text-gray-700">평균 입금액</th>
                 </tr>
               </thead>
               <tbody>
@@ -183,7 +183,7 @@ export function OtherIncomeSummary() {
                   <tr key={item.project} className="border-b hover:bg-gray-50">
                     <td className="p-4 font-medium">{item.project}</td>
                     <td className="p-4 text-right font-medium">{formatCurrency(item.totalAmount)}</td>
-                    <td className="p-4 text-right">{item.count}�?/td>
+                    <td className="p-4 text-right">{item.count}건</td>
                     <td className="p-4 text-right text-gray-600">
                       {formatCurrency(Math.round(item.totalAmount / item.count))}
                     </td>
