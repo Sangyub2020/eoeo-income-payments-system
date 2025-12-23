@@ -9,3 +9,4 @@ DROP TABLE IF EXISTS global_sales_team CASCADE;
 DROP TABLE IF EXISTS brand_planning_team CASCADE;
 DROP TABLE IF EXISTS other_income CASCADE;
 
+

@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { X, Upload as UploadIcon } from 'lucide-react';
 import { OnlineCommerceTeam } from '@/lib/types';
 import { SearchableSelect } from '@/components/ui/searchable-select';
+import { MultiSelect } from '@/components/ui/multi-select';
 import { CATEGORIES } from '@/lib/constants';
 
 interface OnlineCommerceFormModalProps {
@@ -21,12 +22,16 @@ export function OnlineCommerceFormModal({ isOpen, onClose, onSuccess }: OnlineCo
   const [invoiceFileUrl, setInvoiceFileUrl] = useState<string | null>(null);
   const [vendors, setVendors] = useState<Array<{ code: string; name: string }>>([]);
   const [projects, setProjects] = useState<Array<{ code: string; name: string }>>([]);
+  const [brands, setBrands] = useState<Array<{ value: string; label: string }>>([]);
+  const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
 
   useEffect(() => {
     if (isOpen) {
       fetchVendors();
       fetchProjects();
+      fetchBrands();
       setFormData({});
+      setSelectedBrands([]);
       setError(null);
       setInvoiceFile(null);
       setInvoiceFileUrl(null);
@@ -58,6 +63,20 @@ export function OnlineCommerceFormModal({ isOpen, onClose, onSuccess }: OnlineCo
       }
     } catch (err) {
       console.error('프로젝트 조회 오류:', err);
+    }
+  };
+
+  const fetchBrands = async () => {
+    try {
+      const response = await fetch('/api/brands');
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          setBrands(data.data.map((b: any) => ({ value: b.name, label: b.name })));
+        }
+      }
+    } catch (err) {
+      console.error('브랜드 조회 오류:', err);
     }
   };
 
@@ -170,6 +189,7 @@ export function OnlineCommerceFormModal({ isOpen, onClose, onSuccess }: OnlineCo
         body: JSON.stringify({
           team: 'online_commerce',
           ...formData,
+          brandNames: selectedBrands.length > 0 ? selectedBrands : undefined,
           invoiceCopy: invoiceCopyUrl,
         }),
       });
@@ -282,16 +302,15 @@ export function OnlineCommerceFormModal({ isOpen, onClose, onSuccess }: OnlineCo
             </div>
 
             <div>
-              <label htmlFor="brandName" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="brandNames" className="block text-sm font-medium text-gray-700 mb-1">
                 Brand Name
               </label>
-              <input
-                type="text"
-                id="brandName"
-                name="brandName"
-                value={formData.brandName || ''}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              <MultiSelect
+                value={selectedBrands}
+                onChange={setSelectedBrands}
+                options={brands}
+                placeholder="브랜드를 선택하세요"
+                className="w-full"
               />
             </div>
 

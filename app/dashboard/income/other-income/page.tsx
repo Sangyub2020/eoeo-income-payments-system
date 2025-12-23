@@ -30,10 +30,11 @@ export default function OtherIncomePage() {
         </TabsContent>
 
         <TabsContent value="list">
-          <OtherIncomeList key={refreshKey} onSuccess={handleSuccess} />
+          <OtherIncomeList onSuccess={handleSuccess} />
         </TabsContent>
       </Tabs>
     </div>
   );
 }
+
 

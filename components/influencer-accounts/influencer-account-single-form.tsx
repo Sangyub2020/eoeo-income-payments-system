@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { InfluencerAccount } from '@/lib/types';
+import { Plus, X } from 'lucide-react';
 
 interface InfluencerAccountSingleFormProps {
   onSuccess: () => void;
@@ -12,6 +13,9 @@ export function InfluencerAccountSingleForm({ onSuccess }: InfluencerAccountSing
   const [formData, setFormData] = useState<Omit<InfluencerAccount, 'id' | 'createdAt' | 'updatedAt'>>({
     email: '',
     tiktokHandle: '',
+    tiktokHandles: [],
+    instagramHandles: [],
+    recipientType: undefined,
     fullName: '',
     achRoutingNumber: '',
     swiftCode: '',
@@ -48,6 +52,9 @@ export function InfluencerAccountSingleForm({ onSuccess }: InfluencerAccountSing
       setFormData({
         email: '',
         tiktokHandle: '',
+        tiktokHandles: [],
+        instagramHandles: [],
+        recipientType: undefined,
         fullName: '',
         achRoutingNumber: '',
         swiftCode: '',
@@ -68,9 +75,59 @@ export function InfluencerAccountSingleForm({ onSuccess }: InfluencerAccountSing
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData((prev) => {
+      const newData = { ...prev, [name]: value };
+      // Business가 아닐 때는 복수 계정 배열 초기화
+      if (name === 'recipientType' && value !== 'Business') {
+        newData.tiktokHandles = [];
+        newData.instagramHandles = [];
+      }
+      return newData;
+    });
+  };
+
+  const addTiktokAccount = () => {
+    setFormData((prev) => ({
+      ...prev,
+      tiktokHandles: [...(prev.tiktokHandles || []), ''],
+    }));
+  };
+
+  const removeTiktokAccount = (index: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      tiktokHandles: prev.tiktokHandles?.filter((_, i) => i !== index) || [],
+    }));
+  };
+
+  const updateTiktokAccount = (index: number, value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      tiktokHandles: prev.tiktokHandles?.map((handle, i) => (i === index ? value : handle)) || [],
+    }));
+  };
+
+  const addInstagramAccount = () => {
+    setFormData((prev) => ({
+      ...prev,
+      instagramHandles: [...(prev.instagramHandles || []), ''],
+    }));
+  };
+
+  const removeInstagramAccount = (index: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      instagramHandles: prev.instagramHandles?.filter((_, i) => i !== index) || [],
+    }));
+  };
+
+  const updateInstagramAccount = (index: number, value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      instagramHandles: prev.instagramHandles?.map((handle, i) => (i === index ? value : handle)) || [],
+    }));
   };
 
   return (
@@ -106,22 +163,124 @@ export function InfluencerAccountSingleForm({ onSuccess }: InfluencerAccountSing
             />
           </div>
 
+          {formData.recipientType === 'Business' ? (
+            <>
+              <div className="col-span-2">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Tiktok Accounts
+                  </label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={addTiktokAccount}
+                    className="flex items-center gap-1"
+                  >
+                    <Plus className="h-4 w-4" />
+                    추가
+                  </Button>
+                </div>
+                {formData.tiktokHandles?.map((handle, index) => (
+                  <div key={index} className="flex gap-2 mb-2">
+                    <input
+                      type="text"
+                      value={handle}
+                      onChange={(e) => updateTiktokAccount(index, e.target.value)}
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder={`@username${index + 1}`}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => removeTiktokAccount(index)}
+                      className="px-3"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+                {(!formData.tiktokHandles || formData.tiktokHandles.length === 0) && (
+                  <p className="text-sm text-gray-500">+ 버튼을 눌러 계정을 추가하세요</p>
+                )}
+              </div>
+              <div className="col-span-2">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Instagram Accounts
+                  </label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={addInstagramAccount}
+                    className="flex items-center gap-1"
+                  >
+                    <Plus className="h-4 w-4" />
+                    추가
+                  </Button>
+                </div>
+                {formData.instagramHandles?.map((handle, index) => (
+                  <div key={index} className="flex gap-2 mb-2">
+                    <input
+                      type="text"
+                      value={handle}
+                      onChange={(e) => updateInstagramAccount(index, e.target.value)}
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder={`@username${index + 1}`}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => removeInstagramAccount(index)}
+                      className="px-3"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+                {(!formData.instagramHandles || formData.instagramHandles.length === 0) && (
+                  <p className="text-sm text-gray-500">+ 버튼을 눌러 계정을 추가하세요</p>
+                )}
+              </div>
+            </>
+          ) : (
+            <div>
+              <label htmlFor="tiktokHandle" className="block text-sm font-medium text-gray-700 mb-1">
+                Tiktok handle
+              </label>
+              <input
+                type="text"
+                id="tiktokHandle"
+                name="tiktokHandle"
+                value={formData.tiktokHandle}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="@username"
+              />
+            </div>
+          )}
+
           <div>
-            <label htmlFor="tiktokHandle" className="block text-sm font-medium text-gray-700 mb-1">
-              Tiktok handle
+            <label htmlFor="recipientType" className="block text-sm font-medium text-gray-700 mb-1">
+              Recipient Type
             </label>
-            <input
-              type="text"
-              id="tiktokHandle"
-              name="tiktokHandle"
-              value={formData.tiktokHandle}
+            <select
+              id="recipientType"
+              name="recipientType"
+              value={formData.recipientType || ''}
               onChange={handleChange}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="@username"
-            />
+            >
+              <option value="">선택하세요</option>
+              <option value="Personal">Personal</option>
+              <option value="Business">Business</option>
+            </select>
           </div>
 
-          <div className="col-span-2">
+          <div>
             <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-1">
               Full Name of the Bank Account Holder <span className="text-red-500">*</span>
             </label>

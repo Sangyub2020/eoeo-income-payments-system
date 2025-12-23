@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { X, Upload as UploadIcon, Edit2, Save, XCircle, Check } from 'lucide-react';
 import { OtherIncome } from '@/lib/types';
 import { SearchableSelect } from '@/components/ui/searchable-select';
+import { MultiSelect } from '@/components/ui/multi-select';
 import { CATEGORIES } from '@/lib/constants';
 
 interface OtherIncomeBulkModalProps {
@@ -18,6 +19,8 @@ export function OtherIncomeBulkModal({ isOpen, onClose, onSuccess }: OtherIncome
   const [records, setRecords] = useState<Partial<OtherIncome>[]>([]);
   const [vendors, setVendors] = useState<Array<{ code: string; name: string; business_number?: string; invoice_email?: string }>>([]);
   const [projects, setProjects] = useState<Array<{ code: string; name: string }>>([]);
+  const [brands, setBrands] = useState<Array<{ value: string; label: string }>>([]);
+  const [recordBrands, setRecordBrands] = useState<Map<number, string[]>>(new Map());
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
@@ -28,11 +31,13 @@ export function OtherIncomeBulkModal({ isOpen, onClose, onSuccess }: OtherIncome
     if (isOpen) {
       fetchVendors();
       fetchProjects();
+      fetchBrands();
       setCsvText('');
       setRecords([]);
       setError(null);
       setEditingIndex(null);
       setInvoiceFiles(new Map());
+      setRecordBrands(new Map());
       setShowCsvInput(true);
     }
   }, [isOpen]);
@@ -67,6 +72,20 @@ export function OtherIncomeBulkModal({ isOpen, onClose, onSuccess }: OtherIncome
       }
     } catch (err) {
       console.error('프로젝트 조회 오류:', err);
+    }
+  };
+
+  const fetchBrands = async () => {
+    try {
+      const response = await fetch('/api/brands');
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          setBrands(data.data.map((b: any) => ({ value: b.name, label: b.name })));
+        }
+      }
+    } catch (err) {
+      console.error('브랜드 조회 오류:', err);
     }
   };
 
@@ -230,7 +249,7 @@ export function OtherIncomeBulkModal({ isOpen, onClose, onSuccess }: OtherIncome
       }
 
       // 거래처 코드와 프로젝트 코드로 자동 연동
-      const enrichedRecords = parsed.map(record => {
+      const enrichedRecords = parsed.map((record, idx) => {
         let enriched = { ...record };
 
         // 거래처 코드로 연동 (CSV에 값이 없을 때만 자동 채우기)
@@ -263,6 +282,13 @@ export function OtherIncomeBulkModal({ isOpen, onClose, onSuccess }: OtherIncome
               enriched.projectName = project.name;
             }
           }
+        }
+
+        // brandName을 brandNames 배열로 변환
+        if (record.brandName) {
+          const newBrands = new Map(recordBrands);
+          newBrands.set(idx, [record.brandName]);
+          setRecordBrands(newBrands);
         }
 
         return enriched;
@@ -359,8 +385,10 @@ export function OtherIncomeBulkModal({ isOpen, onClose, onSuccess }: OtherIncome
             invoiceCopyUrl = uploadData.url;
           }
 
+          const brandNames = recordBrands.get(index) || (record.brandName ? [record.brandName] : []);
           return {
             ...record,
+            brandNames: brandNames.length > 0 ? brandNames : undefined,
             invoiceCopy: invoiceCopyUrl,
           };
         })
@@ -541,11 +569,17 @@ export function OtherIncomeBulkModal({ isOpen, onClose, onSuccess }: OtherIncome
                             <label className="block text-sm font-medium text-gray-700 mb-1">
                               Brand Name
                             </label>
-                            <input
-                              type="text"
-                              value={record.brandName || ''}
-                              onChange={(e) => updateRecord(index, { brandName: e.target.value })}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            <MultiSelect
+                              value={recordBrands.get(index) || (record.brandName ? [record.brandName] : [])}
+                              onChange={(brands) => {
+                                const newBrands = new Map(recordBrands);
+                                newBrands.set(index, brands);
+                                setRecordBrands(newBrands);
+                                updateRecord(index, { brandName: brands.length > 0 ? brands[0] : undefined, brandNames: brands.length > 0 ? brands : undefined });
+                              }}
+                              options={brands}
+                              placeholder="브랜드를 선택하세요"
+                              className="w-full"
                             />
                           </div>
 

@@ -24,6 +24,7 @@ export async function POST(request: Request) {
     const accountsToInsert = accounts.map((a: any) => ({
       email: a.email || null,
       tiktok_handle: a.tiktokHandle || null,
+      recipient_type: a.recipientType || null,
       full_name: a.fullName,
       ach_routing_number: a.achRoutingNumber || null,
       swift_code: a.swiftCode || null,

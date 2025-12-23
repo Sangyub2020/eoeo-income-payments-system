@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { X, Upload as UploadIcon, XCircle } from 'lucide-react';
 import { OnlineCommerceTeam } from '@/lib/types';
 import { SearchableSelect } from '@/components/ui/searchable-select';
+import { MultiSelect } from '@/components/ui/multi-select';
 import { CATEGORIES } from '@/lib/constants';
 
 interface OnlineCommerceEditModalProps {
@@ -25,14 +26,27 @@ export function OnlineCommerceEditModal({ record, onClose, onSuccess }: OnlineCo
   const [invoiceFileUrl, setInvoiceFileUrl] = useState<string | null>(null);
   const [vendors, setVendors] = useState<Array<{ code: string; name: string; business_number?: string; invoice_email?: string }>>([]);
   const [projects, setProjects] = useState<Array<{ code: string; name: string }>>([]);
+  const [brands, setBrands] = useState<Array<{ value: string; label: string }>>([]);
+  const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
 
   useEffect(() => {
+    console.log('수정 모달 열림, 레코드:', record);
+    if (!record.id) {
+      console.error('경고: 레코드에 ID가 없습니다:', record);
+    }
     fetchVendors();
     fetchProjects();
+    fetchBrands();
     if (record.invoiceCopy) {
       setInvoiceFileUrl(record.invoiceCopy);
     }
-  }, []);
+    // 기존 brandName 또는 brandNames를 selectedBrands로 설정
+    if (record.brandNames && record.brandNames.length > 0) {
+      setSelectedBrands(record.brandNames);
+    } else if (record.brandName) {
+      setSelectedBrands([record.brandName]);
+    }
+  }, [record]);
 
   const fetchVendors = async () => {
     try {
@@ -64,6 +78,20 @@ export function OnlineCommerceEditModal({ record, onClose, onSuccess }: OnlineCo
       }
     } catch (err) {
       console.error('프로젝트 조회 오류:', err);
+    }
+  };
+
+  const fetchBrands = async () => {
+    try {
+      const response = await fetch('/api/brands');
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          setBrands(data.data.map((b: any) => ({ value: b.name, label: b.name })));
+        }
+      }
+    } catch (err) {
+      console.error('브랜드 조회 오류:', err);
     }
   };
 
@@ -148,6 +176,11 @@ export function OnlineCommerceEditModal({ record, onClose, onSuccess }: OnlineCo
     setError(null);
 
     try {
+      // record.id 확인
+      if (!record.id) {
+        throw new Error('레코드 ID가 없습니다. 페이지를 새로고침하고 다시 시도해주세요.');
+      }
+
       let invoiceCopyUrl = formData.invoiceCopy || null;
 
       // 새 파일 업로드
@@ -172,27 +205,118 @@ export function OnlineCommerceEditModal({ record, onClose, onSuccess }: OnlineCo
         invoiceCopyUrl = uploadData.url;
       }
 
+      const requestBody = {
+        ...formData,
+        team: 'online_commerce',
+        brandNames: selectedBrands.length > 0 ? selectedBrands : undefined,
+        invoiceCopy: invoiceCopyUrl,
+      };
+      
+      console.log('수정 요청 데이터:', {
+        id: record.id,
+        url: `/api/income-records/${record.id}`,
+        body: requestBody,
+      });
+
       const response = await fetch(`/api/income-records/${record.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          ...formData,
-          team: 'online_commerce',
-          invoiceCopy: invoiceCopyUrl,
-        }),
+        body: JSON.stringify(requestBody),
       });
+      
+      console.log('수정 응답 상태:', response.status, response.statusText);
+      console.log('수정 응답 헤더:', Object.fromEntries(response.headers.entries()));
 
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || '수정에 실패했습니다.');
+      // 성공 응답도 확인
+      if (response.ok) {
+        try {
+          const result = await response.json();
+          console.log('수정 성공:', result);
+          if (result.success) {
+            onSuccess();
+            onClose();
+            return;
+          } else {
+            throw new Error(result.error || '수정에 실패했습니다.');
+          }
+        } catch (parseError) {
+          console.error('성공 응답 파싱 오류:', parseError);
+          throw new Error('응답을 파싱할 수 없습니다.');
+        }
       }
 
-      onSuccess();
-      onClose();
+      // 에러 응답 처리
+      if (!response.ok) {
+        let errorMessage = `서버 오류 (${response.status} ${response.statusText})`;
+        
+        // 응답 본문 읽기 시도
+        const contentType = response.headers.get('content-type');
+        console.log('응답 Content-Type:', contentType);
+        
+        try {
+          if (contentType && contentType.includes('application/json')) {
+            const errorData = await response.json();
+            console.error('수정 실패 - 전체 응답:', errorData);
+            console.error('수정 실패 - 응답 키:', Object.keys(errorData));
+            
+            // 빈 객체인 경우 처리
+            if (Object.keys(errorData).length === 0) {
+              errorMessage = `서버가 빈 응답을 반환했습니다 (${response.status})`;
+            } else {
+              // API 응답 형식 처리 (success, error, details, code)
+              if (errorData.error) {
+                errorMessage = errorData.error;
+                // brand_names 컬럼 관련 에러인 경우 안내 메시지 추가
+                if (errorMessage.includes('brand_names') && errorMessage.includes('column')) {
+                  errorMessage += '\n\n해결 방법: 마이그레이션 파일 031_add_brand_names_to_income_records.sql을 실행해주세요.';
+                }
+              } else if (errorData.message) {
+                errorMessage = errorData.message;
+              } else if (errorData.details) {
+                errorMessage = errorData.details;
+              } else if (errorData.code) {
+                errorMessage = `[${errorData.code}] ${errorMessage}`;
+              } else {
+                // 모든 키를 확인
+                const keys = Object.keys(errorData);
+                if (keys.length > 0) {
+                  // error 키가 있으면 사용
+                  if (keys.includes('error')) {
+                    errorMessage = String(errorData.error);
+                  } else {
+                    // 첫 번째 키의 값을 사용
+                    errorMessage = `${keys[0]}: ${errorData[keys[0]]}`;
+                  }
+                }
+              }
+            }
+          } else {
+            // JSON이 아닌 경우 텍스트로 읽기
+            const text = await response.text();
+            console.error('수정 실패 - 텍스트 응답:', text);
+            errorMessage = text || errorMessage;
+          }
+        } catch (parseError) {
+          console.error('응답 파싱 오류:', parseError);
+          // 클론된 응답으로 다시 시도
+          try {
+            const clonedResponse = response.clone();
+            const text = await clonedResponse.text();
+            console.error('수정 실패 - 클론된 텍스트 응답:', text);
+            errorMessage = text || errorMessage;
+          } catch (textError) {
+            console.error('응답 읽기 실패:', textError);
+            errorMessage = `응답을 읽을 수 없습니다 (${response.status})`;
+          }
+        }
+        throw new Error(errorMessage);
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.');
+      console.error('수정 중 오류:', err);
+      const errorMessage = err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.';
+      setError(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -201,11 +325,18 @@ export function OnlineCommerceEditModal({ record, onClose, onSuccess }: OnlineCo
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     
+    // 입금액과 입금예정금액 필드의 경우 포맷팅 문자 제거
+    let processedValue = value;
+    if (name === 'expectedDepositAmount' || name === 'depositAmount') {
+      // ₩, $, 쉼표 제거
+      processedValue = value.replace(/[₩$,]/g, '');
+    }
+    
     setFormData((prev) => ({
       ...prev,
-      [name]: value === '' ? undefined : (name.includes('Amount') || name.includes('Number') || name.includes('Month') || name.includes('Year') || name === 'ratio' || name === 'count' || name === 'year' || name === 'expectedDepositMonth' || name === 'depositMonth' || name === 'installmentNumber' || name === 'exchangeGainLoss' || name === 'difference' || name === 'expectedDepositAmount' || name === 'depositAmount' || name === 'invoiceSupplyPrice')
-        ? (value === '' ? undefined : Number(value))
-        : value,
+      [name]: processedValue === '' ? undefined : (name.includes('Amount') || name.includes('Number') || name.includes('Month') || name.includes('Year') || name === 'ratio' || name === 'count' || name === 'year' || name === 'expectedDepositMonth' || name === 'depositMonth' || name === 'installmentNumber' || name === 'exchangeGainLoss' || name === 'difference' || name === 'expectedDepositAmount' || name === 'depositAmount' || name === 'invoiceSupplyPrice')
+        ? (processedValue === '' ? undefined : Number(processedValue))
+        : processedValue,
     }));
   };
 
@@ -285,16 +416,15 @@ export function OnlineCommerceEditModal({ record, onClose, onSuccess }: OnlineCo
             </div>
 
             <div>
-              <label htmlFor="brandName" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="brandNames" className="block text-sm font-medium text-gray-700 mb-1">
                 Brand Name
               </label>
-              <input
-                type="text"
-                id="brandName"
-                name="brandName"
-                value={formData.brandName || ''}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              <MultiSelect
+                value={selectedBrands}
+                onChange={setSelectedBrands}
+                options={brands}
+                placeholder="브랜드를 선택하세요"
+                className="w-full"
               />
             </div>
 
@@ -500,9 +630,9 @@ export function OnlineCommerceEditModal({ record, onClose, onSuccess }: OnlineCo
                   type="text"
                   id="expectedDepositAmount"
                   name="expectedDepositAmount"
-                  value={formData.expectedDepositAmount ? `${formData.expectedDepositCurrency === 'USD' ? '$' : '₩'}${formData.expectedDepositAmount.toLocaleString()}` : ''}
+                  value={formData.expectedDepositAmount ? formData.expectedDepositAmount.toString() : ''}
                   onChange={handleChange}
-                  placeholder="₩1,000,000 또는 $1,000"
+                  placeholder="1000000"
                   className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
                 <select
@@ -554,9 +684,9 @@ export function OnlineCommerceEditModal({ record, onClose, onSuccess }: OnlineCo
                   type="text"
                   id="depositAmount"
                   name="depositAmount"
-                  value={formData.depositAmount ? `${formData.depositCurrency === 'USD' ? '$' : '₩'}${formData.depositAmount.toLocaleString()}` : ''}
+                  value={formData.depositAmount ? formData.depositAmount.toString() : ''}
                   onChange={handleChange}
-                  placeholder="₩1,000,000 또는 $1,000"
+                  placeholder="1000000"
                   className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
                 <select

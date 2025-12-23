@@ -11,6 +11,9 @@ export async function PUT(
     const {
       email,
       tiktokHandle,
+      tiktokHandles,
+      instagramHandles,
+      recipientType,
       fullName,
       achRoutingNumber,
       swiftCode,
@@ -32,7 +35,10 @@ export async function PUT(
       .from('influencer_accounts')
       .update({
         email: email || null,
-        tiktok_handle: tiktokHandle || null,
+        tiktok_handle: recipientType === 'Business' ? null : (tiktokHandle || null),
+        tiktok_handles: recipientType === 'Business' ? (tiktokHandles || []) : null,
+        instagram_handles: recipientType === 'Business' ? (instagramHandles || []) : null,
+        recipient_type: recipientType || null,
         full_name: fullName,
         ach_routing_number: achRoutingNumber || null,
         swift_code: swiftCode || null,

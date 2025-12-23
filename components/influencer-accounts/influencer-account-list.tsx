@@ -18,6 +18,64 @@ export function InfluencerAccountList() {
   const [editingAccount, setEditingAccount] = useState<InfluencerAccount | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // 열 너비 관리
+  const [columnWidths, setColumnWidths] = useState<Record<string, number>>({
+    checkbox: 50,
+    number: 60,
+    recipientType: 120,
+    fullName: 150,
+    tiktokAccount: 150,
+    instagramAccount: 150,
+    email: 180,
+    accountNumber: 150,
+    achRoutingNumber: 150,
+    swiftCode: 120,
+    accountType: 120,
+    wiseTag: 120,
+    actions: 100,
+  });
+
+  const [resizingColumn, setResizingColumn] = useState<string | null>(null);
+  const [resizeStartX, setResizeStartX] = useState(0);
+  const [resizeStartWidth, setResizeStartWidth] = useState(0);
+
+  const handleResizeStart = (columnKey: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setResizingColumn(columnKey);
+    setResizeStartX(e.clientX);
+    setResizeStartWidth(columnWidths[columnKey] || 100);
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+  };
+
+  useEffect(() => {
+    const handleResize = (e: MouseEvent) => {
+      if (!resizingColumn) return;
+      const diff = e.clientX - resizeStartX;
+      const newWidth = Math.max(50, resizeStartWidth + diff);
+      setColumnWidths(prev => ({
+        ...prev,
+        [resizingColumn]: newWidth,
+      }));
+    };
+
+    const handleResizeEnd = () => {
+      setResizingColumn(null);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+
+    if (resizingColumn) {
+      document.addEventListener('mousemove', handleResize);
+      document.addEventListener('mouseup', handleResizeEnd);
+      return () => {
+        document.removeEventListener('mousemove', handleResize);
+        document.removeEventListener('mouseup', handleResizeEnd);
+      };
+    }
+  }, [resizingColumn, resizeStartX, resizeStartWidth]);
+
   const fetchAccounts = async () => {
     setIsLoading(true);
     setError(null);
@@ -34,6 +92,9 @@ export function InfluencerAccountList() {
           id: a.id,
           email: a.email,
           tiktokHandle: a.tiktok_handle,
+          tiktokHandles: a.tiktok_handles || [],
+          instagramHandles: a.instagram_handles || [],
+          recipientType: a.recipient_type,
           fullName: a.full_name,
           achRoutingNumber: a.ach_routing_number,
           swiftCode: a.swift_code,
@@ -171,31 +232,147 @@ export function InfluencerAccountList() {
           <table className="w-full">
             <thead className="bg-gray-50 sticky top-0 z-10">
               <tr className="border-b">
-                <th className="text-left p-4 font-medium text-gray-700 w-12">
+                <th 
+                  className="text-left p-4 font-medium text-gray-700 text-sm relative"
+                  style={{ width: `${columnWidths.checkbox}px`, minWidth: '50px' }}
+                >
                   <input
                     type="checkbox"
                     checked={allSelected}
                     onChange={(e) => handleSelectAll(e.target.checked)}
                     className="rounded border-gray-300"
                   />
+                  <div
+                    className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 bg-transparent"
+                    onMouseDown={(e) => handleResizeStart('checkbox', e)}
+                  />
                 </th>
-                <th className="text-left p-4 font-medium text-gray-700 w-16">순번</th>
-                <th className="text-left p-4 font-medium text-gray-700">Tiktok Account</th>
-                <th className="text-left p-4 font-medium text-gray-700">Instagram Account</th>
-                <th className="text-left p-4 font-medium text-gray-700">Email</th>
-                <th className="text-left p-4 font-medium text-gray-700">Full Name</th>
-                <th className="text-left p-4 font-medium text-gray-700">Account Number</th>
-                <th className="text-left p-4 font-medium text-gray-700">ACH routing number</th>
-                <th className="text-left p-4 font-medium text-gray-700">SWIFT CODE</th>
-                <th className="text-left p-4 font-medium text-gray-700">Account Type</th>
-                <th className="text-left p-4 font-medium text-gray-700">Wise Tag</th>
-                <th className="text-left p-4 font-medium text-gray-700 w-24">작업</th>
+                <th 
+                  className="text-left p-4 font-medium text-gray-700 text-sm relative"
+                  style={{ width: `${columnWidths.number}px`, minWidth: '50px' }}
+                >
+                  순번
+                  <div
+                    className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 bg-transparent z-10"
+                    onMouseDown={(e) => handleResizeStart('number', e)}
+                  />
+                </th>
+                <th 
+                  className="text-left p-4 font-medium text-gray-700 text-sm relative"
+                  style={{ width: `${columnWidths.recipientType}px`, minWidth: '50px' }}
+                >
+                  Recipient Type
+                  <div
+                    className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 bg-transparent z-10"
+                    onMouseDown={(e) => handleResizeStart('recipientType', e)}
+                  />
+                </th>
+                <th 
+                  className="text-left p-4 font-medium text-gray-700 text-sm relative"
+                  style={{ width: `${columnWidths.fullName}px`, minWidth: '50px' }}
+                >
+                  Full Name
+                  <div
+                    className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 bg-transparent z-10"
+                    onMouseDown={(e) => handleResizeStart('fullName', e)}
+                  />
+                </th>
+                <th 
+                  className="text-left p-4 font-medium text-gray-700 text-sm relative"
+                  style={{ width: `${columnWidths.tiktokAccount}px`, minWidth: '50px' }}
+                >
+                  Tiktok Account
+                  <div
+                    className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 bg-transparent z-10"
+                    onMouseDown={(e) => handleResizeStart('tiktokAccount', e)}
+                  />
+                </th>
+                <th 
+                  className="text-left p-4 font-medium text-gray-700 text-sm relative"
+                  style={{ width: `${columnWidths.instagramAccount}px`, minWidth: '50px' }}
+                >
+                  Instagram Account
+                  <div
+                    className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 bg-transparent z-10"
+                    onMouseDown={(e) => handleResizeStart('instagramAccount', e)}
+                  />
+                </th>
+                <th 
+                  className="text-left p-4 font-medium text-gray-700 text-sm relative"
+                  style={{ width: `${columnWidths.email}px`, minWidth: '50px' }}
+                >
+                  Email
+                  <div
+                    className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 bg-transparent z-10"
+                    onMouseDown={(e) => handleResizeStart('email', e)}
+                  />
+                </th>
+                <th 
+                  className="text-left p-4 font-medium text-gray-700 text-sm relative"
+                  style={{ width: `${columnWidths.accountNumber}px`, minWidth: '50px' }}
+                >
+                  Account Number
+                  <div
+                    className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 bg-transparent z-10"
+                    onMouseDown={(e) => handleResizeStart('accountNumber', e)}
+                  />
+                </th>
+                <th 
+                  className="text-left p-4 font-medium text-gray-700 text-sm relative"
+                  style={{ width: `${columnWidths.achRoutingNumber}px`, minWidth: '50px' }}
+                >
+                  ACH routing number
+                  <div
+                    className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 bg-transparent z-10"
+                    onMouseDown={(e) => handleResizeStart('achRoutingNumber', e)}
+                  />
+                </th>
+                <th 
+                  className="text-left p-4 font-medium text-gray-700 text-sm relative"
+                  style={{ width: `${columnWidths.swiftCode}px`, minWidth: '50px' }}
+                >
+                  SWIFT CODE
+                  <div
+                    className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 bg-transparent z-10"
+                    onMouseDown={(e) => handleResizeStart('swiftCode', e)}
+                  />
+                </th>
+                <th 
+                  className="text-left p-4 font-medium text-gray-700 text-sm relative"
+                  style={{ width: `${columnWidths.accountType}px`, minWidth: '50px' }}
+                >
+                  Account Type
+                  <div
+                    className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 bg-transparent z-10"
+                    onMouseDown={(e) => handleResizeStart('accountType', e)}
+                  />
+                </th>
+                <th 
+                  className="text-left p-4 font-medium text-gray-700 text-sm relative"
+                  style={{ width: `${columnWidths.wiseTag}px`, minWidth: '50px' }}
+                >
+                  Wise Tag
+                  <div
+                    className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 bg-transparent z-10"
+                    onMouseDown={(e) => handleResizeStart('wiseTag', e)}
+                  />
+                </th>
+                <th 
+                  className="text-left p-4 font-medium text-gray-700 text-sm relative"
+                  style={{ width: `${columnWidths.actions}px`, minWidth: '50px' }}
+                >
+                  작업
+                  <div
+                    className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 bg-transparent z-10"
+                    onMouseDown={(e) => handleResizeStart('actions', e)}
+                  />
+                </th>
               </tr>
             </thead>
             <tbody>
               {currentPageAccounts.length === 0 ? (
                 <tr>
-                  <td colSpan={12} className="p-8 text-center text-gray-500 text-sm">
+                  <td colSpan={13} className="p-8 text-center text-gray-500 text-sm">
                     등록된 계좌가 없습니다.
                   </td>
                 </tr>
@@ -213,10 +390,23 @@ export function InfluencerAccountList() {
                         />
                       </td>
                       <td className="p-4 text-gray-600 text-sm">{rowNumber}</td>
-                      <td className="p-4 text-sm">{account.tiktokHandle || '-'}</td>
-                      <td className="p-4 text-sm">-</td>
-                      <td className="p-4 text-sm">{account.email || '-'}</td>
+                      <td className="p-4 text-sm">{account.recipientType || '-'}</td>
                       <td className="p-4 font-medium text-sm">{account.fullName}</td>
+                      <td className="p-4 text-sm">
+                        {account.recipientType === 'Business' 
+                          ? (account.tiktokHandles && account.tiktokHandles.length > 0 
+                              ? account.tiktokHandles.join(', ') 
+                              : '-')
+                          : (account.tiktokHandle || '-')}
+                      </td>
+                      <td className="p-4 text-sm">
+                        {account.recipientType === 'Business' 
+                          ? (account.instagramHandles && account.instagramHandles.length > 0 
+                              ? account.instagramHandles.join(', ') 
+                              : '-')
+                          : '-'}
+                      </td>
+                      <td className="p-4 text-sm">{account.email || '-'}</td>
                       <td className="p-4 text-gray-600 text-sm">{account.accountNumber || '-'}</td>
                       <td className="p-4 text-gray-600 text-sm">{account.achRoutingNumber || '-'}</td>
                       <td className="p-4 text-gray-600 text-sm">{account.swiftCode || '-'}</td>

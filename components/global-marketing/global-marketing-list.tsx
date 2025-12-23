@@ -1,14 +1,15 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { GlobalMarketingTeam } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Pagination } from '@/components/ui/pagination';
-import { Trash2, Plus, Upload, Edit2, Search, ArrowUp, ArrowDown, ArrowUpDown, Settings } from 'lucide-react';
+import { Trash2, Plus, Upload, Edit2, Search, ArrowUp, ArrowDown, ArrowUpDown, Settings, Download } from 'lucide-react';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { GlobalMarketingFormModal } from './global-marketing-form-modal';
 import { GlobalMarketingBulkModal } from './global-marketing-bulk-modal';
 import { GlobalMarketingEditModal } from './global-marketing-edit-modal';
+import { MultiSelect } from '@/components/ui/multi-select';
 
 const ITEMS_PER_PAGE = 100;
 
@@ -31,9 +32,22 @@ export function GlobalMarketingList({ onSuccess }: GlobalMarketingListProps) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [editingRecord, setEditingRecord] = useState<GlobalMarketingTeam | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchColumns, setSearchColumns] = useState<string[]>(['companyName', 'brandName']); // 기본값: 회사이름, 브랜드명
   const [sortField, setSortField] = useState<SortField>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [isColumnSelectorOpen, setIsColumnSelectorOpen] = useState(false);
+  
+  // 검색 가능한 컬럼 옵션
+  const searchableColumns = [
+    { value: 'companyName', label: '회사명' },
+    { value: 'brandName', label: '브랜드명' },
+    { value: 'vendorCode', label: '거래처코드' },
+    { value: 'category', label: '거래 유형' },
+    { value: 'project', label: '프로젝트 유형' },
+    { value: 'projectName', label: 'Project Name' },
+    { value: 'eoeoManager', label: '담당자' },
+    { value: 'description', label: '적요' },
+  ];
   
   // 모든 열 정의
   const allColumns = [
@@ -51,6 +65,7 @@ export function GlobalMarketingList({ onSuccess }: GlobalMarketingListProps) {
     { key: 'oneTimeExpenseAmount', label: '실비금액', alwaysVisible: false },
     { key: 'depositDate', label: '입금일', alwaysVisible: false },
     { key: 'depositAmount', label: '입금액', alwaysVisible: false },
+    { key: 'invoiceSupplyPrice', label: '세금계산서 발행 공급가', alwaysVisible: false },
     { key: 'invoiceIssued', label: '세금계산서', alwaysVisible: false },
     { key: 'businessRegistrationNumber', label: '사업자번호', alwaysVisible: false },
     { key: 'invoiceEmail', label: '이메일', alwaysVisible: false },
@@ -90,6 +105,7 @@ export function GlobalMarketingList({ onSuccess }: GlobalMarketingListProps) {
     oneTimeExpenseAmount: 120,
     depositDate: 110,
     depositAmount: 120,
+    invoiceSupplyPrice: 150,
     invoiceIssued: 80,
     businessRegistrationNumber: 120,
     invoiceEmail: 180,
@@ -170,8 +186,9 @@ export function GlobalMarketingList({ onSuccess }: GlobalMarketingListProps) {
           depositCurrency: r.depositCurrency || 'KRW',
           hasWarning: !r.vendorCode || !r.category || !r.projectCode,
         }));
+        // records만 업데이트하면 useEffect가 자동으로 필터링을 다시 실행합니다
+        // 검색어와 필터 상태는 유지됩니다
         setRecords(formattedRecords);
-        setFilteredRecords(formattedRecords);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.');
@@ -191,10 +208,10 @@ export function GlobalMarketingList({ onSuccess }: GlobalMarketingListProps) {
       setSortField(field);
       setSortDirection('asc');
     }
-    setCurrentPage(1);
+    // 페이지 리셋은 useEffect에서 처리
   };
 
-  const sortRecords = (recordsToSort: GlobalMarketingTeam[]): GlobalMarketingTeam[] => {
+  const sortRecords = useCallback((recordsToSort: GlobalMarketingTeam[]): GlobalMarketingTeam[] => {
     if (!sortField) return recordsToSort;
 
     const sorted = [...recordsToSort].sort((a, b) => {
@@ -227,24 +244,48 @@ export function GlobalMarketingList({ onSuccess }: GlobalMarketingListProps) {
     });
 
     return sorted;
-  };
+  }, [sortField, sortDirection]);
 
   useEffect(() => {
     let filtered = records;
 
-    if (searchQuery.trim() !== '') {
+    if (searchQuery.trim() !== '' && searchColumns.length > 0) {
       const query = searchQuery.toLowerCase();
-      filtered = records.filter(record => 
-        record.companyName?.toLowerCase().includes(query) ||
-        record.vendorCode?.toLowerCase().includes(query) ||
-        record.brandName?.toLowerCase().includes(query)
-      );
+      filtered = records.filter(record => {
+        return searchColumns.some(column => {
+          const value = (record as any)[column];
+          if (value === null || value === undefined) return false;
+          
+          // brandNames 배열 처리
+          if (column === 'brandName' && Array.isArray((record as any).brandNames)) {
+            return (record as any).brandNames.some((brand: string) => 
+              brand?.toLowerCase().includes(query)
+            );
+          }
+          
+          return String(value).toLowerCase().includes(query);
+        });
+      });
     }
 
     const sorted = sortRecords(filtered);
     setFilteredRecords(sorted);
+  }, [searchQuery, searchColumns, records, sortField, sortDirection, sortRecords]);
+
+  // 검색/정렬 변경 시에만 페이지 리셋
+  useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, records, sortField, sortDirection]);
+  }, [searchQuery, searchColumns, sortField, sortDirection]);
+
+  // 필터링된 결과가 변경되면 현재 페이지가 유효한 범위 내에 있는지 확인
+  useEffect(() => {
+    const totalPages = Math.ceil(filteredRecords.length / ITEMS_PER_PAGE);
+    if (currentPage > totalPages && totalPages > 0) {
+      setCurrentPage(totalPages);
+    } else if (currentPage < 1 && filteredRecords.length > 0) {
+      setCurrentPage(1);
+    }
+  }, [filteredRecords.length, currentPage]);
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
@@ -315,6 +356,90 @@ export function GlobalMarketingList({ onSuccess }: GlobalMarketingListProps) {
     fetchRecords();
     setEditingRecord(null);
     if (onSuccess) onSuccess();
+  };
+
+  const handleDownloadCSV = () => {
+    // CSV 헤더 생성 (표시된 열만)
+    const visibleColumnKeys = Array.from(visibleColumns).filter(key => 
+      key !== 'checkbox' && key !== 'actions' && key !== 'number'
+    );
+    
+    const headers = visibleColumnKeys.map(key => {
+      const column = allColumns.find(col => col.key === key);
+      return column ? column.label : key;
+    });
+
+    // CSV 데이터 생성
+    const csvRows: string[] = [];
+    
+    // 헤더 추가
+    csvRows.push(headers.map(h => `"${h.replace(/"/g, '""')}"`).join(','));
+
+    // 데이터 행 추가
+    filteredRecords.forEach((record) => {
+      const row: string[] = [];
+      
+      visibleColumnKeys.forEach(key => {
+        let value: any = (record as any)[key];
+        
+        // 특수 케이스 처리
+        if (key === 'brandName') {
+          // 브랜드명 배열 처리
+          if (Array.isArray((record as any).brandNames)) {
+            value = (record as any).brandNames.join(', ');
+          } else if (value) {
+            value = String(value);
+          } else {
+            value = '';
+          }
+        } else if (key === 'expectedDepositAmount' || key === 'depositAmount') {
+          // 금액 포맷팅
+          if (value != null) {
+            const currency = key === 'expectedDepositAmount' 
+              ? (record as any).expectedDepositCurrency || 'KRW'
+              : (record as any).depositCurrency || 'KRW';
+            value = formatCurrency(Number(value), currency);
+          } else {
+            value = '';
+          }
+        } else if (key === 'expectedDepositDate' || key === 'depositDate' || key === 'createdDate') {
+          // 날짜 포맷팅
+          value = value ? formatDate(value) : '';
+        } else if (key === 'invoiceIssued') {
+          // 세금계산서 발행 여부
+          value = value === true || value === 'O' || value === 'o' ? 'O' : 'X';
+        } else {
+          // 일반 필드
+          if (value == null) {
+            value = '';
+          } else {
+            value = String(value);
+          }
+        }
+
+        // CSV 이스케이프 처리 (쉼표, 따옴표, 줄바꿈 포함 시 따옴표로 감싸기)
+        const stringValue = String(value);
+        if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
+          row.push(`"${stringValue.replace(/"/g, '""')}"`);
+        } else {
+          row.push(stringValue);
+        }
+      });
+      
+      csvRows.push(row.join(','));
+    });
+
+    // CSV 파일 생성 및 다운로드
+    const csvContent = csvRows.join('\n');
+    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' }); // BOM 추가로 한글 깨짐 방지
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `글로벌마케팅솔루션팀_입금목록_${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   const getCurrentPageRecords = () => {
@@ -424,19 +549,35 @@ export function GlobalMarketingList({ onSuccess }: GlobalMarketingListProps) {
               <Upload className="h-4 w-4 mr-2" />
               일괄 추가
             </Button>
+            <Button onClick={handleDownloadCSV} variant="outline">
+              <Download className="h-4 w-4 mr-2" />
+              CSV 다운로드
+            </Button>
           </div>
         </div>
 
-        <div className="p-4 border-b">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="회사이름, 거래처코드, 브랜드명으로 검색..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+        <div className="p-4 border-b space-y-3">
+          <div className="flex gap-3">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="검색어를 입력하세요..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div className="w-64">
+              <label className="block text-xs text-gray-600 mb-1">검색 컬럼</label>
+              <MultiSelect
+                value={searchColumns}
+                onChange={setSearchColumns}
+                options={searchableColumns}
+                placeholder="검색할 컬럼 선택"
+                className="w-full"
+              />
+            </div>
           </div>
         </div>
 
@@ -730,6 +871,18 @@ export function GlobalMarketingList({ onSuccess }: GlobalMarketingListProps) {
                     <div
                       className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 bg-transparent z-10"
                       onMouseDown={(e) => handleResizeStart('depositAmount', e)}
+                    />
+                  </th>
+                )}
+                {visibleColumns.has('invoiceSupplyPrice') && (
+                  <th 
+                    className="text-right p-2 font-medium text-gray-700 whitespace-nowrap relative"
+                    style={{ width: `${columnWidths.invoiceSupplyPrice}px`, minWidth: '50px' }}
+                  >
+                    세금계산서 발행 공급가
+                    <div
+                      className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 bg-transparent z-10"
+                      onMouseDown={(e) => handleResizeStart('invoiceSupplyPrice', e)}
                     />
                   </th>
                 )}
@@ -1055,6 +1208,9 @@ export function GlobalMarketingList({ onSuccess }: GlobalMarketingListProps) {
                   )}
                   {visibleColumns.has('depositAmount') && (
                     <td className="p-2 text-right font-medium whitespace-nowrap truncate overflow-hidden" title={record.depositAmount ? formatCurrency(record.depositAmount, record.depositCurrency) : ''}>{record.depositAmount ? formatCurrency(record.depositAmount, record.depositCurrency) : '-'}</td>
+                  )}
+                  {visibleColumns.has('invoiceSupplyPrice') && (
+                    <td className="p-2 text-right whitespace-nowrap truncate overflow-hidden" title={record.invoiceSupplyPrice ? formatCurrency(record.invoiceSupplyPrice, 'KRW') : ''}>{record.invoiceSupplyPrice ? formatCurrency(record.invoiceSupplyPrice, 'KRW') : '-'}</td>
                   )}
                   {visibleColumns.has('invoiceIssued') && (
                     <td className="p-2 whitespace-nowrap truncate overflow-hidden" title={record.invoiceIssued || ''}>{record.invoiceIssued || '-'}</td>

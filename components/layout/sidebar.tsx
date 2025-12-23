@@ -35,6 +35,7 @@ const sections = [
     children: [
       { name: '거래처 관리', href: '/dashboard/vendors', icon: Building2 },
       { name: '프로젝트 유형', href: '/dashboard/projects', icon: FolderKanban },
+      { name: '브랜드 관리', href: '/dashboard/brands', icon: Building2 },
       { name: '인플루언서 계좌 등록', href: '/dashboard/influencer-accounts', icon: User },
     ],
   },

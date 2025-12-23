@@ -6,3 +6,4 @@ SET project = 'Influencer - Branded',
 WHERE project = '브랜디드시딩'
    OR LOWER(TRIM(project)) = '브랜디드시딩';
 
+

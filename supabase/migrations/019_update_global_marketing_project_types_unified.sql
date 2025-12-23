@@ -6,3 +6,4 @@ SET project = 'Influencer - Branded',
 WHERE project IN ('tiktok viral - regular', 'Partner_regular project')
    OR LOWER(TRIM(project)) IN ('tiktok viral - regular', 'partner_regular project');
 
+

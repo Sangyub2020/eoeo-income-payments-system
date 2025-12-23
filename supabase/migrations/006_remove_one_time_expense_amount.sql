@@ -2,3 +2,4 @@
 ALTER TABLE online_commerce_team DROP COLUMN IF EXISTS one_time_expense_amount;
 
 
+

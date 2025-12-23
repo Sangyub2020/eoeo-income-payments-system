@@ -51,3 +51,4 @@ CREATE TRIGGER update_global_marketing_team_updated_at
   EXECUTE FUNCTION update_updated_at_column();
 
 
+

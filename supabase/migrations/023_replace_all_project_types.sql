@@ -15,3 +15,4 @@ INSERT INTO projects (code, name) VALUES
   ('20', '직거래'),
   ('21', '중계무역');
 
+

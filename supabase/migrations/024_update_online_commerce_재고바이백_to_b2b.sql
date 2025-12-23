@@ -4,3 +4,4 @@ SET category = 'B2B',
     updated_at = NOW()
 WHERE category = '재고 바이백';
 
+

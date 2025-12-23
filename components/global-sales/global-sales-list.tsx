@@ -1,14 +1,15 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { GlobalSalesTeam } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Pagination } from '@/components/ui/pagination';
-import { Trash2, Plus, Upload, Edit2, Search, ArrowUp, ArrowDown, ArrowUpDown, Settings } from 'lucide-react';
+import { Trash2, Plus, Upload, Edit2, Search, ArrowUp, ArrowDown, ArrowUpDown, Settings, Download } from 'lucide-react';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { GlobalSalesFormModal } from './global-sales-form-modal';
 import { GlobalSalesBulkModal } from './global-sales-bulk-modal';
 import { GlobalSalesEditModal } from './global-sales-edit-modal';
+import { MultiSelect } from '@/components/ui/multi-select';
 
 const ITEMS_PER_PAGE = 100;
 
@@ -31,9 +32,21 @@ export function GlobalSalesList({ onSuccess }: GlobalSalesListProps) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [editingRecord, setEditingRecord] = useState<GlobalSalesTeam | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchColumns, setSearchColumns] = useState<string[]>(['companyName', 'brandName']); // 기본값: 회사이름, 브랜드명
   const [sortField, setSortField] = useState<SortField>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [isColumnSelectorOpen, setIsColumnSelectorOpen] = useState(false);
+  
+  // 검색 가능한 컬럼 옵션
+  const searchableColumns = [
+    { value: 'companyName', label: '회사명' },
+    { value: 'brandName', label: '브랜드명' },
+    { value: 'vendorCode', label: '거래처코드' },
+    { value: 'category', label: '거래 유형' },
+    { value: 'project', label: '프로젝트 유형' },
+    { value: 'eoeoManager', label: '담당자' },
+    { value: 'description', label: '적요' },
+  ];
   
   // 모든 열 정의
   const allColumns = [
@@ -168,8 +181,9 @@ export function GlobalSalesList({ onSuccess }: GlobalSalesListProps) {
           depositCurrency: r.depositCurrency || 'KRW',
           hasWarning: !r.vendorCode || !r.category || !r.projectCode,
         }));
+        // records만 업데이트하면 useEffect가 자동으로 필터링을 다시 실행합니다
+        // 검색어와 필터 상태는 유지됩니다
         setRecords(formattedRecords);
-        setFilteredRecords(formattedRecords);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.');
@@ -189,10 +203,10 @@ export function GlobalSalesList({ onSuccess }: GlobalSalesListProps) {
       setSortField(field);
       setSortDirection('asc');
     }
-    setCurrentPage(1);
+    // 페이지 리셋은 useEffect에서 처리
   };
 
-  const sortRecords = (recordsToSort: GlobalSalesTeam[]): GlobalSalesTeam[] => {
+  const sortRecords = useCallback((recordsToSort: GlobalSalesTeam[]): GlobalSalesTeam[] => {
     if (!sortField) return recordsToSort;
 
     const sorted = [...recordsToSort].sort((a, b) => {
@@ -225,24 +239,48 @@ export function GlobalSalesList({ onSuccess }: GlobalSalesListProps) {
     });
 
     return sorted;
-  };
+  }, [sortField, sortDirection]);
 
   useEffect(() => {
     let filtered = records;
 
-    if (searchQuery.trim() !== '') {
+    if (searchQuery.trim() !== '' && searchColumns.length > 0) {
       const query = searchQuery.toLowerCase();
-      filtered = records.filter(record => 
-        record.companyName?.toLowerCase().includes(query) ||
-        record.vendorCode?.toLowerCase().includes(query) ||
-        record.brandName?.toLowerCase().includes(query)
-      );
+      filtered = records.filter(record => {
+        return searchColumns.some(column => {
+          const value = (record as any)[column];
+          if (value === null || value === undefined) return false;
+          
+          // brandNames 배열 처리
+          if (column === 'brandName' && Array.isArray((record as any).brandNames)) {
+            return (record as any).brandNames.some((brand: string) => 
+              brand?.toLowerCase().includes(query)
+            );
+          }
+          
+          return String(value).toLowerCase().includes(query);
+        });
+      });
     }
 
     const sorted = sortRecords(filtered);
     setFilteredRecords(sorted);
+  }, [searchQuery, searchColumns, records, sortField, sortDirection, sortRecords]);
+
+  // 검색/정렬 변경 시에만 페이지 리셋
+  useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, records, sortField, sortDirection]);
+  }, [searchQuery, searchColumns, sortField, sortDirection]);
+
+  // 필터링된 결과가 변경되면 현재 페이지가 유효한 범위 내에 있는지 확인
+  useEffect(() => {
+    const totalPages = Math.ceil(filteredRecords.length / ITEMS_PER_PAGE);
+    if (currentPage > totalPages && totalPages > 0) {
+      setCurrentPage(totalPages);
+    } else if (currentPage < 1 && filteredRecords.length > 0) {
+      setCurrentPage(1);
+    }
+  }, [filteredRecords.length, currentPage]);
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
@@ -422,19 +460,35 @@ export function GlobalSalesList({ onSuccess }: GlobalSalesListProps) {
               <Upload className="h-4 w-4 mr-2" />
               일괄 추가
             </Button>
+            <Button onClick={handleDownloadCSV} variant="outline">
+              <Download className="h-4 w-4 mr-2" />
+              CSV 다운로드
+            </Button>
           </div>
         </div>
 
-        <div className="p-4 border-b">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="회사이름, 거래처코드, 브랜드명으로 검색..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+        <div className="p-4 border-b space-y-3">
+          <div className="flex gap-3">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="검색어를 입력하세요..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div className="w-64">
+              <label className="block text-xs text-gray-600 mb-1">검색 컬럼</label>
+              <MultiSelect
+                value={searchColumns}
+                onChange={setSearchColumns}
+                options={searchableColumns}
+                placeholder="검색할 컬럼 선택"
+                className="w-full"
+              />
+            </div>
           </div>
         </div>
 

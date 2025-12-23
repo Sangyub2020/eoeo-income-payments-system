@@ -68,3 +68,4 @@ git push -u origin main
 - 환경 변수는 Vercel 대시보드의 Settings → Environment Variables에서 나중에 수정할 수 있습니다
 - `main` 브랜치에 push하면 자동으로 프로덕션 배포가 됩니다
 
+

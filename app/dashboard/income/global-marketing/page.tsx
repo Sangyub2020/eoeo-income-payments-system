@@ -30,11 +30,12 @@ export default function GlobalMarketingPage() {
         </TabsContent>
 
         <TabsContent value="list">
-          <GlobalMarketingList key={refreshKey} onSuccess={handleSuccess} />
+          <GlobalMarketingList onSuccess={handleSuccess} />
         </TabsContent>
       </Tabs>
     </div>
   );
 }
+
 
 

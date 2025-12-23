@@ -9,3 +9,4 @@ END,
 updated_at = NOW()
 WHERE category IN ('파트너십/마케팅지원비', '정부지원사업', '기재고사입');
 
+

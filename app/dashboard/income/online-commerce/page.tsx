@@ -30,7 +30,7 @@ export default function OnlineCommercePage() {
         </TabsContent>
 
         <TabsContent value="list">
-          <OnlineCommerceList key={refreshKey} onSuccess={handleSuccess} />
+          <OnlineCommerceList onSuccess={handleSuccess} />
         </TabsContent>
       </Tabs>
     </div>

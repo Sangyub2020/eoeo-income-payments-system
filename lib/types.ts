@@ -71,10 +71,20 @@ export interface Project {
   updatedAt?: string;
 }
 
+export interface Brand {
+  id?: string;
+  name: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface InfluencerAccount {
   id?: string;
   email?: string;
   tiktokHandle?: string;
+  tiktokHandles?: string[]; // Business일 때 복수 계정
+  instagramHandles?: string[]; // Business일 때 복수 계정
+  recipientType?: 'Personal' | 'Business';
   fullName: string;
   achRoutingNumber?: string;
   swiftCode?: string;

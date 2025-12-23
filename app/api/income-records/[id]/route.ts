@@ -7,13 +7,41 @@ export async function PUT(
 ) {
   try {
     const { id } = await params;
-    const body = await request.json();
+    console.log('PUT 요청 - ID:', id);
+    console.log('PUT 요청 - URL:', request.url);
+    
+    if (!id) {
+      console.error('ID가 없습니다');
+      return NextResponse.json(
+        {
+          success: false,
+          error: '레코드 ID가 필요합니다.',
+        },
+        { status: 400 }
+      );
+    }
+    
+    let body;
+    try {
+      body = await request.json();
+      console.log('PUT 요청 - Body:', JSON.stringify(body, null, 2));
+    } catch (jsonError) {
+      console.error('JSON 파싱 오류:', jsonError);
+      return NextResponse.json(
+        {
+          success: false,
+          error: '요청 본문을 파싱할 수 없습니다.',
+        },
+        { status: 400 }
+      );
+    }
     const {
       team,
       category,
       vendorCode,
       companyName,
       brandName,
+      brandNames,
       businessRegistrationNumber,
       invoiceEmail,
       projectCode,
@@ -64,6 +92,20 @@ export async function PUT(
     if (vendorCode !== undefined) updateData.vendor_code = vendorCode || null;
     if (companyName !== undefined) updateData.company_name = companyName || null;
     if (brandName !== undefined) updateData.brand_name = brandName || null;
+    if (brandNames !== undefined) {
+      // brand_names 컬럼이 있으면 업데이트, 없으면 brand_name만 업데이트
+      // Supabase에서 컬럼이 없으면 에러가 발생하므로, 일단 brand_name만 업데이트
+      // 마이그레이션 031_add_brand_names_to_income_records.sql을 실행하면 brand_names도 사용 가능
+      if (brandNames && brandNames.length > 0) {
+        updateData.brand_name = brandNames[0] || null;
+        // brand_names 컬럼이 있는 경우에만 추가 (마이그레이션 실행 후)
+        // 주의: 마이그레이션이 실행되지 않았으면 이 줄로 인해 에러 발생
+        updateData.brand_names = brandNames;
+      } else {
+        updateData.brand_name = null;
+        updateData.brand_names = null;
+      }
+    }
     if (businessRegistrationNumber !== undefined) updateData.business_registration_number = businessRegistrationNumber || null;
     if (invoiceEmail !== undefined) updateData.invoice_email = invoiceEmail || null;
     if (projectCode !== undefined) updateData.project_code = projectCode || null;
@@ -116,6 +158,19 @@ export async function PUT(
 
     if (error) {
       console.error('Supabase 업데이트 오류:', error);
+      // Supabase 에러 객체를 더 자세히 로깅
+      if (error.message) {
+        console.error('에러 메시지:', error.message);
+      }
+      if (error.details) {
+        console.error('에러 상세:', error.details);
+      }
+      if (error.hint) {
+        console.error('에러 힌트:', error.hint);
+      }
+      if (error.code) {
+        console.error('에러 코드:', error.code);
+      }
       throw error;
     }
 
@@ -127,6 +182,7 @@ export async function PUT(
       vendorCode: data.vendor_code,
       companyName: data.company_name,
       brandName: data.brand_name,
+      brandNames: data.brand_names || (data.brand_name ? [data.brand_name] : []),
       businessRegistrationNumber: data.business_registration_number,
       invoiceEmail: data.invoice_email,
       projectCode: data.project_code,
@@ -174,12 +230,34 @@ export async function PUT(
     };
 
     return NextResponse.json({ success: true, data: formattedRecord });
-  } catch (error) {
+  } catch (error: any) {
     console.error('입금 기록 수정 오류:', error);
+    
+    let errorMessage = '알 수 없는 오류가 발생했습니다.';
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    } else if (error?.message) {
+      errorMessage = error.message;
+    } else if (error?.details) {
+      errorMessage = error.details;
+    } else if (typeof error === 'string') {
+      errorMessage = error;
+    }
+    
+    // Supabase 에러의 경우 더 자세한 정보 포함
+    if (error?.code) {
+      errorMessage = `[${error.code}] ${errorMessage}`;
+      if (error.hint) {
+        errorMessage += ` (힌트: ${error.hint})`;
+      }
+    }
+    
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.',
+        error: errorMessage,
+        details: error?.details || null,
+        code: error?.code || null,
       },
       { status: 500 }
     );

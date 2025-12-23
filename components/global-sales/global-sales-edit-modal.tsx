@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { X, Upload as UploadIcon, XCircle } from 'lucide-react';
 import { GlobalSalesTeam } from '@/lib/types';
 import { SearchableSelect } from '@/components/ui/searchable-select';
+import { MultiSelect } from '@/components/ui/multi-select';
 import { CATEGORIES } from '@/lib/constants';
 
 interface GlobalSalesEditModalProps {
@@ -25,12 +26,21 @@ export function GlobalSalesEditModal({ record, onClose, onSuccess }: GlobalSales
   const [invoiceFileUrl, setInvoiceFileUrl] = useState<string | null>(null);
   const [vendors, setVendors] = useState<Array<{ code: string; name: string; business_number?: string; invoice_email?: string }>>([]);
   const [projects, setProjects] = useState<Array<{ code: string; name: string }>>([]);
+  const [brands, setBrands] = useState<Array<{ value: string; label: string }>>([]);
+  const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
 
   useEffect(() => {
     fetchVendors();
     fetchProjects();
+    fetchBrands();
     if (record.invoiceCopy) {
       setInvoiceFileUrl(record.invoiceCopy);
+    }
+    // 기존 brandName 또는 brandNames를 selectedBrands로 설정
+    if (record.brandNames && record.brandNames.length > 0) {
+      setSelectedBrands(record.brandNames);
+    } else if (record.brandName) {
+      setSelectedBrands([record.brandName]);
     }
   }, []);
 
@@ -64,6 +74,20 @@ export function GlobalSalesEditModal({ record, onClose, onSuccess }: GlobalSales
       }
     } catch (err) {
       console.error('프로젝트 조회 오류:', err);
+    }
+  };
+
+  const fetchBrands = async () => {
+    try {
+      const response = await fetch('/api/brands');
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          setBrands(data.data.map((b: any) => ({ value: b.name, label: b.name })));
+        }
+      }
+    } catch (err) {
+      console.error('브랜드 조회 오류:', err);
     }
   };
 
@@ -180,6 +204,7 @@ export function GlobalSalesEditModal({ record, onClose, onSuccess }: GlobalSales
         body: JSON.stringify({
           ...formData,
           team: 'global_sales',
+          brandNames: selectedBrands.length > 0 ? selectedBrands : undefined,
           invoiceCopy: invoiceCopyUrl,
         }),
       });
@@ -303,16 +328,15 @@ export function GlobalSalesEditModal({ record, onClose, onSuccess }: GlobalSales
             </div>
 
             <div>
-              <label htmlFor="brandName" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="brandNames" className="block text-sm font-medium text-gray-700 mb-1">
                 Brand Name
               </label>
-              <input
-                type="text"
-                id="brandName"
-                name="brandName"
-                value={formData.brandName || ''}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              <MultiSelect
+                value={selectedBrands}
+                onChange={setSelectedBrands}
+                options={brands}
+                placeholder="브랜드를 선택하세요"
+                className="w-full"
               />
             </div>
 
@@ -574,9 +598,9 @@ export function GlobalSalesEditModal({ record, onClose, onSuccess }: GlobalSales
                   type="text"
                   id="depositAmount"
                   name="depositAmount"
-                  value={formData.depositAmount ? `${formData.depositCurrency === 'USD' ? '$' : '₩'}${formData.depositAmount.toLocaleString()}` : ''}
+                  value={formData.depositAmount ? formData.depositAmount.toString() : ''}
                   onChange={handleChange}
-                  placeholder="₩1,000,000 또는 $1,000"
+                  placeholder="1000000"
                   className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
                 <select

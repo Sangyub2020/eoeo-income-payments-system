@@ -6,3 +6,4 @@ SET project = 'Amazon - Promotion',
 WHERE project = 'Amazon - network promotion'
    OR LOWER(TRIM(project)) = 'amazon - network promotion';
 
+

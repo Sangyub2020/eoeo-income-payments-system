@@ -30,11 +30,12 @@ export default function BrandPlanningPage() {
         </TabsContent>
 
         <TabsContent value="list">
-          <BrandPlanningList key={refreshKey} onSuccess={handleSuccess} />
+          <BrandPlanningList onSuccess={handleSuccess} />
         </TabsContent>
       </Tabs>
     </div>
   );
 }
+
 
 
