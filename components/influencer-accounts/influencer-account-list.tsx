@@ -179,58 +179,71 @@ export function InfluencerAccountList() {
                     className="rounded border-gray-300"
                   />
                 </th>
+                <th className="text-left p-4 font-medium text-gray-700 w-16">순번</th>
+                <th className="text-left p-4 font-medium text-gray-700">Tiktok Account</th>
+                <th className="text-left p-4 font-medium text-gray-700">Instagram Account</th>
                 <th className="text-left p-4 font-medium text-gray-700">Email</th>
-                <th className="text-left p-4 font-medium text-gray-700">Tiktok handle</th>
                 <th className="text-left p-4 font-medium text-gray-700">Full Name</th>
                 <th className="text-left p-4 font-medium text-gray-700">Account Number</th>
-                <th className="text-left p-4 font-medium text-gray-700">Phone Number</th>
+                <th className="text-left p-4 font-medium text-gray-700">ACH routing number</th>
+                <th className="text-left p-4 font-medium text-gray-700">SWIFT CODE</th>
+                <th className="text-left p-4 font-medium text-gray-700">Account Type</th>
+                <th className="text-left p-4 font-medium text-gray-700">Wise Tag</th>
                 <th className="text-left p-4 font-medium text-gray-700 w-24">작업</th>
               </tr>
             </thead>
             <tbody>
               {currentPageAccounts.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="p-8 text-center text-gray-500">
+                  <td colSpan={12} className="p-8 text-center text-gray-500 text-sm">
                     등록된 계좌가 없습니다.
                   </td>
                 </tr>
               ) : (
-                currentPageAccounts.map((account) => (
-                  <tr key={account.id} className="border-b hover:bg-gray-50">
-                    <td className="p-4">
-                      <input
-                        type="checkbox"
-                        checked={selectedIds.has(account.id!)}
-                        onChange={(e) => handleSelectOne(account.id!, e.target.checked)}
-                        className="rounded border-gray-300"
-                      />
-                    </td>
-                    <td className="p-4">{account.email || '-'}</td>
-                    <td className="p-4">{account.tiktokHandle || '-'}</td>
-                    <td className="p-4 font-medium">{account.fullName}</td>
-                    <td className="p-4 text-gray-600">{account.accountNumber || '-'}</td>
-                    <td className="p-4 text-gray-600">{account.phoneNumber || '-'}</td>
-                    <td className="p-4">
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => setEditingAccount(account)}
-                          className="text-blue-600 hover:text-blue-800"
-                          title="수정"
-                        >
-                          <Edit2 className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete([account.id!])}
-                          className="text-red-600 hover:text-red-800"
-                          title="삭제"
-                          disabled={isDeleting}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                currentPageAccounts.map((account, index) => {
+                  const rowNumber = (currentPage - 1) * ITEMS_PER_PAGE + index + 1;
+                  return (
+                    <tr key={account.id} className="border-b hover:bg-gray-50">
+                      <td className="p-4 text-sm">
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.has(account.id!)}
+                          onChange={(e) => handleSelectOne(account.id!, e.target.checked)}
+                          className="rounded border-gray-300"
+                        />
+                      </td>
+                      <td className="p-4 text-gray-600 text-sm">{rowNumber}</td>
+                      <td className="p-4 text-sm">{account.tiktokHandle || '-'}</td>
+                      <td className="p-4 text-sm">-</td>
+                      <td className="p-4 text-sm">{account.email || '-'}</td>
+                      <td className="p-4 font-medium text-sm">{account.fullName}</td>
+                      <td className="p-4 text-gray-600 text-sm">{account.accountNumber || '-'}</td>
+                      <td className="p-4 text-gray-600 text-sm">{account.achRoutingNumber || '-'}</td>
+                      <td className="p-4 text-gray-600 text-sm">{account.swiftCode || '-'}</td>
+                      <td className="p-4 text-gray-600 text-sm">{account.accountType || '-'}</td>
+                      <td className="p-4 text-gray-600 text-sm">{account.wiseTag || '-'}</td>
+                      <td className="p-4 text-sm">
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => setEditingAccount(account)}
+                            className="text-blue-600 hover:text-blue-800"
+                            title="수정"
+                          >
+                            <Edit2 className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete([account.id!])}
+                            className="text-red-600 hover:text-red-800"
+                            title="삭제"
+                            disabled={isDeleting}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>

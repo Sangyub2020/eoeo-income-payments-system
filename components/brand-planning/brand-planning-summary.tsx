@@ -26,7 +26,7 @@ export function BrandPlanningSummary() {
     setError(null);
 
     try {
-      const response = await fetch('/api/brand-planning-team');
+      const response = await fetch('/api/income-records?team=brand_planning');
       if (!response.ok) {
         throw new Error('입금 정보를 불러오는데 실패했습니다.');
       }

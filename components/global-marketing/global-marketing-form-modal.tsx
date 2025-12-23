@@ -158,13 +158,14 @@ export function GlobalMarketingFormModal({ isOpen, onClose, onSuccess }: GlobalM
         invoiceCopyUrl = uploadData.url;
       }
 
-      const response = await fetch('/api/global-marketing-team', {
+      const response = await fetch('/api/income-records', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           ...formData,
+          team: 'global_marketing',
           invoiceCopy: invoiceCopyUrl,
         }),
       });
@@ -510,14 +511,26 @@ export function GlobalMarketingFormModal({ isOpen, onClose, onSuccess }: GlobalM
               <label htmlFor="expectedDepositAmount" className="block text-sm font-medium text-gray-700 mb-1">
                 입금 예정금액 (부가세 포함)
               </label>
-              <input
-                type="number"
-                id="expectedDepositAmount"
-                name="expectedDepositAmount"
-                value={formData.expectedDepositAmount || ''}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  id="expectedDepositAmount"
+                  name="expectedDepositAmount"
+                  value={formData.expectedDepositAmount ? `${formData.expectedDepositCurrency === 'USD' ? '$' : '₩'}${formData.expectedDepositAmount.toLocaleString()}` : ''}
+                  onChange={handleChange}
+                  placeholder="₩1,000,000 또는 $1,000"
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <select
+                  name="expectedDepositCurrency"
+                  value={formData.expectedDepositCurrency || 'KRW'}
+                  onChange={(e) => setFormData(prev => ({ ...prev, expectedDepositCurrency: e.target.value }))}
+                  className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="KRW">KRW</option>
+                  <option value="USD">USD</option>
+                </select>
+              </div>
             </div>
 
             <div>

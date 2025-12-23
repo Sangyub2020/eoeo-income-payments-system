@@ -14,7 +14,11 @@ interface GlobalMarketingEditModalProps {
 }
 
 export function GlobalMarketingEditModal({ record, onClose, onSuccess }: GlobalMarketingEditModalProps) {
-  const [formData, setFormData] = useState<Partial<GlobalMarketingTeam>>(record);
+  const [formData, setFormData] = useState<Partial<GlobalMarketingTeam>>({
+    ...record,
+    expectedDepositCurrency: record.expectedDepositCurrency || 'KRW',
+    depositCurrency: record.depositCurrency || 'KRW',
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [invoiceFile, setInvoiceFile] = useState<File | null>(null);
@@ -167,13 +171,14 @@ export function GlobalMarketingEditModal({ record, onClose, onSuccess }: GlobalM
         invoiceCopyUrl = uploadData.url;
       }
 
-      const response = await fetch(`/api/global-marketing-team/${record.id}`, {
+      const response = await fetch(`/api/income-records/${record.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           ...formData,
+          team: 'global_marketing',
           invoiceCopy: invoiceCopyUrl,
         }),
       });
@@ -195,9 +200,27 @@ export function GlobalMarketingEditModal({ record, onClose, onSuccess }: GlobalM
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     
+    // 입금액 필드 처리 (통화 기호 인식)
+    if (name === 'expectedDepositAmount' || name === 'depositAmount') {
+      const hasWon = value.includes('₩') || value.includes('원');
+      const hasDollar = value.includes('$') || value.includes('USD') || value.toUpperCase().includes('USD');
+      const numStr = value.replace(/[₩$,\s원USD]/gi, '');
+      const amount = numStr ? Number(numStr) : undefined;
+      
+      setFormData((prev) => {
+        const currency = hasDollar ? 'USD' : (hasWon ? 'KRW' : (name === 'expectedDepositAmount' ? (prev.expectedDepositCurrency || 'KRW') : (prev.depositCurrency || 'KRW')));
+        return {
+          ...prev,
+          [name]: amount,
+          [name === 'expectedDepositAmount' ? 'expectedDepositCurrency' : 'depositCurrency']: currency,
+        };
+      });
+      return;
+    }
+    
     setFormData((prev) => ({
       ...prev,
-      [name]: value === '' ? undefined : (name.includes('Amount') || name.includes('Number') || name.includes('Month') || name.includes('Year') || name === 'ratio' || name === 'count' || name === 'year' || name === 'expectedDepositMonth' || name === 'depositMonth' || name === 'installmentNumber' || name === 'exchangeGainLoss' || name === 'difference' || name === 'oneTimeExpenseAmount' || name === 'expectedDepositAmount' || name === 'depositAmount' || name === 'invoiceSupplyPrice')
+      [name]: value === '' ? undefined : (name.includes('Amount') || name.includes('Number') || name.includes('Month') || name.includes('Year') || name === 'ratio' || name === 'count' || name === 'year' || name === 'expectedDepositMonth' || name === 'depositMonth' || name === 'installmentNumber' || name === 'exchangeGainLoss' || name === 'difference' || name === 'oneTimeExpenseAmount' || name === 'invoiceSupplyPrice')
         ? (value === '' ? undefined : Number(value))
         : value,
     }));

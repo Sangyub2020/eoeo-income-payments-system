@@ -26,7 +26,7 @@ export function GlobalMarketingSummary() {
     setError(null);
 
     try {
-      const response = await fetch('/api/global-marketing-team');
+      const response = await fetch('/api/income-records?team=global_marketing');
       if (!response.ok) {
         throw new Error('입금 정보를 불러오는데 실패했습니다.');
       }

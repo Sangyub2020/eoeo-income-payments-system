@@ -224,9 +224,23 @@ export function GlobalMarketingBulkModal({ isOpen, onClose, onSuccess }: GlobalM
         return null;
       }
 
+      const parseAmount = (val: string): { amount?: number; currency?: string } => {
+        if (!val || val === '') return { amount: undefined, currency: undefined };
+        // 통화 기호 확인
+        const hasWon = val.includes('₩') || val.includes('원');
+        const hasDollar = val.includes('$') || val.includes('USD') || val.toUpperCase().includes('USD');
+        
+        // 통화 기호 제거 및 숫자 추출
+        const numStr = val.replace(/[₩$,\s원USD]/gi, '');
+        const amount = numStr ? Number(numStr) : undefined;
+        const currency = hasDollar ? 'USD' : (hasWon ? 'KRW' : 'KRW'); // 기본값은 KRW
+        
+        return { amount, currency };
+      };
+      
       const parseNumber = (val: string) => {
         if (!val || val === '') return undefined;
-        const numStr = val.replace(/[₩,\s]/g, '');
+        const numStr = val.replace(/[₩$,\s원USD]/gi, '');
         return numStr ? Number(numStr) : undefined;
       };
 
@@ -269,10 +283,22 @@ export function GlobalMarketingBulkModal({ isOpen, onClose, onSuccess }: GlobalM
         count: get(16) ? Number(get(16)) : undefined,  // 건수
         expectedDepositDate: get(17),        // 입금예정일
         oneTimeExpenseAmount: parseNumber(get(18) || ''),  // One-time 실비 금액
-        expectedDepositAmount: parseNumber(get(19) || ''),  // 입금 예정금액 (부가세 포함)
+        ...(() => {
+          const parsed = parseAmount(get(19) || '');
+          return {
+            expectedDepositAmount: parsed.amount,
+            expectedDepositCurrency: parsed.currency,
+          };
+        })(),
         description: get(20),                // 적요
         depositDate: get(21),                 // 입금일
-        depositAmount: parseNumber(get(22) || ''),  // 입금액
+        ...(() => {
+          const parsed = parseAmount(get(22) || '');
+          return {
+            depositAmount: parsed.amount,
+            depositCurrency: parsed.currency,
+          };
+        })(),
         exchangeGainLoss: parseNumber(get(23) || ''),  // 환차손익
         difference: parseNumber(get(24) || ''),  // 차액
         createdDate: get(25),                // 작성일자
@@ -446,7 +472,7 @@ export function GlobalMarketingBulkModal({ isOpen, onClose, onSuccess }: GlobalM
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ records: recordsToSubmit }),
+        body: JSON.stringify({ team: 'global_marketing', records: recordsToSubmit }),
       });
 
       const data = await response.json();

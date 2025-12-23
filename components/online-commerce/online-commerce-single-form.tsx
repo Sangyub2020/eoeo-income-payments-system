@@ -55,12 +55,15 @@ export function OnlineCommerceSingleForm({ onSuccess }: OnlineCommerceSingleForm
     setSuccess(false);
 
     try {
-      const response = await fetch('/api/online-commerce-team', {
+      const response = await fetch('/api/income-records', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          team: 'online_commerce',
+        }),
       });
 
       if (!response.ok) {

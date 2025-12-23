@@ -180,9 +180,23 @@ export function OnlineCommerceBulkModal({ isOpen, onClose, onSuccess }: OnlineCo
           currentRecord = ''; // 다음 레코드를 위해 초기화
           quoteCount = 0; // 따옴표 카운터 초기화
           
+          const parseAmount = (val: string): { amount?: number; currency?: string } => {
+            if (!val || val === '') return { amount: undefined, currency: undefined };
+            // 통화 기호 확인
+            const hasWon = val.includes('₩') || val.includes('원');
+            const hasDollar = val.includes('$') || val.includes('USD') || val.toUpperCase().includes('USD');
+            
+            // 통화 기호 제거 및 숫자 추출
+            const numStr = val.replace(/[₩$,\s원USD]/gi, '');
+            const amount = numStr ? Number(numStr) : undefined;
+            const currency = hasDollar ? 'USD' : (hasWon ? 'KRW' : 'KRW'); // 기본값은 KRW
+            
+            return { amount, currency };
+          };
+          
           const parseNumber = (val: string) => {
             if (!val || val === '') return undefined;
-            const numStr = val.replace(/[₩,\s]/g, '');
+            const numStr = val.replace(/[₩$,\s원USD]/gi, '');
             return numStr ? Number(numStr) : undefined;
           };
 
@@ -213,14 +227,26 @@ export function OnlineCommerceBulkModal({ isOpen, onClose, onSuccess }: OnlineCo
           expectedDepositDate: get(17),
           // 온라인 커머스팀은 oneTimeExpenseAmount가 없지만, CSV 데이터에는 포함되어 있을 수 있음
           // 인덱스 18: oneTimeExpenseAmount (온라인 커머스팀에는 없지만 CSV에 있을 수 있음 - 빈칸)
-          // 인덱스 19: expectedDepositAmount (₩3,300,000 형식)
-          expectedDepositAmount: parseNumber(get(19) || ''),
+          // 인덱스 19: expectedDepositAmount (₩3,300,000 또는 $3,300 형식)
+          ...(() => {
+            const parsed = parseAmount(get(19) || '');
+            return {
+              expectedDepositAmount: parsed.amount,
+              expectedDepositCurrency: parsed.currency,
+            };
+          })(),
           // 인덱스 20: description (적요) - "아마존 마케팅 서비스"
           description: get(20),
           // 인덱스 21: depositDate (입금일) - 빈칸
           depositDate: get(21),
-          // 인덱스 22: depositAmount (입금액) - "3,300,000"
-          depositAmount: parseNumber(get(22) || ''),
+          // 인덱스 22: depositAmount (입금액) - "3,300,000" 또는 "$3,300"
+          ...(() => {
+            const parsed = parseAmount(get(22) || '');
+            return {
+              depositAmount: parsed.amount,
+              depositCurrency: parsed.currency,
+            };
+          })(),
           // 인덱스 23: exchangeGainLoss (환차손익) - "확인중"
           exchangeGainLoss: (() => {
             const value = get(23);
@@ -401,12 +427,12 @@ export function OnlineCommerceBulkModal({ isOpen, onClose, onSuccess }: OnlineCo
 
       console.log('일괄 등록 요청 데이터:', { recordsCount: recordsToSubmit.length, firstRecord: recordsToSubmit[0] });
 
-      const response = await fetch('/api/online-commerce-team/bulk', {
+      const response = await fetch('/api/income-records/bulk', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ records: recordsToSubmit }),
+        body: JSON.stringify({ team: 'online_commerce', records: recordsToSubmit }),
       });
 
       const data = await response.json();

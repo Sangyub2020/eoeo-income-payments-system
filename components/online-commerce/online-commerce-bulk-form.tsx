@@ -89,12 +89,12 @@ export function OnlineCommerceBulkForm({ onSuccess }: OnlineCommerceBulkFormProp
         throw new Error('등록할 입금 정보가 없습니다.');
       }
 
-      const response = await fetch('/api/online-commerce-team/bulk', {
+      const response = await fetch('/api/income-records/bulk', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ records }),
+        body: JSON.stringify({ team: 'online_commerce', records }),
       });
 
       if (!response.ok) {

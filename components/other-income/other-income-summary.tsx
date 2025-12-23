@@ -26,7 +26,7 @@ export function OtherIncomeSummary() {
     setError(null);
 
     try {
-      const response = await fetch('/api/other-income');
+      const response = await fetch('/api/income-records?team=other_income');
       if (!response.ok) {
         throw new Error('입금 정보를 불러오는데 실패했습니다.');
       }

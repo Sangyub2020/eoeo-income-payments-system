@@ -162,12 +162,13 @@ export function OnlineCommerceFormModal({ isOpen, onClose, onSuccess }: OnlineCo
         invoiceCopyUrl = uploadData.url;
       }
 
-      const response = await fetch('/api/online-commerce-team', {
+      const response = await fetch('/api/income-records', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          team: 'online_commerce',
           ...formData,
           invoiceCopy: invoiceCopyUrl,
         }),
@@ -190,9 +191,27 @@ export function OnlineCommerceFormModal({ isOpen, onClose, onSuccess }: OnlineCo
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     
+    // 입금액 필드 처리 (통화 기호 인식)
+    if (name === 'expectedDepositAmount' || name === 'depositAmount') {
+      const hasWon = value.includes('₩') || value.includes('원');
+      const hasDollar = value.includes('$') || value.includes('USD') || value.toUpperCase().includes('USD');
+      const numStr = value.replace(/[₩$,\s원USD]/gi, '');
+      const amount = numStr ? Number(numStr) : undefined;
+      
+      setFormData((prev) => {
+        const currency = hasDollar ? 'USD' : (hasWon ? 'KRW' : (name === 'expectedDepositAmount' ? (prev.expectedDepositCurrency || 'KRW') : (prev.depositCurrency || 'KRW')));
+        return {
+          ...prev,
+          [name]: amount,
+          [name === 'expectedDepositAmount' ? 'expectedDepositCurrency' : 'depositCurrency']: currency,
+        };
+      });
+      return;
+    }
+    
     setFormData((prev) => ({
       ...prev,
-      [name]: value === '' ? undefined : (name.includes('Amount') || name.includes('Number') || name.includes('Month') || name.includes('Year') || name === 'ratio' || name === 'count' || name === 'year' || name === 'expectedDepositMonth' || name === 'depositMonth' || name === 'installmentNumber' || name === 'exchangeGainLoss' || name === 'difference' || name === 'expectedDepositAmount' || name === 'depositAmount' || name === 'invoiceSupplyPrice')
+      [name]: value === '' ? undefined : (name.includes('Amount') || name.includes('Number') || name.includes('Month') || name.includes('Year') || name === 'ratio' || name === 'count' || name === 'year' || name === 'expectedDepositMonth' || name === 'depositMonth' || name === 'installmentNumber' || name === 'exchangeGainLoss' || name === 'difference' || name === 'invoiceSupplyPrice')
         ? (value === '' ? undefined : Number(value))
         : value,
     }));
@@ -500,14 +519,26 @@ export function OnlineCommerceFormModal({ isOpen, onClose, onSuccess }: OnlineCo
               <label htmlFor="expectedDepositAmount" className="block text-sm font-medium text-gray-700 mb-1">
                 입금 예정금액 (부가세 포함)
               </label>
-              <input
-                type="number"
-                id="expectedDepositAmount"
-                name="expectedDepositAmount"
-                value={formData.expectedDepositAmount || ''}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  id="expectedDepositAmount"
+                  name="expectedDepositAmount"
+                  value={formData.expectedDepositAmount ? `${formData.expectedDepositCurrency === 'USD' ? '$' : '₩'}${formData.expectedDepositAmount.toLocaleString()}` : ''}
+                  onChange={handleChange}
+                  placeholder="₩1,000,000 또는 $1,000"
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <select
+                  name="expectedDepositCurrency"
+                  value={formData.expectedDepositCurrency || 'KRW'}
+                  onChange={(e) => setFormData(prev => ({ ...prev, expectedDepositCurrency: e.target.value }))}
+                  className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="KRW">KRW</option>
+                  <option value="USD">USD</option>
+                </select>
+              </div>
             </div>
 
             <div>
@@ -542,14 +573,26 @@ export function OnlineCommerceFormModal({ isOpen, onClose, onSuccess }: OnlineCo
               <label htmlFor="depositAmount" className="block text-sm font-medium text-gray-700 mb-1">
                 입금액
               </label>
-              <input
-                type="number"
-                id="depositAmount"
-                name="depositAmount"
-                value={formData.depositAmount || ''}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  id="depositAmount"
+                  name="depositAmount"
+                  value={formData.depositAmount ? `${formData.depositCurrency === 'USD' ? '$' : '₩'}${formData.depositAmount.toLocaleString()}` : ''}
+                  onChange={handleChange}
+                  placeholder="₩1,000,000 또는 $1,000"
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <select
+                  name="depositCurrency"
+                  value={formData.depositCurrency || 'KRW'}
+                  onChange={(e) => setFormData(prev => ({ ...prev, depositCurrency: e.target.value }))}
+                  className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="KRW">KRW</option>
+                  <option value="USD">USD</option>
+                </select>
+              </div>
             </div>
 
             <div>

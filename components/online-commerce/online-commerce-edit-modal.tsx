@@ -14,7 +14,11 @@ interface OnlineCommerceEditModalProps {
 }
 
 export function OnlineCommerceEditModal({ record, onClose, onSuccess }: OnlineCommerceEditModalProps) {
-  const [formData, setFormData] = useState<Partial<OnlineCommerceTeam>>(record);
+  const [formData, setFormData] = useState<Partial<OnlineCommerceTeam>>({
+    ...record,
+    expectedDepositCurrency: record.expectedDepositCurrency || 'KRW',
+    depositCurrency: record.depositCurrency || 'KRW',
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [invoiceFile, setInvoiceFile] = useState<File | null>(null);
@@ -168,13 +172,14 @@ export function OnlineCommerceEditModal({ record, onClose, onSuccess }: OnlineCo
         invoiceCopyUrl = uploadData.url;
       }
 
-      const response = await fetch(`/api/online-commerce-team/${record.id}`, {
+      const response = await fetch(`/api/income-records/${record.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           ...formData,
+          team: 'online_commerce',
           invoiceCopy: invoiceCopyUrl,
         }),
       });
@@ -490,14 +495,26 @@ export function OnlineCommerceEditModal({ record, onClose, onSuccess }: OnlineCo
               <label htmlFor="expectedDepositAmount" className="block text-sm font-medium text-gray-700 mb-1">
                 입금 예정금액 (부가세 포함)
               </label>
-              <input
-                type="number"
-                id="expectedDepositAmount"
-                name="expectedDepositAmount"
-                value={formData.expectedDepositAmount || ''}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  id="expectedDepositAmount"
+                  name="expectedDepositAmount"
+                  value={formData.expectedDepositAmount ? `${formData.expectedDepositCurrency === 'USD' ? '$' : '₩'}${formData.expectedDepositAmount.toLocaleString()}` : ''}
+                  onChange={handleChange}
+                  placeholder="₩1,000,000 또는 $1,000"
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <select
+                  name="expectedDepositCurrency"
+                  value={formData.expectedDepositCurrency || 'KRW'}
+                  onChange={(e) => setFormData(prev => ({ ...prev, expectedDepositCurrency: e.target.value }))}
+                  className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="KRW">KRW</option>
+                  <option value="USD">USD</option>
+                </select>
+              </div>
             </div>
 
             <div>
@@ -532,14 +549,26 @@ export function OnlineCommerceEditModal({ record, onClose, onSuccess }: OnlineCo
               <label htmlFor="depositAmount" className="block text-sm font-medium text-gray-700 mb-1">
                 입금액
               </label>
-              <input
-                type="number"
-                id="depositAmount"
-                name="depositAmount"
-                value={formData.depositAmount || ''}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  id="depositAmount"
+                  name="depositAmount"
+                  value={formData.depositAmount ? `${formData.depositCurrency === 'USD' ? '$' : '₩'}${formData.depositAmount.toLocaleString()}` : ''}
+                  onChange={handleChange}
+                  placeholder="₩1,000,000 또는 $1,000"
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <select
+                  name="depositCurrency"
+                  value={formData.depositCurrency || 'KRW'}
+                  onChange={(e) => setFormData(prev => ({ ...prev, depositCurrency: e.target.value }))}
+                  className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="KRW">KRW</option>
+                  <option value="USD">USD</option>
+                </select>
+              </div>
             </div>
 
             <div>

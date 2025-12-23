@@ -5,10 +5,11 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat('ko-KR', {
+export function formatCurrency(amount: number, currency: string = 'KRW'): string {
+  const locale = currency === 'USD' ? 'en-US' : 'ko-KR';
+  return new Intl.NumberFormat(locale, {
     style: 'currency',
-    currency: 'KRW',
+    currency: currency,
   }).format(amount);
 }
 

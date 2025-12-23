@@ -12,7 +12,7 @@ import { OnlineCommerceEditModal } from './online-commerce-edit-modal';
 
 const ITEMS_PER_PAGE = 100;
 
-type SortField = 'category' | 'vendorCode' | 'companyName' | 'brandName' | 'projectName' | 'expectedDepositDate' | 'expectedDepositAmount' | 'depositDate' | 'depositAmount' | 'invoiceIssued' | null;
+type SortField = 'category' | 'vendorCode' | 'companyName' | 'brandName' | 'project' | 'projectName' | 'projectCode' | 'expectedDepositDate' | 'expectedDepositAmount' | 'depositDate' | 'depositAmount' | 'invoiceIssued' | null;
 type SortDirection = 'asc' | 'desc';
 
 interface OnlineCommerceListProps {
@@ -68,62 +68,104 @@ export function OnlineCommerceList({ onSuccess }: OnlineCommerceListProps) {
     { key: 'actions', label: '작업', alwaysVisible: true },
   ];
   
-  // 선택된 열 관리 (디폴트는 모든 열 선택)
+  // 선택된 열 관리 (프로젝트 유형 코드는 기본적으로 숨김)
   const [visibleColumns, setVisibleColumns] = useState<Set<string>>(
-    new Set(allColumns.map(col => col.key))
+    new Set(allColumns.filter(col => col.key !== 'projectCode').map(col => col.key))
   );
+
+  // 열 너비 관리
+  const [columnWidths, setColumnWidths] = useState<Record<string, number>>({
+    checkbox: 50,
+    number: 60,
+    category: 120,
+    projectCode: 150,
+    project: 150,
+    projectName: 150,
+    vendorCode: 100,
+    companyName: 150,
+    brandName: 120,
+    expectedDepositDate: 110,
+    expectedDepositAmount: 120,
+    depositDate: 110,
+    depositAmount: 120,
+    invoiceIssued: 80,
+    businessRegistrationNumber: 120,
+    invoiceEmail: 180,
+    eoeoManager: 100,
+    contractLink: 120,
+    estimateLink: 120,
+    installmentNumber: 60,
+    attributionYearMonth: 100,
+    advanceBalance: 80,
+    ratio: 80,
+    count: 60,
+    description: 200,
+    createdDate: 110,
+    invoiceCopy: 120,
+    issueNotes: 200,
+    actions: 100,
+  });
+
+  const [resizingColumn, setResizingColumn] = useState<string | null>(null);
+  const [resizeStartX, setResizeStartX] = useState(0);
+  const [resizeStartWidth, setResizeStartWidth] = useState(0);
+
+  const handleResizeStart = (columnKey: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setResizingColumn(columnKey);
+    setResizeStartX(e.clientX);
+    setResizeStartWidth(columnWidths[columnKey] || 100);
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+  };
+
+  useEffect(() => {
+    const handleResize = (e: MouseEvent) => {
+      if (!resizingColumn) return;
+      const diff = e.clientX - resizeStartX;
+      const newWidth = Math.max(50, resizeStartWidth + diff);
+      setColumnWidths(prev => ({
+        ...prev,
+        [resizingColumn]: newWidth,
+      }));
+    };
+
+    const handleResizeEnd = () => {
+      setResizingColumn(null);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+
+    if (resizingColumn) {
+      document.addEventListener('mousemove', handleResize);
+      document.addEventListener('mouseup', handleResizeEnd);
+      return () => {
+        document.removeEventListener('mousemove', handleResize);
+        document.removeEventListener('mouseup', handleResizeEnd);
+      };
+    }
+  }, [resizingColumn, resizeStartX, resizeStartWidth]);
 
   const fetchRecords = async () => {
     setIsLoading(true);
     setError(null);
 
     try {
-      const response = await fetch('/api/online-commerce-team');
+      const response = await fetch('/api/income-records?team=online_commerce');
       if (!response.ok) {
         throw new Error('입금 목록을 불러오는데 실패했습니다.');
       }
 
       const data = await response.json();
       if (data.success) {
+        // 통합 API는 이미 camelCase로 변환된 데이터를 반환
         const formattedRecords = data.data.map((r: any) => ({
-          id: r.id,
-          category: r.category,
-          vendorCode: r.vendor_code,
-          companyName: r.company_name,
-          brandName: r.brand_name,
-          businessRegistrationNumber: r.business_registration_number,
-          invoiceEmail: r.invoice_email,
-          projectCode: r.project_code,
-          project: r.project,
-          projectName: r.project_name,
-          eoeoManager: r.eoeo_manager,
-          contractLink: r.contract_link,
-          estimateLink: r.estimate_link,
-          installmentNumber: r.installment_number,
-          attributionYearMonth: r.attribution_year_month,
-          advanceBalance: r.advance_balance,
-          ratio: r.ratio,
-          count: r.count,
-          expectedDepositDate: r.expected_deposit_date,
-          expectedDepositAmount: r.expected_deposit_amount,
-          description: r.description,
-          depositDate: r.deposit_date,
-          depositAmount: r.deposit_amount,
-          exchangeGainLoss: r.exchange_gain_loss,
-          difference: r.difference,
-          createdDate: r.created_date,
-          invoiceIssued: r.invoice_issued,
-          invoiceCopy: r.invoice_copy,
-          issueNotes: r.issue_notes,
-          year: r.year,
-          expectedDepositMonth: r.expected_deposit_month,
-          depositMonth: r.deposit_month,
-          taxStatus: r.tax_status,
-          invoiceSupplyPrice: r.invoice_supply_price,
-          createdAt: r.created_at,
-          updatedAt: r.updated_at,
+          ...r,
+          expectedDepositCurrency: r.expectedDepositCurrency || 'KRW',
+          depositCurrency: r.depositCurrency || 'KRW',
           // 필수 필드 검증 플래그
-          hasWarning: !r.vendor_code || !r.category || !r.project_code,
+          hasWarning: !r.vendorCode || !r.category || !r.projectCode,
         }));
         setRecords(formattedRecords);
         setFilteredRecords(formattedRecords);
@@ -235,17 +277,17 @@ export function OnlineCommerceList({ onSuccess }: OnlineCommerceListProps) {
 
     setIsDeleting(true);
     try {
-      const response = await fetch('/api/online-commerce-team', {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ ids }),
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || '삭제에 실패했습니다.');
+      // 여러 ID를 개별적으로 삭제
+      const deletePromises = ids.map(id => 
+        fetch(`/api/income-records/${id}`, {
+          method: 'DELETE',
+        })
+      );
+      const responses = await Promise.all(deletePromises);
+      
+      const failed = responses.filter(r => !r.ok);
+      if (failed.length > 0) {
+        throw new Error('일부 항목 삭제에 실패했습니다.');
       }
 
       await fetchRecords();
@@ -423,27 +465,42 @@ export function OnlineCommerceList({ onSuccess }: OnlineCommerceListProps) {
       )}
 
       <div className="overflow-x-auto max-h-[calc(100vh-300px)]">
-        <table className="w-full text-sm">
+        <table className="w-full text-sm" style={{ tableLayout: 'fixed' }}>
             <thead className="bg-gray-50 sticky top-0 z-10">
               <tr className="border-b">
                 {visibleColumns.has('checkbox') && (
-                  <th className="text-left p-2 font-medium text-gray-700 w-12">
+                  <th 
+                    className="text-left p-2 font-medium text-gray-700 relative"
+                    style={{ width: `${columnWidths.checkbox}px`, minWidth: '50px' }}
+                  >
                     <input
                       type="checkbox"
                       checked={allSelected}
                       onChange={(e) => handleSelectAll(e.target.checked)}
                       className="rounded border-gray-300"
                     />
+                    <div
+                      className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 bg-transparent"
+                      onMouseDown={(e) => handleResizeStart('checkbox', e)}
+                    />
                   </th>
                 )}
                 {visibleColumns.has('number') && (
-                  <th className="text-left p-2 font-medium text-gray-700 whitespace-nowrap">
+                  <th 
+                    className="text-left p-2 font-medium text-gray-700 whitespace-nowrap relative"
+                    style={{ width: `${columnWidths.number}px`, minWidth: '50px' }}
+                  >
                     번호
+                    <div
+                      className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 bg-transparent"
+                      onMouseDown={(e) => handleResizeStart('number', e)}
+                    />
                   </th>
                 )}
                 {visibleColumns.has('category') && (
                   <th 
-                    className="text-left p-2 font-medium text-gray-700 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap"
+                    className="text-left p-2 font-medium text-gray-700 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap relative"
+                    style={{ width: `${columnWidths.category}px`, minWidth: '50px' }}
                     onClick={() => handleSort('category')}
                   >
                     <div className="flex items-center gap-1">
@@ -459,20 +516,68 @@ export function OnlineCommerceList({ onSuccess }: OnlineCommerceListProps) {
                         <ArrowUpDown className="h-3 w-3 text-gray-400" />
                       )}
                     </div>
+                    <div
+                      className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 bg-transparent z-10"
+                      onMouseDown={(e) => handleResizeStart('category', e)}
+                    />
                   </th>
                 )}
                 {visibleColumns.has('projectCode') && (
-                  <th className="text-left p-2 font-medium text-gray-700 whitespace-nowrap">
-                    프로젝트 유형 코드
+                  <th 
+                    className="text-left p-2 font-medium text-gray-700 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap relative"
+                    style={{ width: `${columnWidths.projectCode}px`, minWidth: '50px' }}
+                    onClick={() => handleSort('projectCode')}
+                  >
+                    <div className="flex items-center gap-1">
+                      <span>프로젝트 유형 코드</span>
+                      {sortField === 'projectCode' ? (
+                        sortDirection === 'asc' ? (
+                          <ArrowUp className="h-3 w-3" />
+                        ) : (
+                          <ArrowDown className="h-3 w-3" />
+                        )
+                      ) : (
+                        <ArrowUpDown className="h-3 w-3 text-gray-400" />
+                      )}
+                    </div>
+                    <div
+                      className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 bg-transparent z-10"
+                      onMouseDown={(e) => handleResizeStart('projectCode', e)}
+                    />
                   </th>
                 )}
                 {visibleColumns.has('project') && (
                   <th 
-                    className="text-left p-2 font-medium text-gray-700 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap"
-                    onClick={() => handleSort('projectName')}
+                    className="text-left p-2 font-medium text-gray-700 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap relative"
+                    style={{ width: `${columnWidths.project}px`, minWidth: '50px' }}
+                    onClick={() => handleSort('project')}
                   >
                     <div className="flex items-center gap-1">
                       <span>프로젝트 유형</span>
+                      {sortField === 'project' ? (
+                        sortDirection === 'asc' ? (
+                          <ArrowUp className="h-3 w-3" />
+                        ) : (
+                          <ArrowDown className="h-3 w-3" />
+                        )
+                      ) : (
+                        <ArrowUpDown className="h-3 w-3 text-gray-400" />
+                      )}
+                    </div>
+                    <div
+                      className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 bg-transparent z-10"
+                      onMouseDown={(e) => handleResizeStart('project', e)}
+                    />
+                  </th>
+                )}
+                {visibleColumns.has('projectName') && (
+                  <th 
+                    className="text-left p-2 font-medium text-gray-700 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap relative"
+                    style={{ width: `${columnWidths.projectName}px`, minWidth: '50px' }}
+                    onClick={() => handleSort('projectName')}
+                  >
+                    <div className="flex items-center gap-1">
+                      <span>Project Name</span>
                       {sortField === 'projectName' ? (
                         sortDirection === 'asc' ? (
                           <ArrowUp className="h-3 w-3" />
@@ -483,16 +588,16 @@ export function OnlineCommerceList({ onSuccess }: OnlineCommerceListProps) {
                         <ArrowUpDown className="h-3 w-3 text-gray-400" />
                       )}
                     </div>
-                  </th>
-                )}
-                {visibleColumns.has('projectName') && (
-                  <th className="text-left p-2 font-medium text-gray-700 whitespace-nowrap">
-                    Project Name
+                    <div
+                      className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 bg-transparent z-10"
+                      onMouseDown={(e) => handleResizeStart('projectName', e)}
+                    />
                   </th>
                 )}
                 {visibleColumns.has('vendorCode') && (
                   <th 
-                    className="text-left p-2 font-medium text-gray-700 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap"
+                    className="text-left p-2 font-medium text-gray-700 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap relative"
+                    style={{ width: `${columnWidths.vendorCode}px`, minWidth: '50px' }}
                     onClick={() => handleSort('vendorCode')}
                   >
                     <div className="flex items-center gap-1">
@@ -507,11 +612,16 @@ export function OnlineCommerceList({ onSuccess }: OnlineCommerceListProps) {
                         <ArrowUpDown className="h-3 w-3 text-gray-400" />
                       )}
                     </div>
+                    <div
+                      className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 bg-transparent z-10"
+                      onMouseDown={(e) => handleResizeStart('vendorCode', e)}
+                    />
                   </th>
                 )}
                 {visibleColumns.has('companyName') && (
                   <th 
-                    className="text-left p-2 font-medium text-gray-700 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap"
+                    className="text-left p-2 font-medium text-gray-700 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap relative"
+                    style={{ width: `${columnWidths.companyName}px`, minWidth: '50px' }}
                     onClick={() => handleSort('companyName')}
                   >
                     <div className="flex items-center gap-1">
@@ -526,11 +636,16 @@ export function OnlineCommerceList({ onSuccess }: OnlineCommerceListProps) {
                         <ArrowUpDown className="h-3 w-3 text-gray-400" />
                       )}
                     </div>
+                    <div
+                      className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 bg-transparent z-10"
+                      onMouseDown={(e) => handleResizeStart('companyName', e)}
+                    />
                   </th>
                 )}
                 {visibleColumns.has('brandName') && (
                   <th 
-                    className="text-left p-2 font-medium text-gray-700 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap"
+                    className="text-left p-2 font-medium text-gray-700 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap relative"
+                    style={{ width: `${columnWidths.brandName}px`, minWidth: '50px' }}
                     onClick={() => handleSort('brandName')}
                   >
                     <div className="flex items-center gap-1">
@@ -545,11 +660,16 @@ export function OnlineCommerceList({ onSuccess }: OnlineCommerceListProps) {
                         <ArrowUpDown className="h-3 w-3 text-gray-400" />
                       )}
                     </div>
+                    <div
+                      className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 bg-transparent z-10"
+                      onMouseDown={(e) => handleResizeStart('brandName', e)}
+                    />
                   </th>
                 )}
                 {visibleColumns.has('expectedDepositDate') && (
                   <th 
-                    className="text-left p-2 font-medium text-gray-700 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap"
+                    className="text-left p-2 font-medium text-gray-700 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap relative"
+                    style={{ width: `${columnWidths.expectedDepositDate}px`, minWidth: '50px' }}
                     onClick={() => handleSort('expectedDepositDate')}
                   >
                     <div className="flex items-center gap-1">
@@ -564,11 +684,16 @@ export function OnlineCommerceList({ onSuccess }: OnlineCommerceListProps) {
                         <ArrowUpDown className="h-3 w-3 text-gray-400" />
                       )}
                     </div>
+                    <div
+                      className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 bg-transparent z-10"
+                      onMouseDown={(e) => handleResizeStart('expectedDepositDate', e)}
+                    />
                   </th>
                 )}
                 {visibleColumns.has('expectedDepositAmount') && (
                   <th 
-                    className="text-right p-2 font-medium text-gray-700 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap"
+                    className="text-right p-2 font-medium text-gray-700 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap relative"
+                    style={{ width: `${columnWidths.expectedDepositAmount}px`, minWidth: '50px' }}
                     onClick={() => handleSort('expectedDepositAmount')}
                   >
                     <div className="flex items-center justify-end gap-1">
@@ -583,11 +708,16 @@ export function OnlineCommerceList({ onSuccess }: OnlineCommerceListProps) {
                         <ArrowUpDown className="h-3 w-3 text-gray-400" />
                       )}
                     </div>
+                    <div
+                      className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 bg-transparent z-10"
+                      onMouseDown={(e) => handleResizeStart('expectedDepositAmount', e)}
+                    />
                   </th>
                 )}
                 {visibleColumns.has('depositDate') && (
                   <th 
-                    className="text-left p-2 font-medium text-gray-700 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap"
+                    className="text-left p-2 font-medium text-gray-700 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap relative"
+                    style={{ width: `${columnWidths.depositDate}px`, minWidth: '50px' }}
                     onClick={() => handleSort('depositDate')}
                   >
                     <div className="flex items-center gap-1">
@@ -602,11 +732,16 @@ export function OnlineCommerceList({ onSuccess }: OnlineCommerceListProps) {
                         <ArrowUpDown className="h-3 w-3 text-gray-400" />
                       )}
                     </div>
+                    <div
+                      className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 bg-transparent z-10"
+                      onMouseDown={(e) => handleResizeStart('depositDate', e)}
+                    />
                   </th>
                 )}
                 {visibleColumns.has('depositAmount') && (
                   <th 
-                    className="text-right p-2 font-medium text-gray-700 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap"
+                    className="text-right p-2 font-medium text-gray-700 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap relative"
+                    style={{ width: `${columnWidths.depositAmount}px`, minWidth: '50px' }}
                     onClick={() => handleSort('depositAmount')}
                   >
                     <div className="flex items-center justify-end gap-1">
@@ -621,11 +756,16 @@ export function OnlineCommerceList({ onSuccess }: OnlineCommerceListProps) {
                         <ArrowUpDown className="h-3 w-3 text-gray-400" />
                       )}
                     </div>
+                    <div
+                      className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 bg-transparent z-10"
+                      onMouseDown={(e) => handleResizeStart('depositAmount', e)}
+                    />
                   </th>
                 )}
                 {visibleColumns.has('invoiceIssued') && (
                   <th 
-                    className="text-left p-2 font-medium text-gray-700 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap"
+                    className="text-left p-2 font-medium text-gray-700 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap relative"
+                    style={{ width: `${columnWidths.invoiceIssued}px`, minWidth: '50px' }}
                     onClick={() => handleSort('invoiceIssued')}
                   >
                     <div className="flex items-center gap-1">
@@ -640,52 +780,191 @@ export function OnlineCommerceList({ onSuccess }: OnlineCommerceListProps) {
                         <ArrowUpDown className="h-3 w-3 text-gray-400" />
                       )}
                     </div>
+                    <div
+                      className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 bg-transparent z-10"
+                      onMouseDown={(e) => handleResizeStart('invoiceIssued', e)}
+                    />
                   </th>
                 )}
                 {visibleColumns.has('businessRegistrationNumber') && (
-                  <th className="text-left p-2 font-medium text-gray-700 whitespace-nowrap">사업자번호</th>
+                  <th 
+                    className="text-left p-2 font-medium text-gray-700 whitespace-nowrap relative"
+                    style={{ width: `${columnWidths.businessRegistrationNumber}px`, minWidth: '50px' }}
+                  >
+                    사업자번호
+                    <div
+                      className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 bg-transparent z-10"
+                      onMouseDown={(e) => handleResizeStart('businessRegistrationNumber', e)}
+                    />
+                  </th>
                 )}
                 {visibleColumns.has('invoiceEmail') && (
-                  <th className="text-left p-2 font-medium text-gray-700 whitespace-nowrap">이메일</th>
+                  <th 
+                    className="text-left p-2 font-medium text-gray-700 whitespace-nowrap relative"
+                    style={{ width: `${columnWidths.invoiceEmail}px`, minWidth: '50px' }}
+                  >
+                    이메일
+                    <div
+                      className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 bg-transparent z-10"
+                      onMouseDown={(e) => handleResizeStart('invoiceEmail', e)}
+                    />
+                  </th>
                 )}
                 {visibleColumns.has('eoeoManager') && (
-                  <th className="text-left p-2 font-medium text-gray-700 whitespace-nowrap">담당자</th>
+                  <th 
+                    className="text-left p-2 font-medium text-gray-700 whitespace-nowrap relative"
+                    style={{ width: `${columnWidths.eoeoManager}px`, minWidth: '50px' }}
+                  >
+                    담당자
+                    <div
+                      className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 bg-transparent z-10"
+                      onMouseDown={(e) => handleResizeStart('eoeoManager', e)}
+                    />
+                  </th>
                 )}
                 {visibleColumns.has('contractLink') && (
-                  <th className="text-left p-2 font-medium text-gray-700 whitespace-nowrap">계약서</th>
+                  <th 
+                    className="text-left p-2 font-medium text-gray-700 whitespace-nowrap relative"
+                    style={{ width: `${columnWidths.contractLink}px`, minWidth: '50px' }}
+                  >
+                    계약서
+                    <div
+                      className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 bg-transparent z-10"
+                      onMouseDown={(e) => handleResizeStart('contractLink', e)}
+                    />
+                  </th>
                 )}
                 {visibleColumns.has('estimateLink') && (
-                  <th className="text-left p-2 font-medium text-gray-700 whitespace-nowrap">견적서</th>
+                  <th 
+                    className="text-left p-2 font-medium text-gray-700 whitespace-nowrap relative"
+                    style={{ width: `${columnWidths.estimateLink}px`, minWidth: '50px' }}
+                  >
+                    견적서
+                    <div
+                      className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 bg-transparent z-10"
+                      onMouseDown={(e) => handleResizeStart('estimateLink', e)}
+                    />
+                  </th>
                 )}
                 {visibleColumns.has('installmentNumber') && (
-                  <th className="text-left p-2 font-medium text-gray-700 whitespace-nowrap">차수</th>
+                  <th 
+                    className="text-left p-2 font-medium text-gray-700 whitespace-nowrap relative"
+                    style={{ width: `${columnWidths.installmentNumber}px`, minWidth: '50px' }}
+                  >
+                    차수
+                    <div
+                      className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 bg-transparent z-10"
+                      onMouseDown={(e) => handleResizeStart('installmentNumber', e)}
+                    />
+                  </th>
                 )}
                 {visibleColumns.has('attributionYearMonth') && (
-                  <th className="text-left p-2 font-medium text-gray-700 whitespace-nowrap">귀속년월</th>
+                  <th 
+                    className="text-left p-2 font-medium text-gray-700 whitespace-nowrap relative"
+                    style={{ width: `${columnWidths.attributionYearMonth}px`, minWidth: '50px' }}
+                  >
+                    귀속년월
+                    <div
+                      className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 bg-transparent z-10"
+                      onMouseDown={(e) => handleResizeStart('attributionYearMonth', e)}
+                    />
+                  </th>
                 )}
                 {visibleColumns.has('advanceBalance') && (
-                  <th className="text-left p-2 font-medium text-gray-700 whitespace-nowrap">선/잔금</th>
+                  <th 
+                    className="text-left p-2 font-medium text-gray-700 whitespace-nowrap relative"
+                    style={{ width: `${columnWidths.advanceBalance}px`, minWidth: '50px' }}
+                  >
+                    선/잔금
+                    <div
+                      className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 bg-transparent z-10"
+                      onMouseDown={(e) => handleResizeStart('advanceBalance', e)}
+                    />
+                  </th>
                 )}
                 {visibleColumns.has('ratio') && (
-                  <th className="text-left p-2 font-medium text-gray-700 whitespace-nowrap">비율</th>
+                  <th 
+                    className="text-left p-2 font-medium text-gray-700 whitespace-nowrap relative"
+                    style={{ width: `${columnWidths.ratio}px`, minWidth: '50px' }}
+                  >
+                    비율
+                    <div
+                      className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 bg-transparent z-10"
+                      onMouseDown={(e) => handleResizeStart('ratio', e)}
+                    />
+                  </th>
                 )}
                 {visibleColumns.has('count') && (
-                  <th className="text-left p-2 font-medium text-gray-700 whitespace-nowrap">건수</th>
+                  <th 
+                    className="text-left p-2 font-medium text-gray-700 whitespace-nowrap relative"
+                    style={{ width: `${columnWidths.count}px`, minWidth: '50px' }}
+                  >
+                    건수
+                    <div
+                      className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 bg-transparent z-10"
+                      onMouseDown={(e) => handleResizeStart('count', e)}
+                    />
+                  </th>
                 )}
                 {visibleColumns.has('description') && (
-                  <th className="text-left p-2 font-medium text-gray-700 whitespace-nowrap">적요</th>
+                  <th 
+                    className="text-left p-2 font-medium text-gray-700 whitespace-nowrap relative"
+                    style={{ width: `${columnWidths.description}px`, minWidth: '50px' }}
+                  >
+                    적요
+                    <div
+                      className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 bg-transparent z-10"
+                      onMouseDown={(e) => handleResizeStart('description', e)}
+                    />
+                  </th>
                 )}
                 {visibleColumns.has('createdDate') && (
-                  <th className="text-left p-2 font-medium text-gray-700 whitespace-nowrap">작성일</th>
+                  <th 
+                    className="text-left p-2 font-medium text-gray-700 whitespace-nowrap relative"
+                    style={{ width: `${columnWidths.createdDate}px`, minWidth: '50px' }}
+                  >
+                    작성일
+                    <div
+                      className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 bg-transparent z-10"
+                      onMouseDown={(e) => handleResizeStart('createdDate', e)}
+                    />
+                  </th>
                 )}
                 {visibleColumns.has('invoiceCopy') && (
-                  <th className="text-left p-2 font-medium text-gray-700 whitespace-nowrap">세금계산서 첨부</th>
+                  <th 
+                    className="text-left p-2 font-medium text-gray-700 whitespace-nowrap relative"
+                    style={{ width: `${columnWidths.invoiceCopy}px`, minWidth: '50px' }}
+                  >
+                    세금계산서 첨부
+                    <div
+                      className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 bg-transparent z-10"
+                      onMouseDown={(e) => handleResizeStart('invoiceCopy', e)}
+                    />
+                  </th>
                 )}
                 {visibleColumns.has('issueNotes') && (
-                  <th className="text-left p-2 font-medium text-gray-700 whitespace-nowrap">이슈</th>
+                  <th 
+                    className="text-left p-2 font-medium text-gray-700 whitespace-nowrap relative"
+                    style={{ width: `${columnWidths.issueNotes}px`, minWidth: '50px' }}
+                  >
+                    이슈
+                    <div
+                      className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 bg-transparent z-10"
+                      onMouseDown={(e) => handleResizeStart('issueNotes', e)}
+                    />
+                  </th>
                 )}
                 {visibleColumns.has('actions') && (
-                  <th className="text-left p-2 font-medium text-gray-700 w-24 whitespace-nowrap">작업</th>
+                  <th 
+                    className="text-left p-2 font-medium text-gray-700 whitespace-nowrap relative"
+                    style={{ width: `${columnWidths.actions}px`, minWidth: '50px' }}
+                  >
+                    작업
+                    <div
+                      className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 bg-transparent z-10"
+                      onMouseDown={(e) => handleResizeStart('actions', e)}
+                    />
+                  </th>
                 )}
               </tr>
             </thead>
@@ -755,7 +1034,7 @@ export function OnlineCommerceList({ onSuccess }: OnlineCommerceListProps) {
                     <td className="p-2 whitespace-nowrap truncate overflow-hidden" title={record.depositDate ? formatDate(record.depositDate) : ''}>{record.depositDate ? formatDate(record.depositDate) : '-'}</td>
                   )}
                   {visibleColumns.has('depositAmount') && (
-                    <td className="p-2 text-right font-medium whitespace-nowrap truncate overflow-hidden" title={record.depositAmount ? formatCurrency(record.depositAmount) : ''}>{record.depositAmount ? formatCurrency(record.depositAmount) : '-'}</td>
+                    <td className="p-2 text-right font-medium whitespace-nowrap truncate overflow-hidden" title={record.depositAmount ? formatCurrency(record.depositAmount, record.depositCurrency) : ''}>{record.depositAmount ? formatCurrency(record.depositAmount, record.depositCurrency) : '-'}</td>
                   )}
                   {visibleColumns.has('invoiceIssued') && (
                     <td className="p-2 whitespace-nowrap truncate overflow-hidden" title={record.invoiceIssued || ''}>{record.invoiceIssued || '-'}</td>

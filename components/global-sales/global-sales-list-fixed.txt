@@ -1,0 +1,35 @@
+  // 모든 열 정의
+  const allColumns = [
+    { key: 'checkbox', label: '선택', alwaysVisible: true },
+    { key: 'number', label: '번호', alwaysVisible: true },
+    { key: 'category', label: '거래 유형', alwaysVisible: false },
+    { key: 'projectCode', label: '프로젝트 유형 코드', alwaysVisible: false },
+    { key: 'project', label: '프로젝트 유형', alwaysVisible: false },
+    { key: 'vendorCode', label: '거래처코드', alwaysVisible: false },
+    { key: 'companyName', label: '회사명', alwaysVisible: false },
+    { key: 'brandName', label: '브랜드명', alwaysVisible: false },
+    { key: 'expectedDepositDate', label: '입금예정일', alwaysVisible: false },
+    { key: 'expectedDepositAmount', label: '예정금액', alwaysVisible: false },
+    { key: 'oneTimeExpenseAmount', label: '실비금액', alwaysVisible: false },
+    { key: 'depositDate', label: '입금일', alwaysVisible: false },
+    { key: 'depositAmount', label: '입금액', alwaysVisible: false },
+    { key: 'invoiceIssued', label: '세금계산서', alwaysVisible: false },
+    { key: 'businessRegistrationNumber', label: '사업자번호', alwaysVisible: false },
+    { key: 'invoiceEmail', label: '이메일', alwaysVisible: false },
+    { key: 'eoeoManager', label: '담당자', alwaysVisible: false },
+    { key: 'contractLink', label: '계약서', alwaysVisible: false },
+    { key: 'invoiceLink', label: '인보이스', alwaysVisible: false },
+    { key: 'installmentNumber', label: '차수', alwaysVisible: false },
+    { key: 'attributionYearMonth', label: '귀속년월', alwaysVisible: false },
+    { key: 'advanceBalance', label: '선/잔금', alwaysVisible: false },
+    { key: 'ratio', label: '비율', alwaysVisible: false },
+    { key: 'count', label: '건수', alwaysVisible: false },
+    { key: 'description', label: '적요', alwaysVisible: false },
+    { key: 'createdDate', label: '작성일', alwaysVisible: false },
+    { key: 'invoiceCopy', label: '세금계산서 첨부', alwaysVisible: false },
+    { key: 'issueNotes', label: '이슈', alwaysVisible: false },
+    { key: 'actions', label: '작업', alwaysVisible: true },
+  ];
+  
+  // 선택된 열 관리 (디폴트는 모든 열 선택)
+

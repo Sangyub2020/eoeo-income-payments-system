@@ -120,9 +120,23 @@ export function GlobalSalesBulkModal({ isOpen, onClose, onSuccess }: GlobalSales
       
       // 최소 2개 컬럼은 있어야 데이터로 인식 (구분, 거래처코드)
       if (parts.length >= 2) {
+        const parseAmount = (val: string): { amount?: number; currency?: string } => {
+          if (!val || val === '') return { amount: undefined, currency: undefined };
+          // 통화 기호 확인
+          const hasWon = val.includes('₩') || val.includes('원');
+          const hasDollar = val.includes('$') || val.includes('USD') || val.toUpperCase().includes('USD');
+          
+          // 통화 기호 제거 및 숫자 추출
+          const numStr = val.replace(/[₩$,\s원USD]/gi, '');
+          const amount = numStr ? Number(numStr) : undefined;
+          const currency = hasDollar ? 'USD' : (hasWon ? 'KRW' : 'KRW'); // 기본값은 KRW
+          
+          return { amount, currency };
+        };
+        
         const parseNumber = (val: string) => {
           if (!val || val === '') return undefined;
-          const numStr = val.replace(/[₩,\s]/g, '');
+          const numStr = val.replace(/[₩$,\s원USD]/gi, '');
           return numStr ? Number(numStr) : undefined;
         };
 
@@ -310,12 +324,12 @@ export function GlobalSalesBulkModal({ isOpen, onClose, onSuccess }: GlobalSales
         })
       );
 
-      const response = await fetch('/api/global-sales-team/bulk', {
+      const response = await fetch('/api/income-records/bulk', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ records: recordsToSubmit }),
+        body: JSON.stringify({ team: 'global_sales', records: recordsToSubmit }),
       });
 
       if (!response.ok) {

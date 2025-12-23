@@ -26,7 +26,7 @@ export function OnlineCommerceSummary() {
     setError(null);
 
     try {
-      const response = await fetch('/api/online-commerce-team');
+      const response = await fetch('/api/income-records?team=online_commerce');
       if (!response.ok) {
         throw new Error('입금 정보를 불러오는데 실패했습니다.');
       }
