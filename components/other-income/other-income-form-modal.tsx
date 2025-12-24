@@ -21,6 +21,8 @@ export function OtherIncomeFormModal({ isOpen, onClose, onSuccess }: OtherIncome
   const [invoiceFileUrl, setInvoiceFileUrl] = useState<string | null>(null);
   const [vendors, setVendors] = useState<Array<{ code: string; name: string }>>([]);
   const [projects, setProjects] = useState<Array<{ code: string; name: string }>>([]);
+  const [expectedDepositAmountInput, setExpectedDepositAmountInput] = useState<string>('');
+  const [depositAmountInput, setDepositAmountInput] = useState<string>('');
 
   useEffect(() => {
     if (isOpen) {
@@ -32,6 +34,8 @@ export function OtherIncomeFormModal({ isOpen, onClose, onSuccess }: OtherIncome
       setError(null);
       setInvoiceFile(null);
       setInvoiceFileUrl(null);
+      setExpectedDepositAmountInput('');
+      setDepositAmountInput('');
     }
   }, [isOpen]);
 
@@ -532,8 +536,18 @@ export function OtherIncomeFormModal({ isOpen, onClose, onSuccess }: OtherIncome
                   type="text"
                   id="expectedDepositAmount"
                   name="expectedDepositAmount"
-                  value={formData.expectedDepositAmount ? `${formData.expectedDepositCurrency === 'USD' ? '$' : '₩'}${formData.expectedDepositAmount.toLocaleString()}` : ''}
+                  value={expectedDepositAmountInput ? `${formData.expectedDepositCurrency === 'USD' ? '$' : '₩'}${expectedDepositAmountInput.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}` : ''}
                   onChange={handleChange}
+                  onBlur={() => {
+                    // blur 시 포맷팅된 값으로 업데이트
+                    if (expectedDepositAmountInput) {
+                      const amount = Number(expectedDepositAmountInput);
+                      setFormData((prev) => ({
+                        ...prev,
+                        expectedDepositAmount: amount,
+                      }));
+                    }
+                  }}
                   placeholder="₩1,000,000 또는 $1,000"
                   className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />

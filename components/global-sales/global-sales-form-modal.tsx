@@ -21,6 +21,8 @@ export function GlobalSalesFormModal({ isOpen, onClose, onSuccess }: GlobalSales
   const [invoiceFileUrl, setInvoiceFileUrl] = useState<string | null>(null);
   const [vendors, setVendors] = useState<Array<{ code: string; name: string }>>([]);
   const [projects, setProjects] = useState<Array<{ code: string; name: string }>>([]);
+  const [expectedDepositAmountInput, setExpectedDepositAmountInput] = useState<string>('');
+  const [depositAmountInput, setDepositAmountInput] = useState<string>('');
 
   useEffect(() => {
     if (isOpen) {
@@ -32,6 +34,8 @@ export function GlobalSalesFormModal({ isOpen, onClose, onSuccess }: GlobalSales
       setError(null);
       setInvoiceFile(null);
       setInvoiceFileUrl(null);
+      setExpectedDepositAmountInput('');
+      setDepositAmountInput('');
     }
   }, [isOpen]);
 
@@ -190,18 +194,45 @@ export function GlobalSalesFormModal({ isOpen, onClose, onSuccess }: GlobalSales
     const { name, value } = e.target;
     
     // 입금액 필드 처리 (통화 기호 인식)
-    if (name === 'expectedDepositAmount' || name === 'depositAmount') {
+    if (name === 'expectedDepositAmount') {
+      // 숫자만 추출 (통화 기호, 쉼표, 공백 등 제거)
+      const numericValue = value.replace(/[₩$,\s원USD]/gi, '').replace(/[^\d]/g, '');
+      setExpectedDepositAmountInput(numericValue);
+      
+      const amount = numericValue ? Number(numericValue) : undefined;
+      
+      // 통화 감지
       const hasWon = value.includes('₩') || value.includes('원');
       const hasDollar = value.includes('$') || value.includes('USD') || value.toUpperCase().includes('USD');
-      const numStr = value.replace(/[₩$,\s원USD]/gi, '');
-      const amount = numStr ? Number(numStr) : undefined;
       
       setFormData((prev) => {
-        const currency = hasDollar ? 'USD' : (hasWon ? 'KRW' : (name === 'expectedDepositAmount' ? (prev.expectedDepositCurrency || 'KRW') : (prev.depositCurrency || 'KRW')));
+        const currency = hasDollar ? 'USD' : (hasWon ? 'KRW' : (prev.expectedDepositCurrency || 'KRW'));
         return {
           ...prev,
-          [name]: amount,
-          [name === 'expectedDepositAmount' ? 'expectedDepositCurrency' : 'depositCurrency']: currency,
+          expectedDepositAmount: amount,
+          expectedDepositCurrency: currency,
+        };
+      });
+      return;
+    }
+    
+    if (name === 'depositAmount') {
+      // 숫자만 추출 (통화 기호, 쉼표, 공백 등 제거)
+      const numericValue = value.replace(/[₩$,\s원USD]/gi, '').replace(/[^\d]/g, '');
+      setDepositAmountInput(numericValue);
+      
+      const amount = numericValue ? Number(numericValue) : undefined;
+      
+      // 통화 감지
+      const hasWon = value.includes('₩') || value.includes('원');
+      const hasDollar = value.includes('$') || value.includes('USD') || value.toUpperCase().includes('USD');
+      
+      setFormData((prev) => {
+        const currency = hasDollar ? 'USD' : (hasWon ? 'KRW' : (prev.depositCurrency || 'KRW'));
+        return {
+          ...prev,
+          depositAmount: amount,
+          depositCurrency: currency,
         };
       });
       return;
@@ -537,8 +568,18 @@ export function GlobalSalesFormModal({ isOpen, onClose, onSuccess }: GlobalSales
                   type="text"
                   id="expectedDepositAmount"
                   name="expectedDepositAmount"
-                  value={formData.expectedDepositAmount ? `${formData.expectedDepositCurrency === 'USD' ? '$' : '₩'}${formData.expectedDepositAmount.toLocaleString()}` : ''}
+                  value={expectedDepositAmountInput ? `${formData.expectedDepositCurrency === 'USD' ? '$' : '₩'}${expectedDepositAmountInput.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}` : ''}
                   onChange={handleChange}
+                  onBlur={() => {
+                    // blur 시 포맷팅된 값으로 업데이트
+                    if (expectedDepositAmountInput) {
+                      const amount = Number(expectedDepositAmountInput);
+                      setFormData((prev) => ({
+                        ...prev,
+                        expectedDepositAmount: amount,
+                      }));
+                    }
+                  }}
                   placeholder="₩1,000,000 또는 $1,000"
                   className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
