@@ -103,6 +103,7 @@ export interface OnlineCommerceTeam {
   vendorCode?: string;
   companyName?: string;
   brandName?: string;
+  brandNames?: string[];
   businessRegistrationNumber?: string;
   invoiceEmail?: string;
   projectCode?: string;
@@ -146,6 +147,7 @@ export interface GlobalMarketingTeam {
   vendorCode?: string;
   companyName?: string;
   brandName?: string;
+  brandNames?: string[];
   businessRegistrationNumber?: string;
   invoiceEmail?: string;
   projectCode?: string;
@@ -198,6 +200,7 @@ export interface OtherIncome {
   vendorCode?: string;
   companyName?: string;
   brandName?: string;
+  brandNames?: string[];
   businessRegistrationNumber?: string;
   invoiceEmail?: string;
   projectCode?: string;
@@ -240,6 +243,7 @@ export interface GlobalSalesTeam {
   vendorCode?: string;
   companyName?: string;
   brandName?: string;
+  brandNames?: string[];
   businessRegistrationNumber?: string;
   invoiceEmail?: string;
   projectCode?: string;
@@ -283,6 +287,7 @@ export interface OtherIncome {
   vendorCode?: string;
   companyName?: string;
   brandName?: string;
+  brandNames?: string[];
   businessRegistrationNumber?: string;
   invoiceEmail?: string;
   projectCode?: string;
@@ -369,6 +374,7 @@ export interface OtherIncome {
   vendorCode?: string;
   companyName?: string;
   brandName?: string;
+  brandNames?: string[];
   businessRegistrationNumber?: string;
   invoiceEmail?: string;
   projectCode?: string;
