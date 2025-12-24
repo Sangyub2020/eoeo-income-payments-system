@@ -357,6 +357,7 @@ export interface BrandPlanningTeam {
   difference?: number;
   createdDate?: string;
   invoiceCopy?: string;
+  invoiceAttachmentStatus?: 'required' | 'completed' | 'not_required'; // 첨부필요, 첨부완료, 첨부 불요
   issueNotes?: string;
   year?: number;
   expectedDepositMonth?: number;
