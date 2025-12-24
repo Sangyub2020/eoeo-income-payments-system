@@ -275,7 +275,7 @@ export function GlobalSalesMonthlyChart() {
               }}
             />
             <Tooltip 
-              formatter={(value: number | undefined, name: string) => {
+              formatter={(value: number | undefined, name: string | undefined) => {
                 if (value === undefined || value === null) return '-';
                 if (name === '입금액' || name === '이익') {
                   return formatCurrency(value);
