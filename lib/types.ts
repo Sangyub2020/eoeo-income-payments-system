@@ -214,7 +214,12 @@ export interface OtherIncome {
   businessRegistrationNumber?: string;
   invoiceEmail?: string;
   projectCode?: string;
+  projectCode2?: string;
+  projectCode3?: string;
   project?: string;
+  projectCategory?: string;
+  projectCategory2?: string;
+  projectCategory3?: string;
   projectName?: string;
   eoeoManager?: string;
   contractLink?: string;
@@ -306,7 +311,12 @@ export interface OtherIncome {
   businessRegistrationNumber?: string;
   invoiceEmail?: string;
   projectCode?: string;
+  projectCode2?: string;
+  projectCode3?: string;
   project?: string;
+  projectCategory?: string;
+  projectCategory2?: string;
+  projectCategory3?: string;
   projectName?: string;
   eoeoManager?: string;
   contractLink?: string;
@@ -397,7 +407,12 @@ export interface OtherIncome {
   businessRegistrationNumber?: string;
   invoiceEmail?: string;
   projectCode?: string;
+  projectCode2?: string;
+  projectCode3?: string;
   project?: string;
+  projectCategory?: string;
+  projectCategory2?: string;
+  projectCategory3?: string;
   projectName?: string;
   eoeoManager?: string;
   contractLink?: string;
