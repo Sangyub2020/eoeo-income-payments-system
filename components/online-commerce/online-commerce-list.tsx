@@ -65,6 +65,7 @@ export function OnlineCommerceList({ onSuccess }: OnlineCommerceListProps) {
     { key: 'depositDate', label: '입금일', alwaysVisible: false },
     { key: 'depositAmount', label: '입금액', alwaysVisible: false },
     { key: 'invoiceSupplyPrice', label: '세금계산서 발행 공급가', alwaysVisible: false },
+    { key: 'oneTimeExpenseAmount', label: '실비금액(VAT제외)', alwaysVisible: false },
     { key: 'invoiceIssued', label: '세금계산서', alwaysVisible: false },
     { key: 'businessRegistrationNumber', label: '사업자번호', alwaysVisible: false },
     { key: 'invoiceEmail', label: '이메일', alwaysVisible: false },
@@ -104,6 +105,7 @@ export function OnlineCommerceList({ onSuccess }: OnlineCommerceListProps) {
     depositDate: 110,
     depositAmount: 120,
     invoiceSupplyPrice: 150,
+    oneTimeExpenseAmount: 150,
     invoiceIssued: 80,
     businessRegistrationNumber: 120,
     invoiceEmail: 180,
@@ -403,12 +405,14 @@ export function OnlineCommerceList({ onSuccess }: OnlineCommerceListProps) {
           } else {
             value = '';
           }
-        } else if (key === 'expectedDepositAmount' || key === 'depositAmount') {
+        } else if (key === 'expectedDepositAmount' || key === 'depositAmount' || key === 'oneTimeExpenseAmount' || key === 'invoiceSupplyPrice') {
           // 금액 포맷팅
           if (value != null) {
             const currency = key === 'expectedDepositAmount' 
               ? (record as any).expectedDepositCurrency || 'KRW'
-              : (record as any).depositCurrency || 'KRW';
+              : key === 'depositAmount'
+              ? (record as any).depositCurrency || 'KRW'
+              : 'KRW';
             value = formatCurrency(Number(value), currency);
           } else {
             value = '';
@@ -921,6 +925,18 @@ export function OnlineCommerceList({ onSuccess }: OnlineCommerceListProps) {
                     />
                   </th>
                 )}
+                {visibleColumns.has('oneTimeExpenseAmount') && (
+                  <th 
+                    className="text-right p-2 font-medium text-gray-700 whitespace-nowrap relative"
+                    style={{ width: `${columnWidths.oneTimeExpenseAmount}px`, minWidth: '50px' }}
+                  >
+                    실비금액(VAT제외)
+                    <div
+                      className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 bg-transparent z-10"
+                      onMouseDown={(e) => handleResizeStart('oneTimeExpenseAmount', e)}
+                    />
+                  </th>
+                )}
                 {visibleColumns.has('invoiceIssued') && (
                   <th 
                     className="text-left p-2 font-medium text-gray-700 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap relative"
@@ -1197,6 +1213,9 @@ export function OnlineCommerceList({ onSuccess }: OnlineCommerceListProps) {
                   )}
                   {visibleColumns.has('invoiceSupplyPrice') && (
                     <td className="p-2 text-right whitespace-nowrap truncate overflow-hidden" title={record.invoiceSupplyPrice ? formatCurrency(record.invoiceSupplyPrice, 'KRW') : ''}>{record.invoiceSupplyPrice ? formatCurrency(record.invoiceSupplyPrice, 'KRW') : '-'}</td>
+                  )}
+                  {visibleColumns.has('oneTimeExpenseAmount') && (
+                    <td className="p-2 text-right whitespace-nowrap truncate overflow-hidden" title={record.oneTimeExpenseAmount ? formatCurrency(record.oneTimeExpenseAmount) : ''}>{record.oneTimeExpenseAmount ? formatCurrency(record.oneTimeExpenseAmount) : '-'}</td>
                   )}
                   {visibleColumns.has('invoiceIssued') && (
                     <td className="p-2 whitespace-nowrap truncate overflow-hidden" title={record.invoiceIssued || ''}>{record.invoiceIssued || '-'}</td>

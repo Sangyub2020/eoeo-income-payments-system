@@ -62,7 +62,7 @@ export function GlobalMarketingList({ onSuccess }: GlobalMarketingListProps) {
     { key: 'brandName', label: '브랜드명', alwaysVisible: false },
     { key: 'expectedDepositDate', label: '입금예정일', alwaysVisible: false },
     { key: 'expectedDepositAmount', label: '예정금액', alwaysVisible: false },
-    { key: 'oneTimeExpenseAmount', label: '실비금액', alwaysVisible: false },
+    { key: 'oneTimeExpenseAmount', label: '실비금액(VAT제외)', alwaysVisible: false },
     { key: 'depositDate', label: '입금일', alwaysVisible: false },
     { key: 'depositAmount', label: '입금액', alwaysVisible: false },
     { key: 'invoiceSupplyPrice', label: '세금계산서 발행 공급가', alwaysVisible: false },
@@ -1035,7 +1035,7 @@ export function GlobalMarketingList({ onSuccess }: GlobalMarketingListProps) {
                     className="text-left p-2 font-medium text-gray-700 whitespace-nowrap relative"
                     style={{ width: `${columnWidths.oneTimeExpenseAmount}px`, minWidth: '50px' }}
                   >
-                    실비금액
+                    실비금액(VAT제외)
                     <div
                       className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 bg-transparent z-10"
                       onMouseDown={(e) => handleResizeStart('oneTimeExpenseAmount', e)}
