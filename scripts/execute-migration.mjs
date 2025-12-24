@@ -18,3 +18,5 @@ console.log(sql);
 console.log('\n이 SQL을 Supabase 대시보드의 SQL Editor에서 실행하거나,');
 console.log('MCP를 통해 실행해주세요.');
 
+
+

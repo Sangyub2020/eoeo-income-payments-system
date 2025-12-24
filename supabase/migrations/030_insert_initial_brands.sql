@@ -113,3 +113,5 @@ INSERT INTO brands (name) VALUES
 ON CONFLICT (name) DO NOTHING;
 
 
+
+

@@ -60,7 +60,6 @@ export function OnlineCommerceBulkForm({ onSuccess }: OnlineCommerceBulkFormProp
           exchangeGainLoss: parseNumber(parts[23] || ''),
           difference: parseNumber(parts[24] || ''),
           createdDate: parts[25] || undefined,
-          invoiceIssued: parts[26] || undefined,
           invoiceCopy: parts[27] || undefined,
           issueNotes: parts[28] || undefined,
           year: parts[29] ? Number(parts[29]) : undefined,

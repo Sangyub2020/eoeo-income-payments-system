@@ -36,6 +36,11 @@ export function GlobalSalesEditModal({ record, onClose, onSuccess }: GlobalSales
     if (record.invoiceCopy) {
       setInvoiceFileUrl(record.invoiceCopy);
     }
+    // invoiceAttachmentStatus 초기화
+    setFormData(prev => ({
+      ...prev,
+      invoiceAttachmentStatus: record.invoiceAttachmentStatus || (record.invoiceCopy ? 'completed' : 'required'),
+    }));
     // 기존 brandName 또는 brandNames를 selectedBrands로 설정
     if (record.brandNames && record.brandNames.length > 0) {
       setSelectedBrands(record.brandNames);
@@ -153,8 +158,14 @@ export function GlobalSalesEditModal({ record, onClose, onSuccess }: GlobalSales
     const file = e.target.files?.[0];
     if (file) {
       setInvoiceFile(file);
+      // 미리보기 URL 생성
       const url = URL.createObjectURL(file);
       setInvoiceFileUrl(url);
+      // 파일이 업로드되면 상태를 'completed'로 자동 변경
+      setFormData(prev => ({
+        ...prev,
+        invoiceAttachmentStatus: 'completed',
+      }));
     }
   };
 
@@ -164,6 +175,11 @@ export function GlobalSalesEditModal({ record, onClose, onSuccess }: GlobalSales
     }
     setInvoiceFile(null);
     setInvoiceFileUrl(null);
+    // 파일 삭제 시 상태를 'required'로 변경
+    setFormData(prev => ({
+      ...prev,
+      invoiceAttachmentStatus: 'required',
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -206,6 +222,7 @@ export function GlobalSalesEditModal({ record, onClose, onSuccess }: GlobalSales
           team: 'global_sales',
           brandNames: selectedBrands.length > 0 ? selectedBrands : undefined,
           invoiceCopy: invoiceCopyUrl,
+          invoiceAttachmentStatus: invoiceCopyUrl ? 'completed' : (formData.invoiceAttachmentStatus || 'required'),
         }),
       });
 
@@ -658,17 +675,19 @@ export function GlobalSalesEditModal({ record, onClose, onSuccess }: GlobalSales
             </div>
 
             <div>
-              <label htmlFor="invoiceIssued" className="block text-sm font-medium text-gray-700 mb-1">
-                세금계산서 발행 여부
+              <label htmlFor="invoiceAttachmentStatus" className="block text-sm font-medium text-gray-700 mb-1">
+                세금계산서 첨부 상태
               </label>
               <SearchableSelect
-                value={formData.invoiceIssued || ''}
-                onChange={(value) => handleChange({ target: { name: 'invoiceIssued', value } } as any)}
+                value={formData.invoiceAttachmentStatus || 'required'}
+                onChange={(value) => handleChange({ target: { name: 'invoiceAttachmentStatus', value } } as any)}
                 options={[
-                  { value: 'O', label: 'O (발행)' },
-                  { value: 'X', label: 'X (미발행)' },
+                  { value: 'required', label: '첨부필요' },
+                  { value: 'not_required', label: '첨부불요' },
+                  ...(invoiceFileUrl || formData.invoiceCopy ? [{ value: 'completed', label: '첨부완료' }] : []),
                 ]}
-                placeholder="선택하세요"
+                placeholder="상태 선택"
+                disabled={false}
               />
             </div>
 

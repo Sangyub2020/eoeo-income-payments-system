@@ -98,7 +98,6 @@ export function OnlineCommerceSingleForm({ onSuccess }: OnlineCommerceSingleForm
         exchangeGainLoss: undefined,
         difference: undefined,
         createdDate: '',
-        invoiceIssued: '',
         invoiceCopy: '',
         issueNotes: '',
         year: undefined,
@@ -498,18 +497,6 @@ export function OnlineCommerceSingleForm({ onSuccess }: OnlineCommerceSingleForm
           </div>
 
           <div>
-            <label htmlFor="invoiceIssued" className="block text-sm font-medium text-gray-700 mb-1">
-              세금계산서 발행 여부
-            </label>
-            <input
-              type="text"
-              id="invoiceIssued"
-              name="invoiceIssued"
-              value={formData.invoiceIssued || ''}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
 
           <div>
             <label htmlFor="invoiceCopy" className="block text-sm font-medium text-gray-700 mb-1">

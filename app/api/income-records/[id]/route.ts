@@ -45,7 +45,12 @@ export async function PUT(
       businessRegistrationNumber,
       invoiceEmail,
       projectCode,
+      projectCode2,
+      projectCode3,
       project,
+      projectCategory,
+      projectCategory2,
+      projectCategory3,
       projectName,
       projectName2,
       projectName3,
@@ -76,8 +81,8 @@ export async function PUT(
       exchangeGainLoss,
       difference,
       createdDate,
-      invoiceIssued,
       invoiceCopy,
+      invoiceAttachmentStatus,
       issueNotes,
       year,
       expectedDepositMonth,
@@ -109,7 +114,12 @@ export async function PUT(
     if (businessRegistrationNumber !== undefined) updateData.business_registration_number = businessRegistrationNumber || null;
     if (invoiceEmail !== undefined) updateData.invoice_email = invoiceEmail || null;
     if (projectCode !== undefined) updateData.project_code = projectCode || null;
-    if (project !== undefined) updateData.project = project || null;
+    if (projectCode2 !== undefined) updateData.project_code2 = projectCode2 || null;
+    if (projectCode3 !== undefined) updateData.project_code3 = projectCode3 || null;
+    // project 필드는 제거되었으므로 projectCategory만 사용
+    if (projectCategory !== undefined) updateData.project_category = projectCategory || null;
+    if (projectCategory2 !== undefined) updateData.project_category2 = projectCategory2 || null;
+    if (projectCategory3 !== undefined) updateData.project_category3 = projectCategory3 || null;
     if (projectName !== undefined) updateData.project_name = projectName || null;
     if (projectName2 !== undefined) updateData.project_name2 = projectName2 || null;
     if (projectName3 !== undefined) updateData.project_name3 = projectName3 || null;
@@ -140,8 +150,8 @@ export async function PUT(
     if (exchangeGainLoss !== undefined) updateData.exchange_gain_loss = exchangeGainLoss || null;
     if (difference !== undefined) updateData.difference = difference || null;
     if (createdDate !== undefined) updateData.created_date = createdDate || null;
-    if (invoiceIssued !== undefined) updateData.invoice_issued = invoiceIssued || null;
     if (invoiceCopy !== undefined) updateData.invoice_copy = invoiceCopy || null;
+    if (invoiceAttachmentStatus !== undefined) updateData.invoice_attachment_status = invoiceAttachmentStatus || null;
     if (issueNotes !== undefined) updateData.issue_notes = issueNotes || null;
     if (year !== undefined) updateData.year = year || null;
     if (expectedDepositMonth !== undefined) updateData.expected_deposit_month = expectedDepositMonth || null;
@@ -186,8 +196,14 @@ export async function PUT(
       businessRegistrationNumber: data.business_registration_number,
       invoiceEmail: data.invoice_email,
       projectCode: data.project_code,
-      project: data.project,
+      projectCode2: data.project_code2,
+      projectCode3: data.project_code3,
+      project: data.project_category || data.project, // project_category가 있으면 사용, 없으면 기존 project 사용 (호환성)
+      projectCategory: data.project_category,
+      projectCategory2: data.project_category2,
+      projectCategory3: data.project_category3,
       projectName: data.project_name,
+      invoiceAttachmentStatus: data.invoice_attachment_status,
       projectName2: data.project_name2,
       projectName3: data.project_name3,
       projectName4: data.project_name4,
@@ -217,7 +233,6 @@ export async function PUT(
       exchangeGainLoss: data.exchange_gain_loss,
       difference: data.difference,
       createdDate: data.created_date,
-      invoiceIssued: data.invoice_issued,
       invoiceCopy: data.invoice_copy,
       issueNotes: data.issue_notes,
       year: data.year,

@@ -13,7 +13,7 @@ import { MultiSelect } from '@/components/ui/multi-select';
 
 const ITEMS_PER_PAGE = 100;
 
-type SortField = 'category' | 'vendorCode' | 'companyName' | 'brandName' | 'projectName' | 'expectedDepositDate' | 'expectedDepositAmount' | 'depositDate' | 'depositAmount' | 'invoiceIssued' | null;
+type SortField = 'category' | 'vendorCode' | 'companyName' | 'brandName' | 'projectName' | 'expectedDepositDate' | 'expectedDepositAmount' | 'depositDate' | 'depositAmount' | null;
 type SortDirection = 'asc' | 'desc';
 
 interface GlobalMarketingListProps {
@@ -62,11 +62,11 @@ export function GlobalMarketingList({ onSuccess }: GlobalMarketingListProps) {
     { key: 'brandName', label: '브랜드명', alwaysVisible: false },
     { key: 'expectedDepositDate', label: '입금예정일', alwaysVisible: false },
     { key: 'expectedDepositAmount', label: '예정금액', alwaysVisible: false },
-    { key: 'oneTimeExpenseAmount', label: '실비금액(VAT제외)', alwaysVisible: false },
     { key: 'depositDate', label: '입금일', alwaysVisible: false },
     { key: 'depositAmount', label: '입금액', alwaysVisible: false },
     { key: 'invoiceSupplyPrice', label: '세금계산서 발행 공급가', alwaysVisible: false },
-    { key: 'invoiceIssued', label: '세금계산서', alwaysVisible: false },
+    { key: 'oneTimeExpenseAmount', label: '실비금액(VAT제외)', alwaysVisible: false },
+    { key: 'invoiceAttachment', label: '세금계산서 첨부', alwaysVisible: false },
     { key: 'businessRegistrationNumber', label: '사업자번호', alwaysVisible: false },
     { key: 'invoiceEmail', label: '이메일', alwaysVisible: false },
     { key: 'eoeoManager', label: '담당자', alwaysVisible: false },
@@ -79,14 +79,20 @@ export function GlobalMarketingList({ onSuccess }: GlobalMarketingListProps) {
     { key: 'count', label: '건수', alwaysVisible: false },
     { key: 'description', label: '적요', alwaysVisible: false },
     { key: 'createdDate', label: '작성일', alwaysVisible: false },
-    { key: 'invoiceCopy', label: '세금계산서 첨부', alwaysVisible: false },
     { key: 'issueNotes', label: '이슈', alwaysVisible: false },
     { key: 'actions', label: '작업', alwaysVisible: true },
   ];
   
-  // 선택된 열 관리 (프로젝트 유형 코드는 기본적으로 숨김)
+  // 선택된 열 관리 (프로젝트 유형 코드, 차수, 건수, 작성일은 기본적으로 숨김)
   const [visibleColumns, setVisibleColumns] = useState<Set<string>>(
-    new Set(allColumns.filter(col => col.key !== 'projectCode').map(col => col.key))
+    new Set(allColumns.filter(col => 
+      col.key !== 'projectCode' && 
+      col.key !== 'installmentNumber' && 
+      col.key !== 'count' && 
+      col.key !== 'createdDate' &&
+      col.key !== 'businessRegistrationNumber' &&
+      col.key !== 'invoiceEmail'
+    ).map(col => col.key))
   );
 
   // 열 너비 관리
@@ -106,7 +112,7 @@ export function GlobalMarketingList({ onSuccess }: GlobalMarketingListProps) {
     depositDate: 110,
     depositAmount: 120,
     invoiceSupplyPrice: 150,
-    invoiceIssued: 80,
+    invoiceAttachment: 180,
     businessRegistrationNumber: 120,
     invoiceEmail: 180,
     eoeoManager: 100,
@@ -119,7 +125,6 @@ export function GlobalMarketingList({ onSuccess }: GlobalMarketingListProps) {
     count: 60,
     description: 200,
     createdDate: 110,
-    invoiceCopy: 120,
     issueNotes: 200,
     actions: 100,
   });
@@ -253,15 +258,28 @@ export function GlobalMarketingList({ onSuccess }: GlobalMarketingListProps) {
       const query = searchQuery.toLowerCase();
       filtered = records.filter(record => {
         return searchColumns.some(column => {
-          const value = (record as any)[column];
-          if (value === null || value === undefined) return false;
-          
           // brandNames 배열 처리
           if (column === 'brandName' && Array.isArray((record as any).brandNames)) {
             return (record as any).brandNames.some((brand: string) => 
               brand?.toLowerCase().includes(query)
             );
           }
+          
+          // project/projectCategory 복수 처리
+          if (column === 'project' || column === 'projectName') {
+            const categories = [
+              (record as any).projectCategory,
+              (record as any).projectCategory2,
+              (record as any).projectCategory3,
+            ].filter((cat): cat is string => !!cat);
+            
+            return categories.some((cat: string) => 
+              cat?.toLowerCase().includes(query)
+            );
+          }
+          
+          const value = (record as any)[column];
+          if (value === null || value === undefined) return false;
           
           return String(value).toLowerCase().includes(query);
         });
@@ -392,6 +410,15 @@ export function GlobalMarketingList({ onSuccess }: GlobalMarketingListProps) {
           } else {
             value = '';
           }
+        } else if (key === 'project' || key === 'projectName') {
+          // 프로젝트 카테고리 복수 처리
+          const categories = [
+            (record as any).projectCategory,
+            (record as any).projectCategory2,
+            (record as any).projectCategory3,
+          ].filter((cat): cat is string => !!cat);
+          
+          value = categories.length > 0 ? categories.join(', ') : '';
         } else if (key === 'expectedDepositAmount' || key === 'depositAmount') {
           // 금액 포맷팅
           if (value != null) {
@@ -405,9 +432,6 @@ export function GlobalMarketingList({ onSuccess }: GlobalMarketingListProps) {
         } else if (key === 'expectedDepositDate' || key === 'depositDate' || key === 'createdDate') {
           // 날짜 포맷팅
           value = value ? formatDate(value) : '';
-        } else if (key === 'invoiceIssued') {
-          // 세금계산서 발행 여부
-          value = value === true || value === 'O' || value === 'o' ? 'O' : 'X';
         } else {
           // 일반 필드
           if (value == null) {
@@ -886,27 +910,27 @@ export function GlobalMarketingList({ onSuccess }: GlobalMarketingListProps) {
                     />
                   </th>
                 )}
-                {visibleColumns.has('invoiceIssued') && (
+                {visibleColumns.has('oneTimeExpenseAmount') && (
                   <th 
-                    className="text-left p-2 font-medium text-gray-700 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap relative"
-                    style={{ width: `${columnWidths.invoiceIssued}px`, minWidth: '50px' }}
-                    onClick={() => handleSort('invoiceIssued')}
+                    className="text-right p-2 font-medium text-gray-700 whitespace-nowrap relative"
+                    style={{ width: `${columnWidths.oneTimeExpenseAmount}px`, minWidth: '50px' }}
                   >
-                    <div className="flex items-center gap-1">
-                      <span>세금계산서</span>
-                      {sortField === 'invoiceIssued' ? (
-                        sortDirection === 'asc' ? (
-                          <ArrowUp className="h-3 w-3" />
-                        ) : (
-                          <ArrowDown className="h-3 w-3" />
-                        )
-                      ) : (
-                        <ArrowUpDown className="h-3 w-3 text-gray-400" />
-                      )}
-                    </div>
+                    실비금액(VAT제외)
                     <div
                       className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 bg-transparent z-10"
-                      onMouseDown={(e) => handleResizeStart('invoiceIssued', e)}
+                      onMouseDown={(e) => handleResizeStart('oneTimeExpenseAmount', e)}
+                    />
+                  </th>
+                )}
+                {visibleColumns.has('invoiceAttachment') && (
+                  <th 
+                    className="text-left p-2 font-medium text-gray-700 whitespace-nowrap relative"
+                    style={{ width: `${columnWidths.invoiceAttachment}px`, minWidth: '50px' }}
+                  >
+                    세금계산서 첨부
+                    <div
+                      className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 bg-transparent z-10"
+                      onMouseDown={(e) => handleResizeStart('invoiceAttachment', e)}
                     />
                   </th>
                 )}
@@ -1030,18 +1054,6 @@ export function GlobalMarketingList({ onSuccess }: GlobalMarketingListProps) {
                     />
                   </th>
                 )}
-                {visibleColumns.has('oneTimeExpenseAmount') && (
-                  <th 
-                    className="text-left p-2 font-medium text-gray-700 whitespace-nowrap relative"
-                    style={{ width: `${columnWidths.oneTimeExpenseAmount}px`, minWidth: '50px' }}
-                  >
-                    실비금액(VAT제외)
-                    <div
-                      className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 bg-transparent z-10"
-                      onMouseDown={(e) => handleResizeStart('oneTimeExpenseAmount', e)}
-                    />
-                  </th>
-                )}
                 {visibleColumns.has('description') && (
                   <th 
                     className="text-left p-2 font-medium text-gray-700 whitespace-nowrap relative"
@@ -1063,18 +1075,6 @@ export function GlobalMarketingList({ onSuccess }: GlobalMarketingListProps) {
                     <div
                       className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 bg-transparent z-10"
                       onMouseDown={(e) => handleResizeStart('createdDate', e)}
-                    />
-                  </th>
-                )}
-                {visibleColumns.has('invoiceCopy') && (
-                  <th 
-                    className="text-left p-2 font-medium text-gray-700 whitespace-nowrap relative"
-                    style={{ width: `${columnWidths.invoiceCopy}px`, minWidth: '50px' }}
-                  >
-                    세금계산서 첨부
-                    <div
-                      className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 bg-transparent z-10"
-                      onMouseDown={(e) => handleResizeStart('invoiceCopy', e)}
                     />
                   </th>
                 )}
@@ -1146,7 +1146,30 @@ export function GlobalMarketingList({ onSuccess }: GlobalMarketingListProps) {
                     <td className="p-2 whitespace-nowrap truncate overflow-hidden" title={record.projectCode || ''}>{record.projectCode || '-'}</td>
                   )}
                   {visibleColumns.has('project') && (
-                    <td className="p-2 whitespace-nowrap truncate overflow-hidden" title={record.project || ''}>{record.project || '-'}</td>
+                    <td className="p-2">
+                      <div className="flex flex-col gap-1">
+                        {[
+                          (record as any).projectCategory,
+                          (record as any).projectCategory2,
+                          (record as any).projectCategory3,
+                        ]
+                          .filter((category): category is string => !!category)
+                          .map((category, idx) => (
+                            <div
+                              key={idx}
+                              className="whitespace-nowrap truncate overflow-hidden"
+                              title={category}
+                            >
+                              {category}
+                            </div>
+                          ))}
+                        {[
+                          (record as any).projectCategory,
+                          (record as any).projectCategory2,
+                          (record as any).projectCategory3,
+                        ].every((category) => !category) && <span className="text-gray-400">-</span>}
+                      </div>
+                    </td>
                   )}
                   {visibleColumns.has('projectName') && (
                   <td className="p-2">
@@ -1212,8 +1235,41 @@ export function GlobalMarketingList({ onSuccess }: GlobalMarketingListProps) {
                   {visibleColumns.has('invoiceSupplyPrice') && (
                     <td className="p-2 text-right whitespace-nowrap truncate overflow-hidden" title={record.invoiceSupplyPrice ? formatCurrency(record.invoiceSupplyPrice, 'KRW') : ''}>{record.invoiceSupplyPrice ? formatCurrency(record.invoiceSupplyPrice, 'KRW') : '-'}</td>
                   )}
-                  {visibleColumns.has('invoiceIssued') && (
-                    <td className="p-2 whitespace-nowrap truncate overflow-hidden" title={record.invoiceIssued || ''}>{record.invoiceIssued || '-'}</td>
+                  {visibleColumns.has('oneTimeExpenseAmount') && (
+                    <td className="p-2 text-right whitespace-nowrap truncate overflow-hidden" title={record.oneTimeExpenseAmount ? formatCurrency(record.oneTimeExpenseAmount) : ''}>{record.oneTimeExpenseAmount ? formatCurrency(record.oneTimeExpenseAmount) : '-'}</td>
+                  )}
+                  {visibleColumns.has('invoiceAttachment') && (
+                    <td className="p-2 whitespace-nowrap">
+                      {(() => {
+                        // invoiceCopy가 있으면 "첨부완료" (클릭하면 파일 열기)
+                        if (record.invoiceCopy) {
+                          return (
+                            <a 
+                              href={record.invoiceCopy} 
+                              target="_blank" 
+                              rel="noopener noreferrer" 
+                              className="text-blue-600 font-medium hover:underline cursor-pointer"
+                              title={record.invoiceCopy}
+                            >
+                              첨부완료
+                            </a>
+                          );
+                        }
+                        
+                        // invoiceAttachmentStatus에 따라 상태 표시
+                        const currentStatus = record.invoiceAttachmentStatus || 'required';
+                        
+                        if (currentStatus === 'not_required') {
+                          return (
+                            <span className="text-green-600">첨부불요</span>
+                          );
+                        }
+                        
+                        return (
+                          <span className="text-red-600">첨부필요</span>
+                        );
+                      })()}
+                    </td>
                   )}
                   {visibleColumns.has('businessRegistrationNumber') && (
                     <td className="p-2 whitespace-nowrap truncate overflow-hidden" title={record.businessRegistrationNumber || ''}>{record.businessRegistrationNumber || '-'}</td>
@@ -1269,23 +1325,11 @@ export function GlobalMarketingList({ onSuccess }: GlobalMarketingListProps) {
                   {visibleColumns.has('count') && (
                     <td className="p-2 whitespace-nowrap truncate overflow-hidden" title={record.count ? String(record.count) : ''}>{record.count || '-'}</td>
                   )}
-                  {visibleColumns.has('oneTimeExpenseAmount') && (
-                    <td className="p-2 text-right whitespace-nowrap truncate overflow-hidden" title={record.oneTimeExpenseAmount ? formatCurrency(record.oneTimeExpenseAmount) : ''}>{record.oneTimeExpenseAmount ? formatCurrency(record.oneTimeExpenseAmount) : '-'}</td>
-                  )}
                   {visibleColumns.has('description') && (
                     <td className="p-2 whitespace-nowrap truncate overflow-hidden" title={record.description || ''}>{record.description || '-'}</td>
                   )}
                   {visibleColumns.has('createdDate') && (
                     <td className="p-2 whitespace-nowrap truncate overflow-hidden" title={record.createdDate ? formatDate(record.createdDate) : ''}>{record.createdDate ? formatDate(record.createdDate) : '-'}</td>
-                  )}
-                  {visibleColumns.has('invoiceCopy') && (
-                    <td className="p-2 whitespace-nowrap truncate overflow-hidden">
-                      {record.invoiceCopy ? (
-                        <a href={record.invoiceCopy} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline truncate block" title={record.invoiceCopy}>
-                          보기
-                        </a>
-                      ) : '-'}
-                    </td>
                   )}
                   {visibleColumns.has('issueNotes') && (
                     <td className="p-2 whitespace-nowrap truncate overflow-hidden" title={record.issueNotes || ''}>{record.issueNotes || '-'}</td>

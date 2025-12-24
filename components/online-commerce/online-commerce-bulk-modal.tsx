@@ -281,8 +281,6 @@ export function OnlineCommerceBulkModal({ isOpen, onClose, onSuccess }: OnlineCo
           })(),
           // 인덱스 25: createdDate (작성일자) - 빈칸
           createdDate: get(25),
-          // 인덱스 26: invoiceIssued (세금계산서 발행 여부) - 빈칸
-          invoiceIssued: get(26),
           // 인덱스 27: invoiceCopy (세금계산서 사본) - 빈칸
           invoiceCopy: get(27),
           // 인덱스 28: issueNotes (ISSUE사항) - 빈칸
@@ -680,18 +678,6 @@ export function OnlineCommerceBulkModal({ isOpen, onClose, onSuccess }: OnlineCo
                           </div>
 
                           <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                              세금계산서 발행 여부
-                            </label>
-                            <SearchableSelect
-                              value={record.invoiceIssued || ''}
-                              onChange={(value) => updateRecord(index, { invoiceIssued: value })}
-                              options={[
-                                { value: 'O', label: 'O (발행)' },
-                                { value: 'X', label: 'X (미발행)' },
-                              ]}
-                              placeholder="선택하세요"
-                            />
                           </div>
 
                           <div className="col-span-3">

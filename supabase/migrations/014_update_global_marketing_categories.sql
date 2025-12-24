@@ -9,3 +9,5 @@ updated_at = NOW()
 WHERE category IN ('ONE-TIME', '정부지원사업');
 
 
+
+

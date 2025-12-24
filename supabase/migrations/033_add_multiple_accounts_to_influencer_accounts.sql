@@ -4,3 +4,5 @@ ADD COLUMN IF NOT EXISTS tiktok_handles JSONB DEFAULT '[]'::jsonb,
 ADD COLUMN IF NOT EXISTS instagram_handles JSONB DEFAULT '[]'::jsonb;
 
 
+
+

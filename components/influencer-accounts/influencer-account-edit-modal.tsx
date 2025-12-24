@@ -266,7 +266,7 @@ export function InfluencerAccountEditModal({ account, onClose, onSuccess }: Infl
 
             <div>
               <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-1">
-                Full Name of the Bank Account Holder <span className="text-red-500">*</span>
+                Full Name of the Bank Account Holder
               </label>
               <input
                 type="text"
@@ -274,9 +274,11 @@ export function InfluencerAccountEditModal({ account, onClose, onSuccess }: Infl
                 name="fullName"
                 value={formData.fullName}
                 onChange={handleChange}
-                required
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
+              {!formData.fullName && (
+                <p className="text-xs text-yellow-600 mt-1">⚠️ 모든 계좌는 계좌 소유자 이름이 필수입니다.</p>
+              )}
             </div>
 
             <div>

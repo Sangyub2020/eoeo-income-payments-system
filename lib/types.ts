@@ -128,8 +128,8 @@ export interface OnlineCommerceTeam {
   exchangeGainLoss?: number;
   difference?: number;
   createdDate?: string;
-  invoiceIssued?: string;
   invoiceCopy?: string;
+  invoiceAttachmentStatus?: 'required' | 'completed' | 'not_required'; // 첨부필요, 첨부완료, 첨부 불요
   issueNotes?: string;
   year?: number;
   expectedDepositMonth?: number;
@@ -151,7 +151,12 @@ export interface GlobalMarketingTeam {
   businessRegistrationNumber?: string;
   invoiceEmail?: string;
   projectCode?: string;
+  projectCode2?: string;
+  projectCode3?: string;
   project?: string;
+  projectCategory?: string;
+  projectCategory2?: string;
+  projectCategory3?: string;
   projectName?: string;
   projectName2?: string;
   projectName3?: string;
@@ -181,7 +186,6 @@ export interface GlobalMarketingTeam {
   exchangeGainLoss?: number;
   difference?: number;
   createdDate?: string;
-  invoiceIssued?: string;
   invoiceCopy?: string;
   issueNotes?: string;
   year?: number;
@@ -224,7 +228,6 @@ export interface OtherIncome {
   exchangeGainLoss?: number;
   difference?: number;
   createdDate?: string;
-  invoiceIssued?: string;
   invoiceCopy?: string;
   issueNotes?: string;
   year?: number;
@@ -268,7 +271,6 @@ export interface GlobalSalesTeam {
   exchangeGainLoss?: number;
   difference?: number;
   createdDate?: string;
-  invoiceIssued?: string;
   invoiceCopy?: string;
   issueNotes?: string;
   year?: number;
@@ -311,7 +313,6 @@ export interface OtherIncome {
   exchangeGainLoss?: number;
   difference?: number;
   createdDate?: string;
-  invoiceIssued?: string;
   invoiceCopy?: string;
   issueNotes?: string;
   year?: number;
@@ -355,7 +356,6 @@ export interface BrandPlanningTeam {
   exchangeGainLoss?: number;
   difference?: number;
   createdDate?: string;
-  invoiceIssued?: string;
   invoiceCopy?: string;
   issueNotes?: string;
   year?: number;
@@ -398,7 +398,6 @@ export interface OtherIncome {
   exchangeGainLoss?: number;
   difference?: number;
   createdDate?: string;
-  invoiceIssued?: string;
   invoiceCopy?: string;
   issueNotes?: string;
   year?: number;

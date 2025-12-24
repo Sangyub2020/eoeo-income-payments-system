@@ -11,3 +11,5 @@ WHERE brand_name IS NOT NULL AND brand_name != '' AND (brand_names IS NULL OR ar
 CREATE INDEX IF NOT EXISTS idx_income_records_brand_names ON income_records USING GIN (brand_names);
 
 
+
+

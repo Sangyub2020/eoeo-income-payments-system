@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { X, Upload as UploadIcon } from 'lucide-react';
 import { GlobalMarketingTeam } from '@/lib/types';
 import { SearchableSelect } from '@/components/ui/searchable-select';
+import { MultiSelect } from '@/components/ui/multi-select';
 import { GLOBAL_MARKETING_CATEGORIES } from '@/lib/constants';
 
 interface GlobalMarketingFormModalProps {
@@ -21,15 +22,19 @@ export function GlobalMarketingFormModal({ isOpen, onClose, onSuccess }: GlobalM
   const [invoiceFileUrl, setInvoiceFileUrl] = useState<string | null>(null);
   const [vendors, setVendors] = useState<Array<{ code: string; name: string }>>([]);
   const [projects, setProjects] = useState<Array<{ code: string; name: string }>>([]);
+  const [selectedProjectCodes, setSelectedProjectCodes] = useState<string[]>([]);
 
   useEffect(() => {
     if (isOpen) {
       fetchVendors();
       fetchProjects();
-      setFormData({});
+      setFormData({
+        invoiceAttachmentStatus: 'required', // 기본값: 첨부필요
+      });
       setError(null);
       setInvoiceFile(null);
       setInvoiceFileUrl(null);
+      setSelectedProjectCodes([]);
     }
   }, [isOpen]);
 
@@ -93,31 +98,33 @@ export function GlobalMarketingFormModal({ isOpen, onClose, onSuccess }: GlobalM
     }
   };
 
-  const handleProjectCodeChange = async (projectCode: string) => {
-    if (!projectCode) {
-      setFormData((prev) => ({
-        ...prev,
-        projectCode: '',
-        projectName: '',
-      }));
-      return;
-    }
-
-    const project = projects.find(p => p.code === projectCode);
-    if (project) {
-      setFormData((prev) => ({
-        ...prev,
-        projectCode,
-        project: project.name,
-        // projectName은 사용자가 직접 입력하므로 자동으로 채우지 않음
-      }));
-    } else {
-      setFormData((prev) => ({
-        ...prev,
-        projectCode,
-        project: '',
-      }));
-    }
+  const handleProjectCodesChange = (projectCodes: string[]) => {
+    setSelectedProjectCodes(projectCodes);
+    
+    // 선택된 프로젝트들을 project_code, project_code2, project_code3과 project_category, project_category2, project_category3에 매핑
+    const updates: Record<string, string | undefined> = {};
+    
+    // 최대 3개까지만 저장
+    const codesToSave = projectCodes.slice(0, 3);
+    const categoriesToSave = codesToSave.map(code => {
+      const project = projects.find(p => p.code === code);
+      return project ? project.name : '';
+    });
+    
+    // project_code 매핑
+    updates.projectCode = codesToSave[0] || undefined;
+    updates.projectCode2 = codesToSave[1] || undefined;
+    updates.projectCode3 = codesToSave[2] || undefined;
+    
+    // project_category 매핑
+    updates.projectCategory = categoriesToSave[0] || undefined;
+    updates.projectCategory2 = categoriesToSave[1] || undefined;
+    updates.projectCategory3 = categoriesToSave[2] || undefined;
+    
+    setFormData((prev) => ({
+      ...prev,
+      ...updates,
+    }));
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -167,6 +174,7 @@ export function GlobalMarketingFormModal({ isOpen, onClose, onSuccess }: GlobalM
           ...formData,
           team: 'global_marketing',
           invoiceCopy: invoiceCopyUrl,
+          invoiceAttachmentStatus: invoiceCopyUrl ? 'completed' : (formData.invoiceAttachmentStatus || 'required'),
         }),
       });
 
@@ -307,26 +315,12 @@ export function GlobalMarketingFormModal({ isOpen, onClose, onSuccess }: GlobalM
               <label htmlFor="projectCode" className="block text-sm font-medium text-gray-700 mb-1">
                 project code <span className="text-red-500">*</span>
               </label>
-              <SearchableSelect
-                value={formData.projectCode || ''}
-                onChange={(value) => handleProjectCodeChange(value)}
+              <MultiSelect
+                value={selectedProjectCodes}
+                onChange={handleProjectCodesChange}
                 options={projects.map(p => ({ value: p.code, label: `${p.code} - ${p.name}` }))}
-                placeholder="선택하세요"
-                required
-              />
-            </div>
-
-            <div>
-              <label htmlFor="project" className="block text-sm font-medium text-gray-700 mb-1">
-                project
-              </label>
-              <input
-                type="text"
-                id="project"
-                name="project"
-                value={formData.project || ''}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="프로젝트를 선택하세요 (최대 3개)"
+                className="w-full"
               />
             </div>
 
@@ -618,17 +612,19 @@ export function GlobalMarketingFormModal({ isOpen, onClose, onSuccess }: GlobalM
             </div>
 
             <div>
-              <label htmlFor="invoiceIssued" className="block text-sm font-medium text-gray-700 mb-1">
-                세금계산서 발행 여부
+              <label htmlFor="invoiceAttachmentStatus" className="block text-sm font-medium text-gray-700 mb-1">
+                세금계산서 첨부 상태
               </label>
               <SearchableSelect
-                value={formData.invoiceIssued || ''}
-                onChange={(value) => handleChange({ target: { name: 'invoiceIssued', value } } as any)}
+                value={formData.invoiceAttachmentStatus || 'required'}
+                onChange={(value) => handleChange({ target: { name: 'invoiceAttachmentStatus', value } } as any)}
                 options={[
-                  { value: 'O', label: 'O (발행)' },
-                  { value: 'X', label: 'X (미발행)' },
+                  { value: 'required', label: '첨부필요' },
+                  { value: 'not_required', label: '첨부불요' },
+                  ...(invoiceFileUrl || formData.invoiceCopy ? [{ value: 'completed', label: '첨부완료' }] : []),
                 ]}
-                placeholder="선택하세요"
+                placeholder="상태 선택"
+                disabled={false}
               />
             </div>
 

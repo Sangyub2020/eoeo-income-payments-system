@@ -88,24 +88,46 @@ export function InfluencerAccountList() {
 
       const data = await response.json();
       if (data.success) {
-        const formattedAccounts = data.data.map((a: any) => ({
-          id: a.id,
-          email: a.email,
-          tiktokHandle: a.tiktok_handle,
-          tiktokHandles: a.tiktok_handles || [],
-          instagramHandles: a.instagram_handles || [],
-          recipientType: a.recipient_type,
-          fullName: a.full_name,
-          achRoutingNumber: a.ach_routing_number,
-          swiftCode: a.swift_code,
-          accountNumber: a.account_number,
-          accountType: a.account_type,
-          wiseTag: a.wise_tag,
-          address: a.address,
-          phoneNumber: a.phone_number,
-          createdAt: a.created_at,
-          updatedAt: a.updated_at,
-        }));
+        const formattedAccounts = data.data.map((a: any) => {
+          // JSONB 배열이 문자열로 반환될 수 있으므로 파싱
+          let tiktokHandles = a.tiktok_handles;
+          let instagramHandles = a.instagram_handles;
+          
+          if (typeof tiktokHandles === 'string') {
+            try {
+              tiktokHandles = JSON.parse(tiktokHandles);
+            } catch {
+              tiktokHandles = [];
+            }
+          }
+          
+          if (typeof instagramHandles === 'string') {
+            try {
+              instagramHandles = JSON.parse(instagramHandles);
+            } catch {
+              instagramHandles = [];
+            }
+          }
+          
+          return {
+            id: a.id,
+            email: a.email,
+            tiktokHandle: a.tiktok_handle,
+            tiktokHandles: Array.isArray(tiktokHandles) ? tiktokHandles : [],
+            instagramHandles: Array.isArray(instagramHandles) ? instagramHandles : [],
+            recipientType: a.recipient_type,
+            fullName: a.full_name,
+            achRoutingNumber: a.ach_routing_number,
+            swiftCode: a.swift_code,
+            accountNumber: a.account_number,
+            accountType: a.account_type,
+            wiseTag: a.wise_tag,
+            address: a.address,
+            phoneNumber: a.phone_number,
+            createdAt: a.created_at,
+            updatedAt: a.updated_at,
+          };
+        });
         setAccounts(formattedAccounts);
       }
     } catch (err) {
@@ -271,7 +293,7 @@ export function InfluencerAccountList() {
                   className="text-left p-4 font-medium text-gray-700 text-sm relative"
                   style={{ width: `${columnWidths.fullName}px`, minWidth: '50px' }}
                 >
-                  Full Name
+                  Account Holder
                   <div
                     className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 bg-transparent z-10"
                     onMouseDown={(e) => handleResizeStart('fullName', e)}
@@ -406,10 +428,26 @@ export function InfluencerAccountList() {
                               : '-')
                           : '-'}
                       </td>
-                      <td className="p-4 text-sm">{account.email || '-'}</td>
+                      <td className="p-4 text-sm">
+                        {account.email ? (
+                          account.email.includes('\n') ? (
+                            <div className="whitespace-pre-line">{account.email}</div>
+                          ) : (
+                            account.email
+                          )
+                        ) : '-'}
+                      </td>
                       <td className="p-4 text-gray-600 text-sm">{account.accountNumber || '-'}</td>
                       <td className="p-4 text-gray-600 text-sm">{account.achRoutingNumber || '-'}</td>
-                      <td className="p-4 text-gray-600 text-sm">{account.swiftCode || '-'}</td>
+                      <td className="p-4 text-gray-600 text-sm">
+                        {account.swiftCode ? (
+                          account.swiftCode.includes('\n') ? (
+                            <div className="whitespace-pre-line">{account.swiftCode}</div>
+                          ) : (
+                            account.swiftCode
+                          )
+                        ) : '-'}
+                      </td>
                       <td className="p-4 text-gray-600 text-sm">{account.accountType || '-'}</td>
                       <td className="p-4 text-gray-600 text-sm">{account.wiseTag || '-'}</td>
                       <td className="p-4 text-sm">

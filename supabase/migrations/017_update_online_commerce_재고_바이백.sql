@@ -7,3 +7,5 @@ WHERE project = '기재고 사입'
    OR LOWER(TRIM(project)) = '기재고 사입';
 
 
+
+

@@ -192,7 +192,6 @@ export function BrandPlanningBulkModal({ isOpen, onClose, onSuccess }: BrandPlan
           exchangeGainLoss: parseNumber(get(23) || ''),
           difference: parseNumber(get(24) || ''),
           createdDate: get(25),
-          invoiceIssued: get(26),
           invoiceCopy: get(27),
           issueNotes: get(28),
           year: get(29) ? Number(get(29)) : undefined,
@@ -548,20 +547,6 @@ export function BrandPlanningBulkModal({ isOpen, onClose, onSuccess }: BrandPlan
                             />
                           </div>
 
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                              세금계산서 발행 여부
-                            </label>
-                            <SearchableSelect
-                              value={record.invoiceIssued || ''}
-                              onChange={(value) => updateRecord(index, { invoiceIssued: value })}
-                              options={[
-                                { value: 'O', label: 'O (발행)' },
-                                { value: 'X', label: 'X (미발행)' },
-                              ]}
-                              placeholder="선택하세요"
-                            />
-                          </div>
 
                           <div className="col-span-3">
                             <label className="block text-sm font-medium text-gray-700 mb-1">

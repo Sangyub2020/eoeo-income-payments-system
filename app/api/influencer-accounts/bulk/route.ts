@@ -13,27 +13,26 @@ export async function POST(request: Request) {
       );
     }
 
-    const invalidAccounts = accounts.filter((a: any) => !a.fullName);
-    if (invalidAccounts.length > 0) {
-      return NextResponse.json(
-        { success: false, error: '모든 계좌는 계좌 소유자 이름이 필수입니다.' },
-        { status: 400 }
-      );
-    }
-
-    const accountsToInsert = accounts.map((a: any) => ({
-      email: a.email || null,
-      tiktok_handle: a.tiktokHandle || null,
-      recipient_type: a.recipientType || null,
-      full_name: a.fullName,
-      ach_routing_number: a.achRoutingNumber || null,
-      swift_code: a.swiftCode || null,
-      account_number: a.accountNumber || null,
-      account_type: a.accountType || null,
-      wise_tag: a.wiseTag || null,
-      address: a.address || null,
-      phone_number: a.phoneNumber || null,
-    }));
+    const accountsToInsert = accounts.map((a: any) => {
+      const recipientType = a.recipientType;
+      const isBusiness = recipientType === 'Business';
+      
+      return {
+        email: a.email || null,
+        tiktok_handle: isBusiness ? null : (a.tiktokHandle || null),
+        tiktok_handles: isBusiness ? (a.tiktokHandles || []) : null,
+        instagram_handles: isBusiness ? (a.instagramHandles || []) : null,
+        recipient_type: recipientType || null,
+        full_name: a.fullName || null,
+        ach_routing_number: a.achRoutingNumber || null,
+        swift_code: a.swiftCode || null,
+        account_number: a.accountNumber || null,
+        account_type: a.accountType || null,
+        wise_tag: a.wiseTag || null,
+        address: a.address || null,
+        phone_number: a.phoneNumber || null,
+      };
+    });
 
     let successCount = 0;
     let failedCount = 0;

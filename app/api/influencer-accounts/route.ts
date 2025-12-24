@@ -44,13 +44,6 @@ export async function POST(request: Request) {
       phoneNumber,
     } = body;
 
-    if (!fullName) {
-      return NextResponse.json(
-        { success: false, error: '계좌 소유자 이름은 필수입니다.' },
-        { status: 400 }
-      );
-    }
-
     const { data, error } = await supabaseAdmin
       .from('influencer_accounts')
       .insert({
@@ -59,7 +52,7 @@ export async function POST(request: Request) {
         tiktok_handles: recipientType === 'Business' ? (tiktokHandles || []) : null,
         instagram_handles: recipientType === 'Business' ? (instagramHandles || []) : null,
         recipient_type: recipientType || null,
-        full_name: fullName,
+        full_name: fullName || null,
         ach_routing_number: achRoutingNumber || null,
         swift_code: swiftCode || null,
         account_number: accountNumber || null,

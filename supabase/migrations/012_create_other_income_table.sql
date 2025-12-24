@@ -50,3 +50,5 @@ CREATE TRIGGER update_other_income_updated_at
   EXECUTE FUNCTION update_updated_at_column();
 
 
+
+

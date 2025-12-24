@@ -7,3 +7,5 @@ WHERE project IN ('브랜디드시딩', 'tiktok viral - regular', 'Partner_regul
    OR LOWER(TRIM(project)) IN ('브랜디드시딩', 'tiktok viral - regular', 'partner_regular project');
 
 
+
+

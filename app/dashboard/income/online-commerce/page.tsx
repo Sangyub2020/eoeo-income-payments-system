@@ -3,6 +3,8 @@
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { OnlineCommerceList } from '@/components/online-commerce/online-commerce-list';
 import { OnlineCommerceSummary } from '@/components/online-commerce/online-commerce-summary';
+import { OnlineCommerceMonthlyChart } from '@/components/online-commerce/online-commerce-monthly-chart';
+import { OnlineCommerceOutstanding } from '@/components/online-commerce/online-commerce-outstanding';
 import { useState } from 'react';
 
 export default function OnlineCommercePage() {
@@ -23,6 +25,8 @@ export default function OnlineCommercePage() {
         <TabsList>
           <TabsTrigger value="summary">Summary</TabsTrigger>
           <TabsTrigger value="list">목록</TabsTrigger>
+          <TabsTrigger value="monthly">월별 현황</TabsTrigger>
+          <TabsTrigger value="outstanding">미수금 현황</TabsTrigger>
         </TabsList>
 
         <TabsContent value="summary">
@@ -31,6 +35,14 @@ export default function OnlineCommercePage() {
 
         <TabsContent value="list">
           <OnlineCommerceList onSuccess={handleSuccess} />
+        </TabsContent>
+
+        <TabsContent value="monthly">
+          <OnlineCommerceMonthlyChart />
+        </TabsContent>
+
+        <TabsContent value="outstanding">
+          <OnlineCommerceOutstanding onSuccess={handleSuccess} />
         </TabsContent>
       </Tabs>
     </div>

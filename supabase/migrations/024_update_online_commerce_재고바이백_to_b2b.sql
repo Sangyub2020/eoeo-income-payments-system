@@ -5,3 +5,5 @@ SET category = 'B2B',
 WHERE category = '재고 바이백';
 
 
+
+

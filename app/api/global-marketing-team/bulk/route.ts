@@ -51,7 +51,6 @@ export async function POST(request: Request) {
       exchange_gain_loss: r.exchangeGainLoss || null,
       difference: r.difference || null,
       created_date: r.createdDate || null,
-      invoice_issued: r.invoiceIssued || null,
       invoice_copy: r.invoiceCopy || null,
       issue_notes: r.issueNotes || null,
       year: r.year || null,

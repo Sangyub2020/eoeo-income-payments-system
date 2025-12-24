@@ -29,7 +29,8 @@ export async function POST(request: Request) {
       business_registration_number: r.businessRegistrationNumber || null,
       invoice_email: r.invoiceEmail || null,
       project_code: r.projectCode || null,
-      project: r.project || null,
+      // project 필드는 제거되었으므로 projectCategory만 사용
+      project_category: r.projectCategory || null,
       project_name: r.projectName || null,
       project_name2: r.projectName2 || null,
       project_name3: r.projectName3 || null,
@@ -60,7 +61,6 @@ export async function POST(request: Request) {
       exchange_gain_loss: r.exchangeGainLoss || null,
       difference: r.difference || null,
       created_date: r.createdDate || null,
-      invoice_issued: r.invoiceIssued || null,
       invoice_copy: r.invoiceCopy || null,
       issue_notes: r.issueNotes || null,
       year: r.year || null,
@@ -145,5 +145,6 @@ export async function POST(request: Request) {
     );
   }
 }
+
 
 

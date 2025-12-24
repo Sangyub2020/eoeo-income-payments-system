@@ -21,6 +21,7 @@ export function GlobalMarketingBulkModal({ isOpen, onClose, onSuccess }: GlobalM
   const [projects, setProjects] = useState<Array<{ code: string; name: string }>>([]);
   const [brands, setBrands] = useState<Array<{ value: string; label: string }>>([]);
   const [recordBrands, setRecordBrands] = useState<Map<number, string[]>>(new Map());
+  const [recordProjects, setRecordProjects] = useState<Map<number, string[]>>(new Map());
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
@@ -38,6 +39,7 @@ export function GlobalMarketingBulkModal({ isOpen, onClose, onSuccess }: GlobalM
       setEditingIndex(null);
       setInvoiceFiles(new Map());
       setRecordBrands(new Map());
+      setRecordProjects(new Map());
       setShowCsvInput(true);
     }
   }, [isOpen]);
@@ -321,7 +323,6 @@ export function GlobalMarketingBulkModal({ isOpen, onClose, onSuccess }: GlobalM
         exchangeGainLoss: parseNumber(get(23) || ''),  // 환차손익
         difference: parseNumber(get(24) || ''),  // 차액
         createdDate: get(25),                // 작성일자
-        invoiceIssued: get(26),               // 세금계산서 발행 여부
         invoiceCopy: get(27),                // 세금계산서 사본
         issueNotes: get(28),                 // ISSUE사항
         year: get(29) ? Number(get(29)) : undefined,  // 년
@@ -377,13 +378,23 @@ export function GlobalMarketingBulkModal({ isOpen, onClose, onSuccess }: GlobalM
           }
         }
 
-        // projectName은 CSV에서 직접 입력한 값을 우선 사용
-        // CSV에 projectName이 없을 때만 프로젝트 마스터 데이터에서 가져옴
-        if (record.projectCode && !record.projectName) {
+        // projectCategory는 CSV에서 직접 입력한 값을 우선 사용
+        // CSV에 projectCategory가 없을 때만 프로젝트 마스터 데이터에서 가져옴
+        if (record.projectCode && !(record as any).projectCategory) {
           const project = projects.find(p => p.code === record.projectCode);
           if (project) {
-            enriched.projectName = project.name;
+            enriched.projectCategory = project.name;
           }
+        }
+        
+        // 기존 projectCode를 recordProjects에 추가
+        if (record.projectCode) {
+          const codes: string[] = [record.projectCode];
+          if ((record as any).projectCode2) codes.push((record as any).projectCode2);
+          if ((record as any).projectCode3) codes.push((record as any).projectCode3);
+          const newProjects = new Map(recordProjects);
+          newProjects.set(idx, codes);
+          setRecordProjects(newProjects);
         }
 
         // brandName을 brandNames 배열로 변환
@@ -424,13 +435,32 @@ export function GlobalMarketingBulkModal({ isOpen, onClose, onSuccess }: GlobalM
     }
   };
 
-  const handleProjectCodeChange = (index: number, projectCode: string) => {
-    const project = projects.find(p => p.code === projectCode);
-    if (project) {
-      updateRecord(index, { projectCode, projectName: project.name });
-    } else {
-      updateRecord(index, { projectCode, projectName: '' });
-    }
+  const handleProjectCodesChange = (index: number, projectCodes: string[]) => {
+    const newProjects = new Map(recordProjects);
+    newProjects.set(index, projectCodes);
+    setRecordProjects(newProjects);
+    
+    // 선택된 프로젝트들을 project_code, project_code2, project_code3과 project_category, project_category2, project_category3에 매핑
+    const updates: Record<string, string | undefined> = {};
+    
+    // 최대 3개까지만 저장
+    const codesToSave = projectCodes.slice(0, 3);
+    const categoriesToSave = codesToSave.map(code => {
+      const project = projects.find(p => p.code === code);
+      return project ? project.name : '';
+    });
+    
+    // project_code 매핑
+    updates.projectCode = codesToSave[0] || undefined;
+    updates.projectCode2 = codesToSave[1] || undefined;
+    updates.projectCode3 = codesToSave[2] || undefined;
+    
+    // project_category 매핑
+    updates.projectCategory = categoriesToSave[0] || undefined;
+    updates.projectCategory2 = categoriesToSave[1] || undefined;
+    updates.projectCategory3 = categoriesToSave[2] || undefined;
+    
+    updateRecord(index, updates);
   };
 
   const handleFileChange = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
@@ -633,12 +663,16 @@ export function GlobalMarketingBulkModal({ isOpen, onClose, onSuccess }: GlobalM
                             <label className="block text-sm font-medium text-gray-700 mb-1">
                               Project code <span className="text-red-500">*</span>
                             </label>
-                            <SearchableSelect
-                              value={record.projectCode || ''}
-                              onChange={(value) => handleProjectCodeChange(index, value)}
+                            <MultiSelect
+                              value={recordProjects.get(index) || [
+                                record.projectCode,
+                                record.projectCode2,
+                                record.projectCode3,
+                              ].filter((code): code is string => !!code)}
+                              onChange={(codes) => handleProjectCodesChange(index, codes)}
                               options={projects.map(p => ({ value: p.code, label: `${p.code} - ${p.name}` }))}
-                              placeholder="선택하세요"
-                              required
+                              placeholder="프로젝트를 선택하세요 (최대 3개)"
+                              className="w-full"
                             />
                           </div>
 
@@ -722,20 +756,6 @@ export function GlobalMarketingBulkModal({ isOpen, onClose, onSuccess }: GlobalM
                             />
                           </div>
 
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                              세금계산서 발행 여부
-                            </label>
-                            <SearchableSelect
-                              value={record.invoiceIssued || ''}
-                              onChange={(value) => updateRecord(index, { invoiceIssued: value })}
-                              options={[
-                                { value: 'O', label: 'O (발행)' },
-                                { value: 'X', label: 'X (미발행)' },
-                              ]}
-                              placeholder="선택하세요"
-                            />
-                          </div>
 
                           <div className="col-span-3">
                             <label className="block text-sm font-medium text-gray-700 mb-1">

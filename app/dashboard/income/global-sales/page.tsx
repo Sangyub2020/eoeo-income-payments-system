@@ -3,6 +3,8 @@
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { GlobalSalesList } from '@/components/global-sales/global-sales-list';
 import { GlobalSalesSummary } from '@/components/global-sales/global-sales-summary';
+import { GlobalSalesMonthlyChart } from '@/components/global-sales/global-sales-monthly-chart';
+import { GlobalSalesOutstanding } from '@/components/global-sales/global-sales-outstanding';
 import { useState } from 'react';
 
 export default function GlobalSalesPage() {
@@ -23,6 +25,8 @@ export default function GlobalSalesPage() {
         <TabsList>
           <TabsTrigger value="summary">Summary</TabsTrigger>
           <TabsTrigger value="list">목록</TabsTrigger>
+          <TabsTrigger value="monthly">월별 현황</TabsTrigger>
+          <TabsTrigger value="outstanding">미수금 현황</TabsTrigger>
         </TabsList>
 
         <TabsContent value="summary">
@@ -31,6 +35,14 @@ export default function GlobalSalesPage() {
 
         <TabsContent value="list">
           <GlobalSalesList onSuccess={handleSuccess} />
+        </TabsContent>
+
+        <TabsContent value="monthly">
+          <GlobalSalesMonthlyChart />
+        </TabsContent>
+
+        <TabsContent value="outstanding">
+          <GlobalSalesOutstanding onSuccess={handleSuccess} />
         </TabsContent>
       </Tabs>
     </div>

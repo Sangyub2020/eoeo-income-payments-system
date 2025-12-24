@@ -14,3 +14,5 @@ WHERE project = '100원 캠페인'
    OR LOWER(TRIM(project)) = '100원 캠페인';
 
 
+
+

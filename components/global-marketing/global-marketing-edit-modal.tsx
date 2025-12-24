@@ -28,6 +28,7 @@ export function GlobalMarketingEditModal({ record, onClose, onSuccess }: GlobalM
   const [projects, setProjects] = useState<Array<{ code: string; name: string }>>([]);
   const [brands, setBrands] = useState<Array<{ value: string; label: string }>>([]);
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
+  const [selectedProjectCodes, setSelectedProjectCodes] = useState<string[]>([]);
 
   useEffect(() => {
     fetchVendors();
@@ -36,12 +37,24 @@ export function GlobalMarketingEditModal({ record, onClose, onSuccess }: GlobalM
     if (record.invoiceCopy) {
       setInvoiceFileUrl(record.invoiceCopy);
     }
+    // invoiceAttachmentStatus 초기화
+    setFormData(prev => ({
+      ...prev,
+      invoiceAttachmentStatus: record.invoiceAttachmentStatus || (record.invoiceCopy ? 'completed' : 'required'),
+    }));
     // 기존 brandName 또는 brandNames를 selectedBrands로 설정
     if (record.brandNames && record.brandNames.length > 0) {
       setSelectedBrands(record.brandNames);
     } else if (record.brandName) {
       setSelectedBrands([record.brandName]);
     }
+    
+    // 기존 projectCode들을 selectedProjectCodes로 설정
+    const codes: string[] = [];
+    if (record.projectCode) codes.push(record.projectCode);
+    if (record.projectCode2) codes.push(record.projectCode2);
+    if (record.projectCode3) codes.push(record.projectCode3);
+    setSelectedProjectCodes(codes);
   }, []);
 
   const fetchVendors = async () => {
@@ -123,38 +136,47 @@ export function GlobalMarketingEditModal({ record, onClose, onSuccess }: GlobalM
     }
   };
 
-  const handleProjectCodeChange = async (projectCode: string) => {
-    if (!projectCode) {
-      setFormData((prev) => ({
-        ...prev,
-        projectCode: '',
-        projectName: '',
-      }));
-      return;
-    }
-
-    const project = projects.find(p => p.code === projectCode);
-    if (project) {
-      setFormData((prev) => ({
-        ...prev,
-        projectCode,
-        projectName: project.name,
-      }));
-    } else {
-      setFormData((prev) => ({
-        ...prev,
-        projectCode,
-        projectName: '',
-      }));
-    }
+  const handleProjectCodesChange = (projectCodes: string[]) => {
+    setSelectedProjectCodes(projectCodes);
+    
+    // 선택된 프로젝트들을 project_code, project_code2, project_code3과 project_category, project_category2, project_category3에 매핑
+    const updates: Record<string, string | undefined> = {};
+    
+    // 최대 3개까지만 저장
+    const codesToSave = projectCodes.slice(0, 3);
+    const categoriesToSave = codesToSave.map(code => {
+      const project = projects.find(p => p.code === code);
+      return project ? project.name : '';
+    });
+    
+    // project_code 매핑
+    updates.projectCode = codesToSave[0] || undefined;
+    updates.projectCode2 = codesToSave[1] || undefined;
+    updates.projectCode3 = codesToSave[2] || undefined;
+    
+    // project_category 매핑
+    updates.projectCategory = categoriesToSave[0] || undefined;
+    updates.projectCategory2 = categoriesToSave[1] || undefined;
+    updates.projectCategory3 = categoriesToSave[2] || undefined;
+    
+    setFormData((prev) => ({
+      ...prev,
+      ...updates,
+    }));
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setInvoiceFile(file);
+      // 미리보기 URL 생성
       const url = URL.createObjectURL(file);
       setInvoiceFileUrl(url);
+      // 파일이 업로드되면 상태를 'completed'로 자동 변경
+      setFormData(prev => ({
+        ...prev,
+        invoiceAttachmentStatus: 'completed',
+      }));
     }
   };
 
@@ -164,6 +186,11 @@ export function GlobalMarketingEditModal({ record, onClose, onSuccess }: GlobalM
     }
     setInvoiceFile(null);
     setInvoiceFileUrl(null);
+    // 파일 삭제 시 상태를 'required'로 변경
+    setFormData(prev => ({
+      ...prev,
+      invoiceAttachmentStatus: 'required',
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -205,6 +232,7 @@ export function GlobalMarketingEditModal({ record, onClose, onSuccess }: GlobalM
           team: 'global_marketing',
           brandNames: selectedBrands.length > 0 ? selectedBrands : undefined,
           invoiceCopy: invoiceCopyUrl,
+          invoiceAttachmentStatus: invoiceCopyUrl ? 'completed' : (formData.invoiceAttachmentStatus || 'required'),
         }),
       });
 
@@ -302,12 +330,12 @@ export function GlobalMarketingEditModal({ record, onClose, onSuccess }: GlobalM
               <label htmlFor="projectCode" className="block text-sm font-medium text-gray-700 mb-1">
                 project code <span className="text-red-500">*</span>
               </label>
-              <SearchableSelect
-                value={formData.projectCode || ''}
-                onChange={(value) => handleProjectCodeChange(value)}
+              <MultiSelect
+                value={selectedProjectCodes}
+                onChange={handleProjectCodesChange}
                 options={projects.map(p => ({ value: p.code, label: `${p.code} - ${p.name}` }))}
-                placeholder="선택하세요"
-                required
+                placeholder="프로젝트를 선택하세요 (최대 3개)"
+                className="w-full"
               />
             </div>
 
@@ -645,17 +673,19 @@ export function GlobalMarketingEditModal({ record, onClose, onSuccess }: GlobalM
             </div>
 
             <div>
-              <label htmlFor="invoiceIssued" className="block text-sm font-medium text-gray-700 mb-1">
-                세금계산서 발행 여부
+              <label htmlFor="invoiceAttachmentStatus" className="block text-sm font-medium text-gray-700 mb-1">
+                세금계산서 첨부 상태
               </label>
               <SearchableSelect
-                value={formData.invoiceIssued || ''}
-                onChange={(value) => handleChange({ target: { name: 'invoiceIssued', value } } as any)}
+                value={formData.invoiceAttachmentStatus || 'required'}
+                onChange={(value) => handleChange({ target: { name: 'invoiceAttachmentStatus', value } } as any)}
                 options={[
-                  { value: 'O', label: 'O (발행)' },
-                  { value: 'X', label: 'X (미발행)' },
+                  { value: 'required', label: '첨부필요' },
+                  { value: 'not_required', label: '첨부불요' },
+                  ...(invoiceFileUrl || formData.invoiceCopy ? [{ value: 'completed', label: '첨부완료' }] : []),
                 ]}
-                placeholder="선택하세요"
+                placeholder="상태 선택"
+                disabled={false}
               />
             </div>
 

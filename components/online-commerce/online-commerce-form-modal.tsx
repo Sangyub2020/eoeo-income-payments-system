@@ -30,7 +30,9 @@ export function OnlineCommerceFormModal({ isOpen, onClose, onSuccess }: OnlineCo
       fetchVendors();
       fetchProjects();
       fetchBrands();
-      setFormData({});
+      setFormData({
+        invoiceAttachmentStatus: 'required', // 기본값: 첨부필요
+      });
       setSelectedBrands([]);
       setError(null);
       setInvoiceFile(null);
@@ -148,6 +150,11 @@ export function OnlineCommerceFormModal({ isOpen, onClose, onSuccess }: OnlineCo
       // 미리보기 URL 생성
       const url = URL.createObjectURL(file);
       setInvoiceFileUrl(url);
+      // 파일이 업로드되면 상태를 'completed'로 자동 변경
+      setFormData(prev => ({
+        ...prev,
+        invoiceAttachmentStatus: 'completed',
+      }));
     }
   };
 
@@ -191,6 +198,7 @@ export function OnlineCommerceFormModal({ isOpen, onClose, onSuccess }: OnlineCo
           ...formData,
           brandNames: selectedBrands.length > 0 ? selectedBrands : undefined,
           invoiceCopy: invoiceCopyUrl,
+          invoiceAttachmentStatus: invoiceCopyUrl ? 'completed' : (formData.invoiceAttachmentStatus || 'required'),
         }),
       });
 
@@ -657,17 +665,19 @@ export function OnlineCommerceFormModal({ isOpen, onClose, onSuccess }: OnlineCo
             </div>
 
             <div>
-              <label htmlFor="invoiceIssued" className="block text-sm font-medium text-gray-700 mb-1">
-                세금계산서 발행 여부
+              <label htmlFor="invoiceAttachmentStatus" className="block text-sm font-medium text-gray-700 mb-1">
+                세금계산서 첨부 상태
               </label>
               <SearchableSelect
-                value={formData.invoiceIssued || ''}
-                onChange={(value) => handleChange({ target: { name: 'invoiceIssued', value } } as any)}
+                value={formData.invoiceAttachmentStatus || 'required'}
+                onChange={(value) => handleChange({ target: { name: 'invoiceAttachmentStatus', value } } as any)}
                 options={[
-                  { value: 'O', label: 'O (발행)' },
-                  { value: 'X', label: 'X (미발행)' },
+                  { value: 'required', label: '첨부필요' },
+                  { value: 'not_required', label: '첨부불요' },
+                  ...(invoiceFileUrl || formData.invoiceCopy ? [{ value: 'completed', label: '첨부완료' }] : []),
                 ]}
-                placeholder="선택하세요"
+                placeholder="상태 선택"
+                disabled={false}
               />
             </div>
 
