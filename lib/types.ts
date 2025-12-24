@@ -325,6 +325,7 @@ export interface BrandPlanningTeam {
   vendorCode?: string;
   companyName?: string;
   brandName?: string;
+  brandNames?: string[];
   businessRegistrationNumber?: string;
   invoiceEmail?: string;
   projectCode?: string;
