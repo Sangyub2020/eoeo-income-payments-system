@@ -56,40 +56,40 @@ export default function DashboardPage() {
   return (
     <div className="p-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Home</h1>
-        <p className="text-gray-600 mt-2">팀별 입금 및 송금 현황을 한눈에 확인하세요</p>
+        <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">Home</h1>
+        <p className="text-gray-400 mt-2">팀별 입금 및 송금 현황을 한눈에 확인하세요</p>
       </div>
 
       {isLoading ? (
         <div className="text-center py-12">
-          <p className="text-gray-500">데이터를 불러오는 중...</p>
+          <p className="text-gray-400">데이터를 불러오는 중...</p>
         </div>
       ) : (
         <>
           {/* 입금 내역 */}
           <div className="mb-8">
             <div className="flex items-center gap-2 mb-4">
-              <DollarSign className="h-5 w-5 text-blue-600" />
-              <h2 className="text-xl font-semibold text-gray-900">입금 내역</h2>
+              <DollarSign className="h-5 w-5 text-cyan-400" />
+              <h2 className="text-xl font-semibold text-cyan-300">입금 내역</h2>
             </div>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-4">
               {incomeStats.map((stat) => (
                 <Card key={stat.name}>
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-gray-600">{stat.name}</CardTitle>
+                    <CardTitle className="text-sm font-medium text-gray-400">{stat.name}</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold text-blue-600">{formatCurrency(stat.totalAmount)}</div>
+                    <div className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">{formatCurrency(stat.totalAmount)}</div>
                   </CardContent>
                 </Card>
               ))}
             </div>
-            <Card className="bg-blue-50 border-blue-200">
+            <Card className="bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border-cyan-500/30">
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-gray-700">입금 합계</CardTitle>
+                <CardTitle className="text-sm font-medium text-cyan-300">입금 합계</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-blue-700">{formatCurrency(totalIncome)}</div>
+                <div className="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">{formatCurrency(totalIncome)}</div>
               </CardContent>
             </Card>
           </div>
@@ -97,8 +97,8 @@ export default function DashboardPage() {
           {/* 송금 내역 */}
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <CreditCard className="h-5 w-5 text-green-600" />
-              <h2 className="text-xl font-semibold text-gray-900">송금 내역</h2>
+              <CreditCard className="h-5 w-5 text-purple-400" />
+              <h2 className="text-xl font-semibold text-purple-300">송금 내역</h2>
             </div>
             {paymentStats.length > 0 ? (
               <>
@@ -109,24 +109,24 @@ export default function DashboardPage() {
                         <CardTitle className="text-sm font-medium text-gray-600">{stat.name}</CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <div className="text-2xl font-bold text-green-600">{formatCurrency(stat.totalAmount)}</div>
+                        <div className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">{formatCurrency(stat.totalAmount)}</div>
                       </CardContent>
                     </Card>
                   ))}
                 </div>
-                <Card className="bg-green-50 border-green-200">
+                <Card className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 border-purple-500/30">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-gray-700">송금 합계</CardTitle>
+                    <CardTitle className="text-sm font-medium text-purple-300">송금 합계</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-3xl font-bold text-green-700">{formatCurrency(totalPayment)}</div>
+                    <div className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">{formatCurrency(totalPayment)}</div>
                   </CardContent>
                 </Card>
               </>
             ) : (
               <Card>
                 <CardContent className="py-8">
-                  <p className="text-center text-gray-500">송금 내역 데이터가 없습니다.</p>
+                  <p className="text-center text-gray-400">송금 내역 데이터가 없습니다.</p>
                 </CardContent>
               </Card>
             )}

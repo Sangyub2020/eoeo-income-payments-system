@@ -9,3 +9,6 @@ WHERE project IN ('브랜디드시딩', 'tiktok viral - regular', 'Partner_regul
 
 
 
+
+
+

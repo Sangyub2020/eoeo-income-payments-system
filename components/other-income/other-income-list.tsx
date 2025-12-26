@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { OtherIncome } from '@/lib/types';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { Pagination } from '@/components/ui/pagination';
 import { Trash2, Plus, Upload, Edit2, Search, ArrowUp, ArrowDown, ArrowUpDown, Settings, Download } from 'lucide-react';
 import { formatCurrency, formatDate } from '@/lib/utils';
@@ -36,6 +37,7 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
   const [sortField, setSortField] = useState<SortField>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [isColumnSelectorOpen, setIsColumnSelectorOpen] = useState(false);
+  const [depositStatusFilter, setDepositStatusFilter] = useState<'입금완료' | '입금예정' | '입금지연' | null>(null);
   
   // 검색 가능한 컬럼 옵션
   const searchableColumns = [
@@ -60,6 +62,7 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
     { key: 'vendorCode', label: '거래처코드', alwaysVisible: false },
     { key: 'companyName', label: '회사명', alwaysVisible: false },
     { key: 'brandName', label: '브랜드명', alwaysVisible: false },
+    { key: 'depositStatus', label: '입금여부', alwaysVisible: false },
     { key: 'expectedDepositDate', label: '입금예정일', alwaysVisible: false },
     { key: 'expectedDepositAmount', label: '예정금액', alwaysVisible: false },
     { key: 'depositDate', label: '입금일', alwaysVisible: false },
@@ -103,6 +106,7 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
     vendorCode: 100,
     companyName: 150,
     brandName: 120,
+    depositStatus: 100,
     expectedDepositDate: 110,
     expectedDepositAmount: 120,
     depositDate: 110,
@@ -170,7 +174,9 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
     setError(null);
 
     try {
-      const response = await fetch('/api/income-records?team=other_income');
+      const response = await fetch(`/api/income-records?team=other_income&_t=${Date.now()}`, {
+        cache: 'no-store',
+      });
       if (!response.ok) {
         throw new Error('입금 목록을 불러오는데 실패했습니다.');
       }
@@ -211,6 +217,27 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
     }
     // 페이지 리셋은 useEffect에서 처리
   };
+
+  // 입금여부 계산 함수
+  const getDepositStatus = useCallback((record: OtherIncome): '입금완료' | '입금예정' | '입금지연' => {
+    if (record.depositStatus) {
+      return record.depositStatus as '입금완료' | '입금예정' | '입금지연';
+    }
+    if (record.depositAmount && record.depositAmount > 0) {
+      return '입금완료';
+    }
+    if (record.expectedDepositDate) {
+      const expectedDate = new Date(record.expectedDepositDate);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      expectedDate.setHours(0, 0, 0, 0);
+      if (expectedDate >= today) {
+        return '입금예정';
+      }
+      return '입금지연';
+    }
+    return '입금예정';
+  }, []);
 
   const sortRecords = useCallback((recordsToSort: OtherIncome[]): OtherIncome[] => {
     if (!sortField) return recordsToSort;
@@ -254,10 +281,18 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
   useEffect(() => {
     let filtered = records;
 
+    // 입금여부 필터 적용
+    if (depositStatusFilter) {
+      filtered = filtered.filter(record => {
+        const status = getDepositStatus(record);
+        return status === depositStatusFilter;
+      });
+    }
+
     // 검색 필터링
     if (searchQuery.trim() !== '' && searchColumns.length > 0) {
       const query = searchQuery.toLowerCase();
-      filtered = records.filter(record => {
+      filtered = filtered.filter(record => {
         return searchColumns.some(column => {
           const value = (record as any)[column];
           if (value === null || value === undefined) return false;
@@ -277,12 +312,12 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
     // 정렬 적용
     const sorted = sortRecords(filtered);
     setFilteredRecords(sorted);
-  }, [searchQuery, searchColumns, records, sortField, sortDirection, sortRecords]);
+  }, [searchQuery, searchColumns, records, sortField, sortDirection, sortRecords, depositStatusFilter, getDepositStatus]);
 
-  // 검색/정렬 변경 시에만 페이지 리셋
+  // 검색/정렬/필터 변경 시에만 페이지 리셋
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, searchColumns, sortField, sortDirection]);
+  }, [searchQuery, searchColumns, sortField, sortDirection, depositStatusFilter]);
 
   // 필터링된 결과가 변경되면 현재 페이지가 유효한 범위 내에 있는지 확인
   useEffect(() => {
@@ -393,7 +428,7 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
         if (key === 'brandName') {
           // 브랜드명 배열 처리
           if (Array.isArray((record as any).brandNames)) {
-            value = (record as any).brandNames.join(', ');
+            value = (record as any).brandNames.join('\n');
           } else if (value) {
             value = String(value);
           } else {
@@ -456,36 +491,44 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
   const currentPageRecords = getCurrentPageRecords();
   const allSelected = currentPageRecords.length > 0 && currentPageRecords.every(r => selectedIds.has(r.id!));
 
+  // 입금여부별 카운트 계산
+  const depositStatusCounts = {
+    입금완료: records.filter(r => getDepositStatus(r) === '입금완료').length,
+    입금예정: records.filter(r => getDepositStatus(r) === '입금예정').length,
+    입금지연: records.filter(r => getDepositStatus(r) === '입금지연').length,
+  };
+
   if (isLoading) {
     return (
-      <div className="bg-white rounded-lg border p-6">
+      <Card className="p-6">
         <div className="flex items-center justify-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <span className="ml-2 text-gray-600">입금 목록을 불러오는 중...</span>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-400"></div>
+          <span className="ml-2 text-gray-300">입금 목록을 불러오는 중...</span>
         </div>
-      </div>
+      </Card>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-white rounded-lg border p-6">
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+      <Card className="p-6">
+        <div className="bg-red-500/20 border border-red-500/30 text-red-300 px-4 py-3 rounded">
           {error}
         </div>
         <Button onClick={fetchRecords} className="mt-4" variant="outline">
           다시 시도
         </Button>
-      </div>
+      </Card>
     );
   }
 
   return (
     <>
-      <div className="bg-white rounded-lg border">
-        <div className="p-4 border-b flex items-center justify-between">
-          <h3 className="text-lg font-semibold">입금 목록 ({filteredRecords.length}개)</h3>
-          <div className="flex gap-2">
+      <Card>
+        <div className="p-4 border-b border-purple-500/20">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-lg font-semibold text-gray-200">입금 목록 ({filteredRecords.length}개)</h3>
+            <div className="flex gap-2">
             <div className="relative">
               <Button 
                 onClick={() => setIsColumnSelectorOpen(!isColumnSelectorOpen)} 
@@ -511,7 +554,7 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
                     {allColumns.map((column) => (
                       <label
                         key={column.key}
-                        className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-1 rounded"
+                        className="flex items-center gap-2 cursor-pointer hover:bg-white/10 p-1 rounded"
                       >
                         <input
                           type="checkbox"
@@ -558,9 +601,53 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
               CSV 다운로드
             </Button>
           </div>
+          </div>
+          
+          {/* 입금여부 필터 버튼 */}
+          <div className="flex items-center gap-3 mt-3">
+            <span className="text-sm text-gray-400">입금여부:</span>
+            <button
+              onClick={() => setDepositStatusFilter(depositStatusFilter === '입금완료' ? null : '입금완료')}
+              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                depositStatusFilter === '입금완료'
+                  ? 'bg-green-500/30 text-green-400 border border-green-500/50'
+                  : 'bg-green-500/10 text-green-400/70 border border-green-500/20 hover:bg-green-500/20'
+              }`}
+            >
+              입금완료 {depositStatusCounts.입금완료}개
+            </button>
+            <button
+              onClick={() => setDepositStatusFilter(depositStatusFilter === '입금예정' ? null : '입금예정')}
+              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                depositStatusFilter === '입금예정'
+                  ? 'bg-yellow-500/30 text-yellow-400 border border-yellow-500/50'
+                  : 'bg-yellow-500/10 text-yellow-400/70 border border-yellow-500/20 hover:bg-yellow-500/20'
+              }`}
+            >
+              입금예정 {depositStatusCounts.입금예정}개
+            </button>
+            <button
+              onClick={() => setDepositStatusFilter(depositStatusFilter === '입금지연' ? null : '입금지연')}
+              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                depositStatusFilter === '입금지연'
+                  ? 'bg-red-500/30 text-red-400 border border-red-500/50'
+                  : 'bg-red-500/10 text-red-400/70 border border-red-500/20 hover:bg-red-500/20'
+              }`}
+            >
+              입금지연 {depositStatusCounts.입금지연}개
+            </button>
+            {depositStatusFilter && (
+              <button
+                onClick={() => setDepositStatusFilter(null)}
+                className="px-3 py-1.5 rounded-md text-xs font-medium bg-gray-500/10 text-gray-400 border border-gray-500/20 hover:bg-gray-500/20"
+              >
+                필터 초기화
+              </button>
+            )}
+          </div>
         </div>
 
-        <div className="p-4 border-b space-y-3">
+        <div className="p-4 border-b border-purple-500/20 space-y-3">
           <div className="flex gap-3">
             <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -569,11 +656,11 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
                 placeholder="검색어를 입력하세요..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full pl-10 pr-4 py-2 bg-black/40 border border-purple-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 text-gray-200 placeholder-gray-500 backdrop-blur-sm"
             />
             </div>
             <div className="w-64">
-              <label className="block text-xs text-gray-600 mb-1">검색 컬럼</label>
+              <label className="block text-xs text-gray-300 mb-1">검색 컬럼</label>
               <MultiSelect
                 value={searchColumns}
                 onChange={setSearchColumns}
@@ -586,8 +673,8 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
         </div>
 
         {selectedIds.size > 0 && (
-        <div className="p-4 bg-blue-50 border-b flex items-center justify-between">
-          <span className="text-sm font-medium text-blue-700">
+        <div className="p-4 bg-cyan-500/20 border-b border-purple-500/20 flex items-center justify-between">
+          <span className="text-sm font-medium text-cyan-300">
             {selectedIds.size}개 선택됨
           </span>
           <div className="flex gap-2">
@@ -606,11 +693,11 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
 
       <div className="overflow-x-auto max-h-[calc(100vh-300px)]">
         <table className="w-full text-sm" style={{ tableLayout: 'fixed' }}>
-            <thead className="bg-gray-50 sticky top-0 z-10">
-              <tr className="border-b">
+            <thead className="bg-slate-800 sticky top-0 z-10">
+              <tr className="border-b border-purple-500/20">
                 {visibleColumns.has('checkbox') && (
                   <th 
-                    className="text-left p-2 font-medium text-gray-700 relative"
+                    className="text-left p-2 font-medium text-gray-200 relative"
                     style={{ width: `${columnWidths.checkbox}px`, minWidth: '50px' }}
                   >
                     <input
@@ -627,7 +714,7 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
                 )}
                 {visibleColumns.has('number') && (
                   <th 
-                    className="text-left p-2 font-medium text-gray-700 whitespace-nowrap relative"
+                    className="text-left p-2 font-medium text-gray-200 whitespace-nowrap relative"
                     style={{ width: `${columnWidths.number}px`, minWidth: '50px' }}
                   >
                     번호
@@ -639,7 +726,7 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
                 )}
                 {visibleColumns.has('category') && (
                   <th 
-                    className="text-left p-2 font-medium text-gray-700 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap relative"
+                    className="text-left p-2 font-medium text-gray-200 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap relative"
                     style={{ width: `${columnWidths.category}px`, minWidth: '50px' }}
                     onClick={() => handleSort('category')}
                   >
@@ -664,7 +751,7 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
                 )}
                 {visibleColumns.has('projectCode') && (
                   <th 
-                    className="text-left p-2 font-medium text-gray-700 whitespace-nowrap relative"
+                    className="text-left p-2 font-medium text-gray-200 whitespace-nowrap relative"
                     style={{ width: `${columnWidths.projectCode}px`, minWidth: '50px' }}
                   >
                     프로젝트 유형 코드
@@ -676,7 +763,7 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
                 )}
                 {visibleColumns.has('project') && (
                   <th 
-                    className="text-left p-2 font-medium text-gray-700 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap relative"
+                    className="text-left p-2 font-medium text-gray-200 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap relative"
                     style={{ width: `${columnWidths.project}px`, minWidth: '50px' }}
                     onClick={() => handleSort('projectName')}
                   >
@@ -700,7 +787,7 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
                 )}
                 {visibleColumns.has('projectName') && (
                   <th 
-                    className="text-left p-2 font-medium text-gray-700 whitespace-nowrap relative"
+                    className="text-left p-2 font-medium text-gray-200 whitespace-nowrap relative"
                     style={{ width: `${columnWidths.projectName}px`, minWidth: '50px' }}
                   >
                     Project Name
@@ -712,7 +799,7 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
                 )}
                 {visibleColumns.has('vendorCode') && (
                   <th 
-                    className="text-left p-2 font-medium text-gray-700 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap relative"
+                    className="text-left p-2 font-medium text-gray-200 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap relative"
                     style={{ width: `${columnWidths.vendorCode}px`, minWidth: '50px' }}
                     onClick={() => handleSort('vendorCode')}
                   >
@@ -736,7 +823,7 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
                 )}
                 {visibleColumns.has('companyName') && (
                   <th 
-                    className="text-left p-2 font-medium text-gray-700 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap relative"
+                    className="text-left p-2 font-medium text-gray-200 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap relative"
                     style={{ width: `${columnWidths.companyName}px`, minWidth: '50px' }}
                     onClick={() => handleSort('companyName')}
                   >
@@ -760,7 +847,7 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
                 )}
                 {visibleColumns.has('brandName') && (
                   <th 
-                    className="text-left p-2 font-medium text-gray-700 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap relative"
+                    className="text-left p-2 font-medium text-gray-200 cursor-pointer hover:bg-white/10 select-none whitespace-nowrap relative"
                     style={{ width: `${columnWidths.brandName}px`, minWidth: '50px' }}
                     onClick={() => handleSort('brandName')}
                   >
@@ -782,9 +869,23 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
                     />
                   </th>
                 )}
+                {visibleColumns.has('depositStatus') && (
+                  <th 
+                    className="text-left p-2 font-medium text-gray-200 cursor-pointer hover:bg-white/10 select-none whitespace-nowrap relative"
+                    style={{ width: `${columnWidths.depositStatus}px`, minWidth: '50px' }}
+                  >
+                  <div className="flex items-center gap-1">
+                    <span>입금여부</span>
+                  </div>
+                  <div
+                    className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 bg-transparent z-10"
+                    onMouseDown={(e) => handleResizeStart('depositStatus', e)}
+                  />
+                  </th>
+                )}
                 {visibleColumns.has('expectedDepositDate') && (
                   <th 
-                    className="text-left p-2 font-medium text-gray-700 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap relative"
+                    className="text-left p-2 font-medium text-gray-200 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap relative"
                     style={{ width: `${columnWidths.expectedDepositDate}px`, minWidth: '50px' }}
                     onClick={() => handleSort('expectedDepositDate')}
                   >
@@ -808,7 +909,7 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
                 )}
                 {visibleColumns.has('expectedDepositAmount') && (
                   <th 
-                    className="text-right p-2 font-medium text-gray-700 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap relative"
+                    className="text-right p-2 font-medium text-gray-200 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap relative"
                     style={{ width: `${columnWidths.expectedDepositAmount}px`, minWidth: '50px' }}
                     onClick={() => handleSort('expectedDepositAmount')}
                   >
@@ -832,7 +933,7 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
                 )}
                 {visibleColumns.has('depositDate') && (
                   <th 
-                    className="text-left p-2 font-medium text-gray-700 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap relative"
+                    className="text-left p-2 font-medium text-gray-200 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap relative"
                     style={{ width: `${columnWidths.depositDate}px`, minWidth: '50px' }}
                     onClick={() => handleSort('depositDate')}
                   >
@@ -856,7 +957,7 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
                 )}
                 {visibleColumns.has('depositAmount') && (
                   <th 
-                    className="text-right p-2 font-medium text-gray-700 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap relative"
+                    className="text-right p-2 font-medium text-gray-200 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap relative"
                     style={{ width: `${columnWidths.depositAmount}px`, minWidth: '50px' }}
                     onClick={() => handleSort('depositAmount')}
                   >
@@ -880,7 +981,7 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
                 )}
                 {visibleColumns.has('invoiceAttachment') && (
                   <th 
-                    className="text-left p-2 font-medium text-gray-700 whitespace-nowrap relative"
+                    className="text-left p-2 font-medium text-gray-200 whitespace-nowrap relative"
                     style={{ width: `${columnWidths.invoiceAttachment}px`, minWidth: '50px' }}
                   >
                     세금계산서 첨부
@@ -892,7 +993,7 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
                 )}
                 {visibleColumns.has('businessRegistrationNumber') && (
                   <th 
-                    className="text-left p-2 font-medium text-gray-700 whitespace-nowrap relative"
+                    className="text-left p-2 font-medium text-gray-200 whitespace-nowrap relative"
                     style={{ width: `${columnWidths.businessRegistrationNumber}px`, minWidth: '50px' }}
                   >
                     사업자번호
@@ -904,7 +1005,7 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
                 )}
                 {visibleColumns.has('invoiceEmail') && (
                   <th 
-                    className="text-left p-2 font-medium text-gray-700 whitespace-nowrap relative"
+                    className="text-left p-2 font-medium text-gray-200 whitespace-nowrap relative"
                     style={{ width: `${columnWidths.invoiceEmail}px`, minWidth: '50px' }}
                   >
                     이메일
@@ -916,7 +1017,7 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
                 )}
                 {visibleColumns.has('eoeoManager') && (
                   <th 
-                    className="text-left p-2 font-medium text-gray-700 whitespace-nowrap relative"
+                    className="text-left p-2 font-medium text-gray-200 whitespace-nowrap relative"
                     style={{ width: `${columnWidths.eoeoManager}px`, minWidth: '50px' }}
                   >
                     담당자
@@ -928,7 +1029,7 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
                 )}
                 {visibleColumns.has('contractLink') && (
                   <th 
-                    className="text-left p-2 font-medium text-gray-700 whitespace-nowrap relative"
+                    className="text-left p-2 font-medium text-gray-200 whitespace-nowrap relative"
                     style={{ width: `${columnWidths.contractLink}px`, minWidth: '50px' }}
                   >
                     계약서
@@ -940,7 +1041,7 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
                 )}
                 {visibleColumns.has('estimateLink') && (
                   <th 
-                    className="text-left p-2 font-medium text-gray-700 whitespace-nowrap relative"
+                    className="text-left p-2 font-medium text-gray-200 whitespace-nowrap relative"
                     style={{ width: `${columnWidths.estimateLink}px`, minWidth: '50px' }}
                   >
                     견적서
@@ -952,7 +1053,7 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
                 )}
                 {visibleColumns.has('installmentNumber') && (
                   <th 
-                    className="text-left p-2 font-medium text-gray-700 whitespace-nowrap relative"
+                    className="text-left p-2 font-medium text-gray-200 whitespace-nowrap relative"
                     style={{ width: `${columnWidths.installmentNumber}px`, minWidth: '50px' }}
                   >
                     차수
@@ -964,7 +1065,7 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
                 )}
                 {visibleColumns.has('attributionYearMonth') && (
                   <th 
-                    className="text-left p-2 font-medium text-gray-700 whitespace-nowrap relative"
+                    className="text-left p-2 font-medium text-gray-200 whitespace-nowrap relative"
                     style={{ width: `${columnWidths.attributionYearMonth}px`, minWidth: '50px' }}
                   >
                     귀속년월
@@ -976,7 +1077,7 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
                 )}
                 {visibleColumns.has('advanceBalance') && (
                   <th 
-                    className="text-left p-2 font-medium text-gray-700 whitespace-nowrap relative"
+                    className="text-left p-2 font-medium text-gray-200 whitespace-nowrap relative"
                     style={{ width: `${columnWidths.advanceBalance}px`, minWidth: '50px' }}
                   >
                     선/잔금
@@ -988,7 +1089,7 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
                 )}
                 {visibleColumns.has('ratio') && (
                   <th 
-                    className="text-left p-2 font-medium text-gray-700 whitespace-nowrap relative"
+                    className="text-left p-2 font-medium text-gray-200 whitespace-nowrap relative"
                     style={{ width: `${columnWidths.ratio}px`, minWidth: '50px' }}
                   >
                     비율
@@ -1000,7 +1101,7 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
                 )}
                 {visibleColumns.has('count') && (
                   <th 
-                    className="text-left p-2 font-medium text-gray-700 whitespace-nowrap relative"
+                    className="text-left p-2 font-medium text-gray-200 whitespace-nowrap relative"
                     style={{ width: `${columnWidths.count}px`, minWidth: '50px' }}
                   >
                     건수
@@ -1012,7 +1113,7 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
                 )}
                 {visibleColumns.has('description') && (
                   <th 
-                    className="text-left p-2 font-medium text-gray-700 whitespace-nowrap relative"
+                    className="text-left p-2 font-medium text-gray-200 whitespace-nowrap relative"
                     style={{ width: `${columnWidths.description}px`, minWidth: '50px' }}
                   >
                     적요
@@ -1024,7 +1125,7 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
                 )}
                 {visibleColumns.has('createdDate') && (
                   <th 
-                    className="text-left p-2 font-medium text-gray-700 whitespace-nowrap relative"
+                    className="text-left p-2 font-medium text-gray-200 whitespace-nowrap relative"
                     style={{ width: `${columnWidths.createdDate}px`, minWidth: '50px' }}
                   >
                     작성일
@@ -1036,7 +1137,7 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
                 )}
                 {visibleColumns.has('issueNotes') && (
                   <th 
-                    className="text-left p-2 font-medium text-gray-700 whitespace-nowrap relative"
+                    className="text-left p-2 font-medium text-gray-200 whitespace-nowrap relative"
                     style={{ width: `${columnWidths.issueNotes}px`, minWidth: '50px' }}
                   >
                     이슈
@@ -1048,7 +1149,7 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
                 )}
                 {visibleColumns.has('actions') && (
                   <th 
-                    className="text-left p-2 font-medium text-gray-700 whitespace-nowrap relative"
+                    className="text-left p-2 font-medium text-gray-200 whitespace-nowrap relative"
                     style={{ width: `${columnWidths.actions}px`, minWidth: '50px' }}
                   >
                     작업
@@ -1063,7 +1164,7 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
           <tbody>
             {currentPageRecords.length === 0 ? (
               <tr>
-                <td colSpan={visibleColumns.size} className="p-8 text-center text-gray-500">
+                <td colSpan={visibleColumns.size} className="p-8 text-center text-gray-400">
                   {searchQuery ? '검색 결과가 없습니다.' : '등록된 입금 정보가 없습니다.'}
                 </td>
               </tr>
@@ -1071,10 +1172,10 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
               currentPageRecords.map((record, index) => (
                 <tr 
                   key={record.id} 
-                  className={`border-b hover:bg-gray-50 ${(record as any).hasWarning ? 'bg-yellow-50' : ''}`}
+                  className={`border-b border-purple-500/20 hover:bg-white/5 ${(record as any).hasWarning ? 'bg-yellow-500/10' : ''}`}
                 >
                   {visibleColumns.has('checkbox') && (
-                    <td className="p-2">
+                    <td className="p-2 text-[13px]">
                       <input
                         type="checkbox"
                         checked={selectedIds.has(record.id!)}
@@ -1084,12 +1185,12 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
                     </td>
                   )}
                   {visibleColumns.has('number') && (
-                    <td className="p-2 text-gray-600">
+                    <td className="p-2 text-[13px] text-gray-300">
                       {(currentPage - 1) * ITEMS_PER_PAGE + index + 1}
                     </td>
                   )}
                   {visibleColumns.has('category') && (
-                    <td className="p-2 whitespace-nowrap truncate overflow-hidden" title={record.category || ''}>
+                    <td className="p-2 text-[13px] whitespace-nowrap truncate overflow-hidden" title={record.category || ''}>
                       <div className="flex items-center gap-1 min-w-0">
                         <span className="truncate">{record.category || '-'}</span>
                         {(record as any).hasWarning && (
@@ -1099,79 +1200,160 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
                     </td>
                   )}
                   {visibleColumns.has('projectCode') && (
-                    <td className="p-2 whitespace-nowrap truncate overflow-hidden" title={record.projectCode || ''}>{record.projectCode || '-'}</td>
+                    <td className="p-2 text-[13px] whitespace-nowrap truncate overflow-hidden" title={record.projectCode || ''}>{record.projectCode || '-'}</td>
                   )}
                   {visibleColumns.has('project') && (
-                    <td className="p-2 whitespace-nowrap truncate overflow-hidden" title={record.project || ''}>{record.project || '-'}</td>
+                    <td className="p-2 text-[13px] whitespace-nowrap truncate overflow-hidden" title={record.project || ''}>{record.project || '-'}</td>
                   )}
                   {visibleColumns.has('projectName') && (
-                    <td className="p-2 whitespace-nowrap truncate overflow-hidden" title={record.projectName || ''}>{record.projectName || '-'}</td>
+                    <td className="p-2 text-[13px] whitespace-nowrap truncate overflow-hidden" title={record.projectName || ''}>{record.projectName || '-'}</td>
                   )}
                   {visibleColumns.has('vendorCode') && (
-                    <td className="p-2 whitespace-nowrap truncate overflow-hidden" title={record.vendorCode || ''}>{record.vendorCode || '-'}</td>
+                    <td className="p-2 text-[13px] whitespace-nowrap truncate overflow-hidden" title={record.vendorCode || ''}>{record.vendorCode || '-'}</td>
                   )}
                   {visibleColumns.has('companyName') && (
-                    <td className="p-2 whitespace-nowrap truncate overflow-hidden" title={record.companyName || ''}>{record.companyName || '-'}</td>
+                    <td className="p-2 text-[13px] whitespace-nowrap truncate overflow-hidden" title={record.companyName || ''}>{record.companyName || '-'}</td>
                   )}
                   {visibleColumns.has('brandName') && (
-                    <td className="p-2 whitespace-nowrap truncate overflow-hidden" title={record.brandName || ''}>{record.brandName || '-'}</td>
+                    <td className="p-2 text-[13px] whitespace-pre-line" title={Array.isArray(record.brandNames) && record.brandNames.length > 0 ? record.brandNames.join('\n') : (record.brandName || '')}>
+                      {Array.isArray(record.brandNames) && record.brandNames.length > 0 ? record.brandNames.join('\n') : (record.brandName || '-')}
+                    </td>
+                  )}
+                  {visibleColumns.has('depositStatus') && (
+                    <td className="p-2 text-[13px] whitespace-nowrap">
+                      {(() => {
+                        let status: string;
+                        // DB에서 가져온 depositStatus가 있으면 사용
+                        if (record.depositStatus) {
+                          status = record.depositStatus;
+                        } else if (record.depositAmount && record.depositAmount > 0) {
+                          // 입금액이 있으면 '입금완료'
+                          status = '입금완료';
+                        } else if (record.expectedDepositDate) {
+                          // 입금액이 없고 입금예정일이 있으면
+                          const expectedDate = new Date(record.expectedDepositDate);
+                          const today = new Date();
+                          today.setHours(0, 0, 0, 0);
+                          expectedDate.setHours(0, 0, 0, 0);
+                          // 입금예정일이 오늘 이후면 '입금예정'
+                          if (expectedDate >= today) {
+                            status = '입금예정';
+                          } else {
+                            // 입금예정일이 오늘 이전이면 '입금지연'
+                            status = '입금지연';
+                          }
+                        } else {
+                          // 둘 다 없으면 '입금예정'
+                          status = '입금예정';
+                        }
+                        
+                        // 색상 클래스 결정
+                        let bgColor = '';
+                        let textColor = '';
+                        if (status === '입금완료') {
+                          bgColor = 'bg-green-500/20';
+                          textColor = 'text-green-400';
+                        } else if (status === '입금예정') {
+                          bgColor = 'bg-yellow-500/20';
+                          textColor = 'text-yellow-400';
+                        } else if (status === '입금지연') {
+                          bgColor = 'bg-red-500/20';
+                          textColor = 'text-red-400';
+                        }
+                        
+                        return (
+                          <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium ${bgColor} ${textColor} border ${status === '입금완료' ? 'border-green-500/30' : status === '입금예정' ? 'border-yellow-500/30' : 'border-red-500/30'}`}>
+                            {status}
+                          </span>
+                        );
+                      })()}
+                    </td>
                   )}
                   {visibleColumns.has('expectedDepositDate') && (
-                    <td className="p-2 whitespace-nowrap truncate overflow-hidden" title={record.expectedDepositDate ? formatDate(record.expectedDepositDate) : ''}>{record.expectedDepositDate ? formatDate(record.expectedDepositDate) : '-'}</td>
+                    <td className="p-2 text-[13px] whitespace-nowrap truncate overflow-hidden" title={record.expectedDepositDate ? formatDate(record.expectedDepositDate) : ''}>{record.expectedDepositDate ? formatDate(record.expectedDepositDate) : '-'}</td>
                   )}
                   {visibleColumns.has('expectedDepositAmount') && (
-                    <td className="p-2 text-right whitespace-nowrap truncate overflow-hidden" title={record.expectedDepositAmount ? formatCurrency(record.expectedDepositAmount, record.expectedDepositCurrency) : ''}>{record.expectedDepositAmount ? formatCurrency(record.expectedDepositAmount, record.expectedDepositCurrency) : '-'}</td>
+                    <td className="p-2 text-[13px] text-right whitespace-nowrap truncate overflow-hidden" title={record.expectedDepositAmount ? formatCurrency(record.expectedDepositAmount, record.expectedDepositCurrency) : ''}>{record.expectedDepositAmount ? formatCurrency(record.expectedDepositAmount, record.expectedDepositCurrency) : '-'}</td>
                   )}
                   {visibleColumns.has('depositDate') && (
-                    <td className="p-2 whitespace-nowrap truncate overflow-hidden" title={record.depositDate ? formatDate(record.depositDate) : ''}>{record.depositDate ? formatDate(record.depositDate) : '-'}</td>
+                    <td className="p-2 text-[13px] whitespace-nowrap truncate overflow-hidden" title={record.depositDate ? formatDate(record.depositDate) : ''}>{record.depositDate ? formatDate(record.depositDate) : '-'}</td>
                   )}
                   {visibleColumns.has('depositAmount') && (
-                    <td className="p-2 text-right font-medium whitespace-nowrap truncate overflow-hidden" title={record.depositAmount ? formatCurrency(record.depositAmount, record.depositCurrency) : ''}>{record.depositAmount ? formatCurrency(record.depositAmount, record.depositCurrency) : '-'}</td>
+                    <td className="p-2 text-[13px] text-right font-medium whitespace-nowrap truncate overflow-hidden" title={record.depositAmount ? formatCurrency(record.depositAmount, record.depositCurrency) : ''}>{record.depositAmount ? formatCurrency(record.depositAmount, record.depositCurrency) : '-'}</td>
                   )}
                   {visibleColumns.has('invoiceAttachment') && (
-                    <td className="p-2 whitespace-nowrap">
+                    <td className="p-2 text-[13px] whitespace-nowrap">
                       {(() => {
+                        let status: string;
+                        let bgColor = '';
+                        let textColor = '';
+                        let borderColor = '';
+                        let isLink = false;
+                        
                         // invoiceCopy가 있으면 "첨부완료" (클릭하면 파일 열기)
                         if (record.invoiceCopy) {
+                          status = '첨부완료';
+                          bgColor = 'bg-green-500/20';
+                          textColor = 'text-green-400';
+                          borderColor = 'border-green-500/30';
+                          isLink = true;
+                        } else {
+                          // invoiceAttachmentStatus에 따라 상태 표시
+                          const currentStatus = record.invoiceAttachmentStatus || 'required';
+                          
+                          if (currentStatus === 'not_required') {
+                            status = '첨부불요';
+                            bgColor = 'bg-gray-500/20';
+                            textColor = 'text-gray-400';
+                            borderColor = 'border-gray-500/30';
+                          } else if (currentStatus === 'completed') {
+                            status = '첨부완료';
+                            bgColor = 'bg-green-500/20';
+                            textColor = 'text-green-400';
+                            borderColor = 'border-green-500/30';
+                          } else {
+                            status = '첨부필요';
+                            bgColor = 'bg-yellow-500/20';
+                            textColor = 'text-yellow-400';
+                            borderColor = 'border-yellow-500/30';
+                          }
+                        }
+                        
+                        const badgeClass = `inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium ${bgColor} ${textColor} border ${borderColor}`;
+                        
+                        if (isLink && record.invoiceCopy) {
                           return (
                             <a 
                               href={record.invoiceCopy} 
                               target="_blank" 
                               rel="noopener noreferrer" 
-                              className="text-blue-600 font-medium hover:underline cursor-pointer"
+                              className={`${badgeClass} hover:opacity-80 cursor-pointer`}
                               title={record.invoiceCopy}
                             >
-                              첨부완료
+                              {status}
                             </a>
                           );
                         }
                         
-                        // invoiceAttachmentStatus에 따라 상태 표시
-                        const currentStatus = record.invoiceAttachmentStatus || 'required';
-                        
-                        if (currentStatus === 'not_required') {
-                          return (
-                            <span className="text-green-600">첨부불요</span>
-                          );
-                        }
-                        
                         return (
-                          <span className="text-red-600">첨부필요</span>
+                          <span className={badgeClass}>
+                            {status}
+                          </span>
                         );
                       })()}
                     </td>
                   )}
                   {visibleColumns.has('businessRegistrationNumber') && (
-                    <td className="p-2 whitespace-nowrap truncate overflow-hidden" title={record.businessRegistrationNumber || ''}>{record.businessRegistrationNumber || '-'}</td>
+                    <td className="p-2 text-[13px] whitespace-nowrap truncate overflow-hidden" title={record.businessRegistrationNumber || ''}>{record.businessRegistrationNumber || '-'}</td>
                   )}
                   {visibleColumns.has('invoiceEmail') && (
-                    <td className="p-2 whitespace-nowrap truncate overflow-hidden" title={record.invoiceEmail || ''}>{record.invoiceEmail || '-'}</td>
+                    <td className="p-2 text-[13px] whitespace-nowrap truncate overflow-hidden" title={record.invoiceEmail || ''}>{record.invoiceEmail || '-'}</td>
                   )}
                   {visibleColumns.has('eoeoManager') && (
-                    <td className="p-2 whitespace-nowrap truncate overflow-hidden" title={record.eoeoManager || ''}>{record.eoeoManager || '-'}</td>
+                    <td className="p-2 text-[13px] whitespace-nowrap truncate overflow-hidden" title={record.eoeoManager || ''}>{record.eoeoManager || '-'}</td>
                   )}
                   {visibleColumns.has('contractLink') && (
-                    <td className="p-2 whitespace-nowrap truncate overflow-hidden">
+                    <td className="p-2 text-[13px] whitespace-nowrap truncate overflow-hidden">
                       {record.contractLink ? (
                         <a 
                           href={record.contractLink} 
@@ -1186,7 +1368,7 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
                     </td>
                   )}
                   {visibleColumns.has('estimateLink') && (
-                    <td className="p-2 whitespace-nowrap truncate overflow-hidden">
+                    <td className="p-2 text-[13px] whitespace-nowrap truncate overflow-hidden">
                       {record.estimateLink ? (
                         <a 
                           href={record.estimateLink} 
@@ -1201,31 +1383,31 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
                     </td>
                   )}
                   {visibleColumns.has('installmentNumber') && (
-                    <td className="p-2 whitespace-nowrap truncate overflow-hidden" title={record.installmentNumber ? String(record.installmentNumber) : ''}>{record.installmentNumber || '-'}</td>
+                    <td className="p-2 text-[13px] whitespace-nowrap truncate overflow-hidden" title={record.installmentNumber ? String(record.installmentNumber) : ''}>{record.installmentNumber || '-'}</td>
                   )}
                   {visibleColumns.has('attributionYearMonth') && (
-                    <td className="p-2 whitespace-nowrap truncate overflow-hidden" title={record.attributionYearMonth || ''}>{record.attributionYearMonth || '-'}</td>
+                    <td className="p-2 text-[13px] whitespace-nowrap truncate overflow-hidden" title={record.attributionYearMonth || ''}>{record.attributionYearMonth || '-'}</td>
                   )}
                   {visibleColumns.has('advanceBalance') && (
-                    <td className="p-2 whitespace-nowrap truncate overflow-hidden" title={record.advanceBalance || ''}>{record.advanceBalance || '-'}</td>
+                    <td className="p-2 text-[13px] whitespace-nowrap truncate overflow-hidden" title={record.advanceBalance || ''}>{record.advanceBalance || '-'}</td>
                   )}
                   {visibleColumns.has('ratio') && (
-                    <td className="p-2 whitespace-nowrap truncate overflow-hidden" title={record.ratio ? String(record.ratio) : ''}>{record.ratio || '-'}</td>
+                    <td className="p-2 text-[13px] whitespace-nowrap truncate overflow-hidden" title={record.ratio ? String(record.ratio) : ''}>{record.ratio || '-'}</td>
                   )}
                   {visibleColumns.has('count') && (
-                    <td className="p-2 whitespace-nowrap truncate overflow-hidden" title={record.count ? String(record.count) : ''}>{record.count || '-'}</td>
+                    <td className="p-2 text-[13px] whitespace-nowrap truncate overflow-hidden" title={record.count ? String(record.count) : ''}>{record.count || '-'}</td>
                   )}
                   {visibleColumns.has('description') && (
-                    <td className="p-2 whitespace-nowrap truncate overflow-hidden" title={record.description || ''}>{record.description || '-'}</td>
+                    <td className="p-2 text-[13px] whitespace-nowrap truncate overflow-hidden" title={record.description || ''}>{record.description || '-'}</td>
                   )}
                   {visibleColumns.has('createdDate') && (
-                    <td className="p-2 whitespace-nowrap truncate overflow-hidden" title={record.createdDate ? formatDate(record.createdDate) : ''}>{record.createdDate ? formatDate(record.createdDate) : '-'}</td>
+                    <td className="p-2 text-[13px] whitespace-nowrap truncate overflow-hidden" title={record.createdDate ? formatDate(record.createdDate) : ''}>{record.createdDate ? formatDate(record.createdDate) : '-'}</td>
                   )}
                   {visibleColumns.has('issueNotes') && (
-                    <td className="p-2 whitespace-nowrap truncate overflow-hidden" title={record.issueNotes || ''}>{record.issueNotes || '-'}</td>
+                    <td className="p-2 text-[13px] whitespace-nowrap truncate overflow-hidden" title={record.issueNotes || ''}>{record.issueNotes || '-'}</td>
                   )}
                   {visibleColumns.has('actions') && (
-                    <td className="p-2">
+                    <td className="p-2 text-[13px]">
                       <div className="flex gap-2">
                         <button
                           onClick={() => handleEdit(record)}
@@ -1259,7 +1441,7 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
           onPageChange={setCurrentPage}
         />
       )}
-      </div>
+      </Card>
 
       <OtherIncomeFormModal
         isOpen={isModalOpen}

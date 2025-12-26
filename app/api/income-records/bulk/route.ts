@@ -25,7 +25,7 @@ export async function POST(request: Request) {
       category: r.category || null,
       vendor_code: r.vendorCode || null,
       company_name: r.companyName || null,
-      brand_name: r.brandName || null,
+      brand_names: r.brandNames && r.brandNames.length > 0 ? r.brandNames : (r.brandName ? [r.brandName] : null),
       business_registration_number: r.businessRegistrationNumber || null,
       invoice_email: r.invoiceEmail || null,
       project_code: r.projectCode || null,

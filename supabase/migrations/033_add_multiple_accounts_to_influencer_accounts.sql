@@ -6,3 +6,6 @@ ADD COLUMN IF NOT EXISTS instagram_handles JSONB DEFAULT '[]'::jsonb;
 
 
 
+
+
+

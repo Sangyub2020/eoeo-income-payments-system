@@ -16,8 +16,8 @@ export default function InfluencerAccountsPage() {
   return (
     <div className="p-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">인플루언서 계좌 등록</h1>
-        <p className="text-gray-600 mt-2">인플루언서 계좌 정보를 등록하고 관리합니다</p>
+        <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">인플루언서 계좌 등록</h1>
+        <p className="text-gray-400 mt-2">인플루언서 계좌 정보를 등록하고 관리합니다</p>
       </div>
 
       <Tabs defaultValue="register" className="w-full">
@@ -38,6 +38,9 @@ export default function InfluencerAccountsPage() {
     </div>
   );
 }
+
+
+
 
 
 

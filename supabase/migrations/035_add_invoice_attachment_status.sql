@@ -13,3 +13,6 @@ SET invoice_attachment_status = 'required'
 WHERE invoice_copy IS NULL OR invoice_copy = '';
 
 
+
+
+

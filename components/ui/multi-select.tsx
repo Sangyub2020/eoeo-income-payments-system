@@ -83,23 +83,23 @@ export function MultiSelect({
         type="button"
         onClick={() => !disabled && setIsOpen(!isOpen)}
         disabled={disabled}
-        className={`w-full min-h-[42px] px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-left flex items-center justify-between ${
-          disabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-white cursor-pointer hover:border-gray-400'
+        className={`w-full min-h-[42px] px-3 py-2 border border-purple-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 text-left flex items-center justify-between ${
+          disabled ? 'bg-slate-800/40 cursor-not-allowed text-gray-500' : 'bg-black/40 backdrop-blur-xl cursor-pointer hover:border-purple-500/50 text-gray-200'
         }`}
       >
         <div className="flex-1 flex flex-wrap gap-1">
           {selectedOptions.length === 0 ? (
-            <span className="text-gray-500">{placeholder}</span>
+            <span className="text-gray-400">{placeholder}</span>
           ) : (
             selectedOptions.map((opt) => (
               <span
                 key={opt.value}
-                className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 rounded text-sm"
+                className="inline-flex items-center gap-1 px-2 py-1 bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 rounded text-sm"
               >
                 {opt.label}
                 {!disabled && (
                   <X
-                    className="h-3 w-3 cursor-pointer hover:text-blue-900"
+                    className="h-3 w-3 cursor-pointer hover:text-cyan-200"
                     onClick={(e) => handleRemove(opt.value, e)}
                   />
                 )}
@@ -110,7 +110,7 @@ export function MultiSelect({
         <div className="flex items-center gap-1 ml-2">
           {value.length > 0 && !disabled && (
             <X
-              className="h-4 w-4 text-gray-400 hover:text-gray-600"
+              className="h-4 w-4 text-gray-400 hover:text-cyan-300 transition-colors"
               onClick={(e) => {
                 e.stopPropagation();
                 handleClearAll(e);
@@ -122,8 +122,8 @@ export function MultiSelect({
       </button>
 
       {isOpen && !disabled && (
-        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-hidden">
-          <div className="p-2 border-b">
+        <div className="absolute z-50 w-full mt-1 bg-black/80 backdrop-blur-xl border border-purple-500/30 rounded-md shadow-lg max-h-60 overflow-hidden">
+          <div className="p-2 border-b border-purple-500/20">
             <div className="relative">
               <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
@@ -132,13 +132,13 @@ export function MultiSelect({
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="검색..."
-                className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full pl-8 pr-3 py-2 bg-black/40 border border-purple-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 text-gray-200 placeholder-gray-500"
               />
             </div>
           </div>
           <div className="overflow-y-auto max-h-48">
             {filteredOptions.length === 0 ? (
-              <div className="px-4 py-2 text-sm text-gray-500">검색 결과가 없습니다.</div>
+              <div className="px-4 py-2 text-sm text-gray-400">검색 결과가 없습니다.</div>
             ) : (
               filteredOptions.map((option) => {
                 const isSelected = value.includes(option.value);
@@ -147,16 +147,16 @@ export function MultiSelect({
                     key={option.value}
                     type="button"
                     onClick={() => handleToggle(option.value)}
-                    className={`w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center gap-2 ${
-                      isSelected ? 'bg-blue-50' : ''
+                    className={`w-full px-4 py-2 text-left hover:bg-white/10 flex items-center gap-2 transition-colors ${
+                      isSelected ? 'bg-cyan-500/20' : ''
                     }`}
                   >
                     <div className={`w-4 h-4 border-2 rounded flex items-center justify-center ${
-                      isSelected ? 'border-blue-600 bg-blue-600' : 'border-gray-300'
+                      isSelected ? 'border-cyan-400 bg-cyan-500' : 'border-gray-500'
                     }`}>
                       {isSelected && <Check className="h-3 w-3 text-white" />}
                     </div>
-                    <span className={isSelected ? 'text-blue-900 font-medium' : 'text-gray-900'}>
+                    <span className={isSelected ? 'text-cyan-300 font-medium' : 'text-gray-300'}>
                       {option.label}
                     </span>
                   </button>
@@ -169,6 +169,9 @@ export function MultiSelect({
     </div>
   );
 }
+
+
+
 
 
 

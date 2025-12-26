@@ -40,7 +40,6 @@ export async function PUT(
       category,
       vendorCode,
       companyName,
-      brandName,
       brandNames,
       businessRegistrationNumber,
       invoiceEmail,
@@ -71,6 +70,7 @@ export async function PUT(
       ratio,
       count,
       expectedDepositDate,
+      depositStatus,
       oneTimeExpenseAmount,
       expectedDepositAmount,
       expectedDepositCurrency,
@@ -96,18 +96,10 @@ export async function PUT(
     if (category !== undefined) updateData.category = category || null;
     if (vendorCode !== undefined) updateData.vendor_code = vendorCode || null;
     if (companyName !== undefined) updateData.company_name = companyName || null;
-    if (brandName !== undefined) updateData.brand_name = brandName || null;
     if (brandNames !== undefined) {
-      // brand_names 컬럼이 있으면 업데이트, 없으면 brand_name만 업데이트
-      // Supabase에서 컬럼이 없으면 에러가 발생하므로, 일단 brand_name만 업데이트
-      // 마이그레이션 031_add_brand_names_to_income_records.sql을 실행하면 brand_names도 사용 가능
       if (brandNames && brandNames.length > 0) {
-        updateData.brand_name = brandNames[0] || null;
-        // brand_names 컬럼이 있는 경우에만 추가 (마이그레이션 실행 후)
-        // 주의: 마이그레이션이 실행되지 않았으면 이 줄로 인해 에러 발생
         updateData.brand_names = brandNames;
       } else {
-        updateData.brand_name = null;
         updateData.brand_names = null;
       }
     }
@@ -140,6 +132,7 @@ export async function PUT(
     if (ratio !== undefined) updateData.ratio = ratio || null;
     if (count !== undefined) updateData.count = count || null;
     if (expectedDepositDate !== undefined) updateData.expected_deposit_date = expectedDepositDate || null;
+    if (depositStatus !== undefined) updateData.deposit_status = depositStatus || null;
     if (oneTimeExpenseAmount !== undefined) updateData.one_time_expense_amount = oneTimeExpenseAmount || null;
     if (expectedDepositAmount !== undefined) updateData.expected_deposit_amount = expectedDepositAmount || null;
     if (expectedDepositCurrency !== undefined) updateData.expected_deposit_currency = expectedDepositCurrency || 'KRW';
@@ -191,8 +184,8 @@ export async function PUT(
       category: data.category,
       vendorCode: data.vendor_code,
       companyName: data.company_name,
-      brandName: data.brand_name,
-      brandNames: data.brand_names || (data.brand_name ? [data.brand_name] : []),
+      brandNames: Array.isArray(data.brand_names) ? data.brand_names : (data.brand_names ? [data.brand_names] : []),
+      brandName: (Array.isArray(data.brand_names) && data.brand_names.length > 0) ? data.brand_names[0] : (data.brand_names ? String(data.brand_names) : null), // 호환성을 위해 유지하되 brand_names[0] 사용
       businessRegistrationNumber: data.business_registration_number,
       invoiceEmail: data.invoice_email,
       projectCode: data.project_code,
@@ -223,6 +216,7 @@ export async function PUT(
       ratio: data.ratio,
       count: data.count,
       expectedDepositDate: data.expected_deposit_date,
+      depositStatus: data.deposit_status,
       oneTimeExpenseAmount: data.one_time_expense_amount,
       expectedDepositAmount: data.expected_deposit_amount,
       expectedDepositCurrency: data.expected_deposit_currency,

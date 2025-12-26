@@ -123,6 +123,7 @@ export interface OnlineCommerceTeam {
   ratio?: number;
   count?: number;
   expectedDepositDate?: string;
+  depositStatus?: '입금완료' | '입금예정' | '입금지연';
   oneTimeExpenseAmount?: number;
   expectedDepositAmount?: number;
   expectedDepositCurrency?: string;
@@ -181,6 +182,7 @@ export interface GlobalMarketingTeam {
   ratio?: number;
   count?: number;
   expectedDepositDate?: string;
+  depositStatus?: '입금완료' | '입금예정' | '입금지연';
   oneTimeExpenseAmount?: number;
   expectedDepositAmount?: number;
   expectedDepositCurrency?: string;
@@ -278,6 +280,7 @@ export interface GlobalSalesTeam {
   ratio?: number;
   count?: number;
   expectedDepositDate?: string;
+  depositStatus?: '입금완료' | '입금예정' | '입금지연';
   oneTimeExpenseAmount?: number;
   expectedDepositAmount?: number;
   expectedDepositCurrency?: string;
@@ -333,10 +336,13 @@ export interface OtherIncome {
   depositDate?: string;
   depositAmount?: number;
   depositCurrency?: string;
+  oneTimeExpenseAmount?: number;
   exchangeGainLoss?: number;
   difference?: number;
   createdDate?: string;
   invoiceCopy?: string;
+  invoiceAttachmentStatus?: 'required' | 'completed' | 'not_required'; // 첨부필요, 첨부완료, 첨부 불요
+  depositStatus?: '입금완료' | '입금예정' | '입금지연';
   issueNotes?: string;
   year?: number;
   expectedDepositMonth?: number;
@@ -374,6 +380,7 @@ export interface BrandPlanningTeam {
   ratio?: number;
   count?: number;
   expectedDepositDate?: string;
+  depositStatus?: '입금완료' | '입금예정' | '입금지연';
   oneTimeExpenseAmount?: number;
   expectedDepositAmount?: number;
   expectedDepositCurrency?: string;
@@ -429,10 +436,13 @@ export interface OtherIncome {
   depositDate?: string;
   depositAmount?: number;
   depositCurrency?: string;
+  oneTimeExpenseAmount?: number;
   exchangeGainLoss?: number;
   difference?: number;
   createdDate?: string;
   invoiceCopy?: string;
+  invoiceAttachmentStatus?: 'required' | 'completed' | 'not_required'; // 첨부필요, 첨부완료, 첨부 불요
+  depositStatus?: '입금완료' | '입금예정' | '입금지연';
   issueNotes?: string;
   year?: number;
   expectedDepositMonth?: number;

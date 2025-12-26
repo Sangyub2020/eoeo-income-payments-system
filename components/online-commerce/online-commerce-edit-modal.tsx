@@ -229,6 +229,7 @@ export function OnlineCommerceEditModal({ record, onClose, onSuccess }: OnlineCo
       const requestBody = {
         ...formData,
         team: 'online_commerce',
+        brandName: selectedBrands.length > 0 ? selectedBrands[0] : undefined,
         brandNames: selectedBrands.length > 0 ? selectedBrands : undefined,
         invoiceCopy: invoiceCopyUrl,
         invoiceAttachmentStatus,

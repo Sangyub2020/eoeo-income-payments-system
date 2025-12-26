@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { DollarSign, CreditCard, Database, Building2, FolderKanban, User, Home, Gamepad2 } from 'lucide-react';
+import { DollarSign, CreditCard, Database, Building2, FolderKanban, User, Home } from 'lucide-react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 
 const sections = [
@@ -39,11 +39,6 @@ const sections = [
       { name: '인플루언서 계좌 등록', href: '/dashboard/influencer-accounts', icon: User },
     ],
   },
-  {
-    name: '스트레스 해소 게임',
-    href: '/dashboard/stress-game',
-    icon: Gamepad2,
-  },
 ];
 
 export function Sidebar() {
@@ -61,9 +56,9 @@ export function Sidebar() {
   };
 
   return (
-    <div className="flex h-screen w-64 flex-col border-r bg-gray-50">
-      <div className="flex h-16 items-center border-b px-6">
-        <h1 className="text-xl font-bold text-gray-900">EOEO 관리</h1>
+    <div className="flex h-screen w-64 flex-col border-r border-purple-500/20 bg-slate-800/40 backdrop-blur-xl">
+      <div className="flex h-16 items-center border-b border-purple-500/20 px-6">
+        <h1 className="text-xl font-bold bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">EOEO 관리</h1>
       </div>
       <nav className="flex-1 space-y-1 px-3 py-4 overflow-y-auto">
         {sections.map((section) => {
@@ -83,10 +78,10 @@ export function Sidebar() {
                 <button
                   onClick={() => toggleSection(section.name)}
                   className={cn(
-                    'w-full flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                    'w-full flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200',
                     hasActiveChild
-                      ? 'bg-blue-100 text-blue-700'
-                      : 'text-gray-700 hover:bg-gray-100'
+                      ? 'bg-gradient-to-r from-cyan-500/20 to-purple-500/20 text-cyan-300 border border-cyan-500/30 shadow-lg shadow-cyan-500/20'
+                      : 'text-gray-300 hover:bg-white/5 hover:text-cyan-300'
                   )}
                 >
                   <div className="flex items-center gap-3">
@@ -110,10 +105,10 @@ export function Sidebar() {
                           key={child.name}
                           href={child.href}
                           className={cn(
-                            'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors',
+                            'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all duration-200',
                             isActive
-                              ? 'bg-blue-100 text-blue-700 font-medium'
-                              : 'text-gray-600 hover:bg-gray-100'
+                              ? 'bg-gradient-to-r from-cyan-500/20 to-purple-500/20 text-cyan-300 font-medium border border-cyan-500/30 shadow-md shadow-cyan-500/10'
+                              : 'text-gray-400 hover:bg-white/5 hover:text-cyan-300'
                           )}
                         >
                           <ChildIcon className="h-4 w-4" />
@@ -132,10 +127,10 @@ export function Sidebar() {
               key={section.name}
               href={section.href}
               className={cn(
-                'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200',
                 isSectionActive
-                  ? 'bg-blue-100 text-blue-700'
-                  : 'text-gray-700 hover:bg-gray-100'
+                  ? 'bg-gradient-to-r from-cyan-500/20 to-purple-500/20 text-cyan-300 border border-cyan-500/30 shadow-lg shadow-cyan-500/20'
+                  : 'text-gray-300 hover:bg-white/5 hover:text-cyan-300'
               )}
             >
               <Icon className="h-5 w-5" />

@@ -4,3 +4,6 @@
 ALTER TABLE income_records
 DROP COLUMN IF EXISTS invoice_issued;
 
+
+
+

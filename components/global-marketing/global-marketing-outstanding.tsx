@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { GlobalMarketingTeam } from '@/lib/types';
 import { formatCurrency, formatDate } from '@/lib/utils';
+import { Card } from '@/components/ui/card';
 
 interface GlobalMarketingOutstandingProps {
   onSuccess?: () => void;
@@ -69,59 +70,59 @@ export function GlobalMarketingOutstanding({ onSuccess }: GlobalMarketingOutstan
 
   if (isLoading) {
     return (
-      <div className="bg-white rounded-lg border p-6">
+      <Card>
         <div className="flex items-center justify-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <span className="ml-2 text-gray-600">데이터를 불러오는 중...</span>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-400"></div>
+          <span className="ml-2 text-gray-300">데이터를 불러오는 중...</span>
         </div>
-      </div>
+      </Card>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-white rounded-lg border p-6">
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+      <Card>
+        <div className="bg-red-500/20 border border-red-500/30 text-red-300 px-4 py-3 rounded">
           {error}
         </div>
-      </div>
+      </Card>
     );
   }
 
   return (
     <div className="space-y-6">
       {/* 미수금 총계 */}
-      <div className="bg-white rounded-lg border p-6">
-        <div className="bg-red-50 rounded-lg p-4">
-          <div className="text-sm text-gray-600 mb-1">미수금 총계</div>
-          <div className="text-2xl font-bold text-red-600">
+      <Card>
+        <div className="bg-red-500/20 rounded-lg p-4 border border-red-500/30">
+          <div className="text-sm text-gray-300 mb-1">미수금 총계</div>
+          <div className="text-2xl font-bold text-red-300">
             {formatCurrency(totalOutstanding)}
           </div>
-          <div className="text-xs text-gray-500 mt-1">{records.length}건</div>
+          <div className="text-xs text-gray-400 mt-1">{records.length}건</div>
         </div>
-      </div>
+      </Card>
 
       {/* 미수금 목록 */}
-      <div className="bg-white rounded-lg border p-6">
-        <h3 className="text-lg font-semibold mb-4">미수금 목록</h3>
+      <Card>
+        <h3 className="text-lg font-semibold mb-4 text-gray-200">미수금 목록</h3>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b">
+            <thead className="bg-slate-800 border-b border-purple-500/20">
               <tr>
-                <th className="text-left p-3 font-medium text-gray-700">프로젝트 유형</th>
-                <th className="text-left p-3 font-medium text-gray-700">프로젝트 이름</th>
-                <th className="text-left p-3 font-medium text-gray-700">회사명</th>
-                <th className="text-left p-3 font-medium text-gray-700">브랜드명</th>
-                <th className="text-left p-3 font-medium text-gray-700">입금예정일</th>
-                <th className="text-right p-3 font-medium text-gray-700">예정금액</th>
-                <th className="text-left p-3 font-medium text-gray-700">담당자</th>
-                <th className="text-left p-3 font-medium text-gray-700">적요</th>
+                <th className="text-left p-3 font-medium text-gray-200">프로젝트 유형</th>
+                <th className="text-left p-3 font-medium text-gray-200">프로젝트 이름</th>
+                <th className="text-left p-3 font-medium text-gray-200">회사명</th>
+                <th className="text-left p-3 font-medium text-gray-200">브랜드명</th>
+                <th className="text-left p-3 font-medium text-gray-200">입금예정일</th>
+                <th className="text-right p-3 font-medium text-gray-200">예정금액</th>
+                <th className="text-left p-3 font-medium text-gray-200">담당자</th>
+                <th className="text-left p-3 font-medium text-gray-200">적요</th>
               </tr>
             </thead>
             <tbody>
               {records.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="p-8 text-center text-gray-500">
+                  <td colSpan={8} className="p-8 text-center text-gray-400">
                     미수금이 없습니다.
                   </td>
                 </tr>
@@ -138,21 +139,21 @@ export function GlobalMarketingOutstanding({ onSuccess }: GlobalMarketingOutstan
                     : '-';
                   
                   return (
-                    <tr key={record.id} className="border-b hover:bg-gray-50">
-                      <td className="p-3 whitespace-nowrap">{projectCategoryDisplay}</td>
-                      <td className="p-3 whitespace-nowrap">{record.projectName || '-'}</td>
-                      <td className="p-3 whitespace-nowrap">{record.companyName || '-'}</td>
-                      <td className="p-3 whitespace-nowrap">{record.brandName || '-'}</td>
-                      <td className="p-3 whitespace-nowrap">
+                    <tr key={record.id} className="border-b border-purple-500/10 hover:bg-white/5">
+                      <td className="p-3 whitespace-nowrap text-gray-300">{projectCategoryDisplay}</td>
+                      <td className="p-3 whitespace-nowrap text-gray-300">{record.projectName || '-'}</td>
+                      <td className="p-3 whitespace-nowrap text-gray-300">{record.companyName || '-'}</td>
+                      <td className="p-3 whitespace-pre-line text-gray-300">{Array.isArray(record.brandNames) && record.brandNames.length > 0 ? record.brandNames.join('\n') : (record.brandName || '-')}</td>
+                      <td className="p-3 whitespace-nowrap text-gray-300">
                         {record.expectedDepositDate ? formatDate(record.expectedDepositDate) : '-'}
                       </td>
-                      <td className="p-3 text-right whitespace-nowrap">
+                      <td className="p-3 text-right whitespace-nowrap text-gray-300">
                         {record.expectedDepositAmount 
                           ? formatCurrency(record.expectedDepositAmount, record.expectedDepositCurrency)
                           : '-'}
                       </td>
-                      <td className="p-3 whitespace-nowrap">{record.eoeoManager || '-'}</td>
-                      <td className="p-3 whitespace-nowrap">{record.description || '-'}</td>
+                      <td className="p-3 whitespace-nowrap text-gray-300">{record.eoeoManager || '-'}</td>
+                      <td className="p-3 whitespace-nowrap text-gray-300">{record.description || '-'}</td>
                     </tr>
                   );
                 })
@@ -160,7 +161,7 @@ export function GlobalMarketingOutstanding({ onSuccess }: GlobalMarketingOutstan
             </tbody>
           </table>
         </div>
-      </div>
+      </Card>
     </div>
   );
 }

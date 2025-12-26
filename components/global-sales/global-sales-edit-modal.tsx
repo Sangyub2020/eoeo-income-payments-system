@@ -220,6 +220,7 @@ export function GlobalSalesEditModal({ record, onClose, onSuccess }: GlobalSales
         body: JSON.stringify({
           ...formData,
           team: 'global_sales',
+          brandName: selectedBrands.length > 0 ? selectedBrands[0] : undefined,
           brandNames: selectedBrands.length > 0 ? selectedBrands : undefined,
           invoiceCopy: invoiceCopyUrl,
           invoiceAttachmentStatus: invoiceCopyUrl ? 'completed' : (formData.invoiceAttachmentStatus || 'required'),

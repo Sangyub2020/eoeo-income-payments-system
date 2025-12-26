@@ -5,6 +5,7 @@ import { ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
 import { GlobalMarketingTeam } from '@/lib/types';
 import { formatCurrency } from '@/lib/utils';
 import { SearchableSelect } from '@/components/ui/searchable-select';
+import { Card } from '@/components/ui/card';
 
 export function GlobalMarketingMonthlyChart() {
   const [records, setRecords] = useState<GlobalMarketingTeam[]>([]);
@@ -180,72 +181,72 @@ export function GlobalMarketingMonthlyChart() {
 
   if (isLoading) {
     return (
-      <div className="bg-white rounded-lg border p-6">
+      <Card>
         <div className="flex items-center justify-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <span className="ml-2 text-gray-600">데이터를 불러오는 중...</span>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-400"></div>
+          <span className="ml-2 text-gray-300">데이터를 불러오는 중...</span>
         </div>
-      </div>
+      </Card>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-white rounded-lg border p-6">
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+      <Card>
+        <div className="bg-red-500/20 border border-red-500/30 text-red-300 px-4 py-3 rounded">
           {error}
         </div>
-      </div>
+      </Card>
     );
   }
 
   return (
     <div className="space-y-6">
       {/* 총계 표시 */}
-      <div className="bg-white rounded-lg border p-6">
+      <Card>
         <div className="grid grid-cols-3 gap-4 mb-4">
-          <div className="bg-blue-50 rounded-lg p-4">
-            <div className="text-sm text-gray-600 mb-1">매출 총계</div>
-            <div className="text-2xl font-bold text-blue-600">
+          <div className="bg-cyan-500/20 rounded-lg p-4 border border-cyan-500/30">
+            <div className="text-sm text-gray-300 mb-1">매출 총계</div>
+            <div className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
               {formatCurrency(totalDepositAmount)}
             </div>
             {selectedYear && (
-              <div className="text-xs text-gray-500 mt-1">{selectedYear}년</div>
+              <div className="text-xs text-gray-400 mt-1">{selectedYear}년</div>
             )}
-            <div className="text-xs text-gray-500 mt-2 pt-2 border-t border-blue-200">
+            <div className="text-xs text-gray-300 mt-2 pt-2 border-t border-cyan-500/30">
               입금 예정액: {formatCurrency(totalExpectedAmount)}
             </div>
-            <div className="text-xs text-red-600 mt-1">
+            <div className="text-xs text-red-300 mt-1">
               미수금: {formatCurrency(totalOutstanding)}
             </div>
           </div>
-          <div className="bg-green-50 rounded-lg p-4">
-            <div className="text-sm text-gray-600 mb-1">이익 총계</div>
-            <div className="text-2xl font-bold text-green-600">
+          <div className="bg-green-500/20 rounded-lg p-4 border border-green-500/30">
+            <div className="text-sm text-gray-300 mb-1">이익 총계</div>
+            <div className="text-2xl font-bold bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">
               {formatCurrency(totalProfit)}
             </div>
             {selectedYear && (
-              <div className="text-xs text-gray-500 mt-1">{selectedYear}년</div>
+              <div className="text-xs text-gray-400 mt-1">{selectedYear}년</div>
             )}
           </div>
-          <div className="bg-gray-50 rounded-lg p-4">
-            <div className="text-sm text-gray-600 mb-1">실비 총계</div>
-            <div className="text-2xl font-bold text-gray-600">
+          <div className="bg-slate-700/40 rounded-lg p-4 border border-slate-600/30">
+            <div className="text-sm text-gray-300 mb-1">실비 총계</div>
+            <div className="text-2xl font-bold text-gray-300">
               {formatCurrency(totalOneTimeExpenseAmount)}
             </div>
             {selectedYear && (
-              <div className="text-xs text-gray-500 mt-1">{selectedYear}년</div>
+              <div className="text-xs text-gray-400 mt-1">{selectedYear}년</div>
             )}
           </div>
         </div>
-      </div>
+      </Card>
 
       {/* 그래프 */}
-      <div className="bg-white rounded-lg border p-6">
+      <Card>
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold">월별 입금액 및 이익 현황</h3>
+          <h3 className="text-lg font-semibold text-gray-200">월별 입금액 및 이익 현황</h3>
           <div className="flex items-center gap-2">
-            <label className="text-sm text-gray-600">연도:</label>
+            <label className="text-sm text-gray-300">연도:</label>
             <SearchableSelect
               value={selectedYear}
               onChange={(value) => setSelectedYear(value || '')}
@@ -257,17 +258,17 @@ export function GlobalMarketingMonthlyChart() {
         </div>
         <ResponsiveContainer width="100%" height={400}>
           <ComposedChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" />
+            <CartesianGrid strokeDasharray="3 3" stroke="#4b5563" />
             <XAxis 
               dataKey="monthLabel" 
-              tick={{ fontSize: 12 }}
+              tick={{ fontSize: 12, fill: '#d1d5db' }}
               angle={-45}
               textAnchor="end"
               height={80}
             />
             <YAxis 
               yAxisId="left"
-              tick={{ fontSize: 12 }}
+              tick={{ fontSize: 12, fill: '#d1d5db' }}
               tickFormatter={(value) => {
                 if (value >= 1000000) return `${(value / 1000000).toFixed(0)}M`;
                 if (value >= 1000) return `${(value / 1000).toFixed(0)}K`;
@@ -282,7 +283,8 @@ export function GlobalMarketingMonthlyChart() {
                 }
                 return value;
               }}
-              labelStyle={{ color: '#374151' }}
+              contentStyle={{ backgroundColor: '#1f2937', border: '1px solid #4b5563', borderRadius: '8px', color: '#d1d5db' }}
+              labelStyle={{ color: '#d1d5db' }}
             />
             <Legend />
             <Bar 
@@ -302,7 +304,7 @@ export function GlobalMarketingMonthlyChart() {
             />
           </ComposedChart>
         </ResponsiveContainer>
-      </div>
+      </Card>
     </div>
   );
 }

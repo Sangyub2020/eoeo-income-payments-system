@@ -2,7 +2,7 @@
 
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { BrandPlanningList } from '@/components/brand-planning/brand-planning-list';
-import { BrandPlanningSummary } from '@/components/brand-planning/brand-planning-summary';
+import { BrandPlanningMonthlyChart } from '@/components/brand-planning/brand-planning-monthly-chart';
 import { useState } from 'react';
 
 export default function BrandPlanningPage() {
@@ -15,18 +15,18 @@ export default function BrandPlanningPage() {
   return (
     <div className="p-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">브랜드기획팀 입금 관리</h1>
-        <p className="text-gray-600 mt-2">브랜드기획팀 입금 정보를 등록하고 관리합니다</p>
+        <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">브랜드기획팀 입금 관리</h1>
+        <p className="text-gray-400 mt-2">브랜드기획팀 입금 정보를 등록하고 관리합니다</p>
       </div>
 
-      <Tabs defaultValue="summary" className="w-full">
+      <Tabs defaultValue="monthly" className="w-full">
         <TabsList>
-          <TabsTrigger value="summary">Summary</TabsTrigger>
+          <TabsTrigger value="monthly">월별 현황</TabsTrigger>
           <TabsTrigger value="list">목록</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="summary">
-          <BrandPlanningSummary key={refreshKey} />
+        <TabsContent value="monthly">
+          <BrandPlanningMonthlyChart />
         </TabsContent>
 
         <TabsContent value="list">

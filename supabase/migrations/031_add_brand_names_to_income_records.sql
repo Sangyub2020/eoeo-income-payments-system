@@ -13,3 +13,6 @@ CREATE INDEX IF NOT EXISTS idx_income_records_brand_names ON income_records USIN
 
 
 
+
+
+

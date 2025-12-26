@@ -22,3 +22,6 @@ ADD COLUMN IF NOT EXISTS expected_deposit_currency VARCHAR(3) DEFAULT 'KRW';
 
 
 
+
+
+

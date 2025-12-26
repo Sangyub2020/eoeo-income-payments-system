@@ -32,8 +32,8 @@ export default function OutstandingPage() {
   return (
     <div className="p-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">미수금 현황</h1>
-        <p className="text-gray-600 mt-2">미수금 및 연체 현황을 확인합니다</p>
+        <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">미수금 현황</h1>
+        <p className="text-gray-400 mt-2">미수금 및 연체 현황을 확인합니다</p>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 mb-8">
@@ -108,6 +108,9 @@ export default function OutstandingPage() {
     </div>
   );
 }
+
+
+
 
 
 

@@ -15,10 +15,10 @@ export function Button({
   const baseStyles = 'inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed';
   
   const variants = {
-    default: 'bg-blue-600 text-white hover:bg-blue-700',
-    outline: 'border border-gray-300 bg-white hover:bg-gray-50',
-    ghost: 'hover:bg-gray-100',
-    destructive: 'bg-red-600 text-white hover:bg-red-700',
+    default: 'bg-gradient-to-r from-cyan-500 to-purple-500 text-white hover:from-cyan-600 hover:to-purple-600 shadow-lg shadow-cyan-500/50',
+    outline: 'border border-cyan-500/30 bg-black/40 backdrop-blur-xl text-cyan-300 hover:bg-cyan-500/20',
+    ghost: 'text-gray-300 hover:bg-white/5 hover:text-cyan-300',
+    destructive: 'bg-gradient-to-r from-red-500 to-pink-500 text-white hover:from-red-600 hover:to-pink-600 shadow-lg shadow-red-500/50',
   };
 
   const sizes = {
