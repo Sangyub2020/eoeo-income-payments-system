@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { X, Upload as UploadIcon } from 'lucide-react';
 import { BrandPlanningTeam } from '@/lib/types';
 import { SearchableSelect } from '@/components/ui/searchable-select';
+import { MultiSelect } from '@/components/ui/multi-select';
 import { CATEGORIES } from '@/lib/constants';
 
 interface BrandPlanningFormModalProps {
@@ -21,6 +22,8 @@ export function BrandPlanningFormModal({ isOpen, onClose, onSuccess }: BrandPlan
   const [invoiceFileUrl, setInvoiceFileUrl] = useState<string | null>(null);
   const [vendors, setVendors] = useState<Array<{ code: string; name: string }>>([]);
   const [projects, setProjects] = useState<Array<{ code: string; name: string }>>([]);
+  const [brands, setBrands] = useState<Array<{ value: string; label: string }>>([]);
+  const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [expectedDepositAmountInput, setExpectedDepositAmountInput] = useState<string>('');
   const [depositAmountInput, setDepositAmountInput] = useState<string>('');
 
@@ -28,9 +31,11 @@ export function BrandPlanningFormModal({ isOpen, onClose, onSuccess }: BrandPlan
     if (isOpen) {
       fetchVendors();
       fetchProjects();
+      fetchBrands();
       setFormData({
         invoiceAttachmentStatus: 'required', // 기본값: 첨부필요
       });
+      setSelectedBrands([]);
       setError(null);
       setInvoiceFile(null);
       setInvoiceFileUrl(null);
@@ -41,12 +46,18 @@ export function BrandPlanningFormModal({ isOpen, onClose, onSuccess }: BrandPlan
 
   const fetchVendors = async () => {
     try {
-      const response = await fetch('/api/vendors');
+      const response = await fetch('/api/vendors', { cache: 'no-store' });
       if (response.ok) {
         const data = await response.json();
-        if (data.success) {
-          setVendors(data.data.map((v: any) => ({ code: v.code, name: v.name })));
+        if (data.success && data.data) {
+          const vendorList = data.data.map((v: any) => ({ code: v.code, name: v.name })).filter((v: any) => v.code && v.name);
+          setVendors(vendorList);
+          console.log('거래처 로드 완료:', vendorList.length, '개');
+        } else {
+          console.error('거래처 데이터 형식 오류:', data);
         }
+      } else {
+        console.error('거래처 조회 실패:', response.status, response.statusText);
       }
     } catch (err) {
       console.error('거래처 조회 오류:', err);
@@ -55,15 +66,50 @@ export function BrandPlanningFormModal({ isOpen, onClose, onSuccess }: BrandPlan
 
   const fetchProjects = async () => {
     try {
-      const response = await fetch('/api/projects');
+      const response = await fetch('/api/projects', { cache: 'no-store' });
       if (response.ok) {
         const data = await response.json();
-        if (data.success) {
-          setProjects(data.data.map((p: any) => ({ code: p.code, name: p.name })));
+        if (data.success && data.data) {
+          const projectList = data.data.map((p: any) => ({ code: p.code, name: p.name })).filter((p: any) => p.code && p.name);
+          setProjects(projectList);
+          console.log('프로젝트 로드 완료:', projectList.length, '개');
+        } else {
+          console.error('프로젝트 데이터 형식 오류:', data);
         }
+      } else {
+        console.error('프로젝트 조회 실패:', response.status, response.statusText);
       }
     } catch (err) {
       console.error('프로젝트 조회 오류:', err);
+    }
+  };
+
+  const fetchBrands = async () => {
+    try {
+      console.log('브랜드 조회 시작...');
+      const response = await fetch('/api/brands', { cache: 'no-store' });
+      console.log('브랜드 API 응답 상태:', response.status, response.statusText);
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('브랜드 API 응답 데이터:', data);
+        
+        if (data.success && data.data) {
+          console.log('브랜드 원본 데이터 개수:', data.data.length);
+          const brandList = data.data.filter((b: any) => b.name && b.name.trim() !== '').map((b: any) => ({ value: b.name, label: b.name }));
+          console.log('브랜드 필터링 후 개수:', brandList.length);
+          console.log('브랜드 목록 (처음 10개):', brandList.slice(0, 10));
+          setBrands(brandList);
+          console.log('브랜드 로드 완료:', brandList.length, '개');
+        } else {
+          console.error('브랜드 데이터 형식 오류:', data);
+        }
+      } else {
+        const errorText = await response.text();
+        console.error('브랜드 조회 실패:', response.status, response.statusText, errorText);
+      }
+    } catch (err) {
+      console.error('브랜드 조회 오류:', err);
     }
   };
 
@@ -177,6 +223,8 @@ export function BrandPlanningFormModal({ isOpen, onClose, onSuccess }: BrandPlan
         body: JSON.stringify({
           ...formData,
           team: 'brand_planning',
+          brandName: selectedBrands.length > 0 ? selectedBrands[0] : undefined,
+          brandNames: selectedBrands.length > 0 ? selectedBrands : undefined,
           invoiceCopy: invoiceCopyUrl,
           invoiceAttachmentStatus: invoiceCopyUrl ? 'completed' : (formData.invoiceAttachmentStatus || 'required'),
         }),
@@ -246,7 +294,7 @@ export function BrandPlanningFormModal({ isOpen, onClose, onSuccess }: BrandPlan
     
     setFormData((prev) => ({
       ...prev,
-      [name]: value === '' ? undefined : (name.includes('Amount') || name.includes('Number') || name.includes('Month') || name.includes('Year') || name === 'ratio' || name === 'count' || name === 'year' || name === 'expectedDepositMonth' || name === 'depositMonth' || name === 'installmentNumber' || name === 'exchangeGainLoss' || name === 'difference' || name === 'oneTimeExpenseAmount' || name === 'invoiceSupplyPrice')
+      [name]: value === '' ? undefined : (name.includes('Amount') || name.includes('Number') || name === 'ratio' || name === 'count' || name === 'installmentNumber' || name === 'oneTimeExpenseAmount' || name === 'invoiceSupplyPrice')
         ? (value === '' ? undefined : Number(value))
         : value,
     }));
@@ -255,13 +303,13 @@ export function BrandPlanningFormModal({ isOpen, onClose, onSuccess }: BrandPlan
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 overflow-y-auto p-4">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-6xl my-8 max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-white border-b p-6 flex items-center justify-between z-10">
-          <h2 className="text-xl font-semibold">입금 정보 등록</h2>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm overflow-y-auto p-4">
+      <div className="bg-slate-800/95 backdrop-blur-xl rounded-lg shadow-xl border border-purple-500/20 w-full max-w-6xl my-8 max-h-[90vh] overflow-y-auto">
+        <div className="sticky top-0 bg-slate-800/95 backdrop-blur-xl border-b border-purple-500/20 p-6 flex items-center justify-between z-10">
+          <h2 className="text-xl font-semibold text-gray-200">입금 정보 등록</h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="text-gray-400 hover:text-gray-200 transition-colors"
           >
             <X className="h-5 w-5" />
           </button>
@@ -269,15 +317,15 @@ export function BrandPlanningFormModal({ isOpen, onClose, onSuccess }: BrandPlan
 
         <form onSubmit={handleSubmit} className="p-6">
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
+            <div className="bg-red-500/20 border border-red-500/30 text-red-300 px-4 py-3 rounded mb-4">
               {error}
             </div>
           )}
 
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">
-                구분 <span className="text-red-500">*</span>
+              <label htmlFor="category" className="block text-sm font-medium text-gray-300 mb-1">
+                구분 <span className="text-red-400">*</span>
               </label>
               <SearchableSelect
                 value={formData.category || ''}
@@ -289,8 +337,8 @@ export function BrandPlanningFormModal({ isOpen, onClose, onSuccess }: BrandPlan
             </div>
 
             <div>
-              <label htmlFor="vendorCode" className="block text-sm font-medium text-gray-700 mb-1">
-                거래처코드 <span className="text-red-500">*</span>
+              <label htmlFor="vendorCode" className="block text-sm font-medium text-gray-300 mb-1">
+                거래처코드 <span className="text-red-400">*</span>
               </label>
               <SearchableSelect
                 value={formData.vendorCode || ''}
@@ -302,7 +350,7 @@ export function BrandPlanningFormModal({ isOpen, onClose, onSuccess }: BrandPlan
             </div>
 
             <div>
-              <label htmlFor="companyName" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="companyName" className="block text-sm font-medium text-gray-300 mb-1">
                 Company Name
               </label>
               <input
@@ -311,27 +359,26 @@ export function BrandPlanningFormModal({ isOpen, onClose, onSuccess }: BrandPlan
                 name="companyName"
                 value={formData.companyName || ''}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
+                className="w-full px-3 py-2 border border-purple-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 bg-black/40 backdrop-blur-sm"
                 readOnly
               />
             </div>
 
             <div>
-              <label htmlFor="brandName" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="brandNames" className="block text-sm font-medium text-gray-300 mb-1">
                 Brand Name
               </label>
-              <input
-                type="text"
-                id="brandName"
-                name="brandName"
-                value={formData.brandName || ''}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              <MultiSelect
+                value={selectedBrands}
+                onChange={setSelectedBrands}
+                options={brands}
+                placeholder="브랜드를 선택하세요"
+                className="w-full"
               />
             </div>
 
             <div>
-              <label htmlFor="businessRegistrationNumber" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="businessRegistrationNumber" className="block text-sm font-medium text-gray-300 mb-1">
                 사업자등록번호
               </label>
               <input
@@ -340,13 +387,13 @@ export function BrandPlanningFormModal({ isOpen, onClose, onSuccess }: BrandPlan
                 name="businessRegistrationNumber"
                 value={formData.businessRegistrationNumber || ''}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
+                className="w-full px-3 py-2 border border-purple-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 bg-black/40 backdrop-blur-sm"
                 readOnly
               />
             </div>
 
             <div>
-              <label htmlFor="invoiceEmail" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="invoiceEmail" className="block text-sm font-medium text-gray-300 mb-1">
                 세금계산서 발행 이메일
               </label>
               <input
@@ -355,14 +402,14 @@ export function BrandPlanningFormModal({ isOpen, onClose, onSuccess }: BrandPlan
                 name="invoiceEmail"
                 value={formData.invoiceEmail || ''}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
+                className="w-full px-3 py-2 border border-purple-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 bg-black/40 backdrop-blur-sm"
                 readOnly
               />
             </div>
 
             <div>
-              <label htmlFor="projectCode" className="block text-sm font-medium text-gray-700 mb-1">
-                project code <span className="text-red-500">*</span>
+              <label htmlFor="projectCode" className="block text-sm font-medium text-gray-300 mb-1">
+                project code <span className="text-red-400">*</span>
               </label>
               <SearchableSelect
                 value={formData.projectCode || ''}
@@ -374,7 +421,7 @@ export function BrandPlanningFormModal({ isOpen, onClose, onSuccess }: BrandPlan
             </div>
 
             <div>
-              <label htmlFor="project" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="project" className="block text-sm font-medium text-gray-300 mb-1">
                 project
               </label>
               <input
@@ -383,12 +430,12 @@ export function BrandPlanningFormModal({ isOpen, onClose, onSuccess }: BrandPlan
                 name="project"
                 value={formData.project || ''}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-purple-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 bg-black/40 backdrop-blur-sm text-gray-200 placeholder-gray-500"
               />
             </div>
 
             <div>
-              <label htmlFor="projectName" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="projectName" className="block text-sm font-medium text-gray-300 mb-1">
                 Project name
               </label>
               <input
@@ -397,13 +444,13 @@ export function BrandPlanningFormModal({ isOpen, onClose, onSuccess }: BrandPlan
                 name="projectName"
                 value={formData.projectName || ''}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
+                className="w-full px-3 py-2 border border-purple-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 bg-black/40 backdrop-blur-sm"
                 readOnly
               />
             </div>
 
             <div>
-              <label htmlFor="eoeoManager" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="eoeoManager" className="block text-sm font-medium text-gray-300 mb-1">
                 EOEO 담당자
               </label>
               <input
@@ -412,12 +459,12 @@ export function BrandPlanningFormModal({ isOpen, onClose, onSuccess }: BrandPlan
                 name="eoeoManager"
                 value={formData.eoeoManager || ''}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-purple-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 bg-black/40 backdrop-blur-sm text-gray-200 placeholder-gray-500"
               />
             </div>
 
             <div>
-              <label htmlFor="contractLink" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="contractLink" className="block text-sm font-medium text-gray-300 mb-1">
                 계약서 (LINK)
               </label>
               <input
@@ -427,14 +474,14 @@ export function BrandPlanningFormModal({ isOpen, onClose, onSuccess }: BrandPlan
                 value={formData.contractLink || ''}
                 onChange={handleChange}
                 placeholder="https://example.com/contract"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-purple-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 bg-black/40 backdrop-blur-sm text-gray-200 placeholder-gray-500"
               />
               {formData.contractLink && (
                 <a 
                   href={formData.contractLink} 
                   target="_blank" 
                   rel="noopener noreferrer" 
-                  className="text-xs text-blue-600 hover:underline mt-1 inline-block"
+                  className="text-xs text-cyan-400 hover:underline mt-1 inline-block"
                 >
                   링크 열기 →
                 </a>
@@ -442,24 +489,24 @@ export function BrandPlanningFormModal({ isOpen, onClose, onSuccess }: BrandPlan
             </div>
 
             <div>
-              <label htmlFor="invoiceLink" className="block text-sm font-medium text-gray-700 mb-1">
-                인보이스 링크 (LINK)
+              <label htmlFor="estimateLink" className="block text-sm font-medium text-gray-300 mb-1">
+                견적서 (LINK)
               </label>
               <input
                 type="url"
-                id="invoiceLink"
-                name="invoiceLink"
-                value={formData.invoiceLink || ''}
+                id="estimateLink"
+                name="estimateLink"
+                value={formData.estimateLink || ''}
                 onChange={handleChange}
-                placeholder="https://example.com/invoice"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="https://example.com/estimate"
+                className="w-full px-3 py-2 border border-purple-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 bg-black/40 backdrop-blur-sm text-gray-200 placeholder-gray-500"
               />
-              {formData.invoiceLink && (
+              {formData.estimateLink && (
                 <a 
-                  href={formData.invoiceLink} 
+                  href={formData.estimateLink} 
                   target="_blank" 
                   rel="noopener noreferrer" 
-                  className="text-xs text-blue-600 hover:underline mt-1 inline-block"
+                  className="text-xs text-cyan-400 hover:underline mt-1 inline-block"
                 >
                   링크 열기 →
                 </a>
@@ -467,7 +514,7 @@ export function BrandPlanningFormModal({ isOpen, onClose, onSuccess }: BrandPlan
             </div>
 
             <div>
-              <label htmlFor="installmentNumber" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="installmentNumber" className="block text-sm font-medium text-gray-300 mb-1">
                 차수
               </label>
               <input
@@ -476,12 +523,12 @@ export function BrandPlanningFormModal({ isOpen, onClose, onSuccess }: BrandPlan
                 name="installmentNumber"
                 value={formData.installmentNumber || ''}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-purple-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 bg-black/40 backdrop-blur-sm text-gray-200 placeholder-gray-500"
               />
             </div>
 
             <div>
-              <label htmlFor="attributionYearMonth" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="attributionYearMonth" className="block text-sm font-medium text-gray-300 mb-1">
                 귀속년월
               </label>
               <input
@@ -490,12 +537,12 @@ export function BrandPlanningFormModal({ isOpen, onClose, onSuccess }: BrandPlan
                 name="attributionYearMonth"
                 value={formData.attributionYearMonth || ''}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-purple-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 bg-black/40 backdrop-blur-sm text-gray-200 placeholder-gray-500"
               />
             </div>
 
             <div>
-              <label htmlFor="advanceBalance" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="advanceBalance" className="block text-sm font-medium text-gray-300 mb-1">
                 선/잔금
               </label>
               <input
@@ -504,12 +551,12 @@ export function BrandPlanningFormModal({ isOpen, onClose, onSuccess }: BrandPlan
                 name="advanceBalance"
                 value={formData.advanceBalance || ''}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-purple-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 bg-black/40 backdrop-blur-sm text-gray-200 placeholder-gray-500"
               />
             </div>
 
             <div>
-              <label htmlFor="ratio" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="ratio" className="block text-sm font-medium text-gray-300 mb-1">
                 비율
               </label>
               <input
@@ -519,12 +566,12 @@ export function BrandPlanningFormModal({ isOpen, onClose, onSuccess }: BrandPlan
                 name="ratio"
                 value={formData.ratio || ''}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-purple-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 bg-black/40 backdrop-blur-sm text-gray-200 placeholder-gray-500"
               />
             </div>
 
             <div>
-              <label htmlFor="count" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="count" className="block text-sm font-medium text-gray-300 mb-1">
                 건수
               </label>
               <input
@@ -533,12 +580,12 @@ export function BrandPlanningFormModal({ isOpen, onClose, onSuccess }: BrandPlan
                 name="count"
                 value={formData.count || ''}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-purple-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 bg-black/40 backdrop-blur-sm text-gray-200 placeholder-gray-500"
               />
             </div>
 
             <div>
-              <label htmlFor="expectedDepositDate" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="expectedDepositDate" className="block text-sm font-medium text-gray-300 mb-1">
                 입금예정일
               </label>
               <input
@@ -547,12 +594,12 @@ export function BrandPlanningFormModal({ isOpen, onClose, onSuccess }: BrandPlan
                 name="expectedDepositDate"
                 value={formData.expectedDepositDate || ''}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-purple-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 bg-black/40 backdrop-blur-sm text-gray-200 placeholder-gray-500"
               />
             </div>
 
             <div>
-              <label htmlFor="oneTimeExpenseAmount" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="oneTimeExpenseAmount" className="block text-sm font-medium text-gray-300 mb-1">
                 One-time 실비 금액
               </label>
               <input
@@ -561,12 +608,12 @@ export function BrandPlanningFormModal({ isOpen, onClose, onSuccess }: BrandPlan
                 name="oneTimeExpenseAmount"
                 value={formData.oneTimeExpenseAmount || ''}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-purple-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 bg-black/40 backdrop-blur-sm text-gray-200 placeholder-gray-500"
               />
             </div>
 
             <div>
-              <label htmlFor="expectedDepositAmount" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="expectedDepositAmount" className="block text-sm font-medium text-gray-300 mb-1">
                 입금 예정금액 (부가세 포함)
               </label>
               <div className="flex gap-2">
@@ -587,13 +634,13 @@ export function BrandPlanningFormModal({ isOpen, onClose, onSuccess }: BrandPlan
                     }
                   }}
                   placeholder="₩1,000,000 또는 $1,000"
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="flex-1 px-3 py-2 border border-purple-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 bg-black/40 backdrop-blur-sm text-gray-200 placeholder-gray-500"
                 />
                 <select
                   name="expectedDepositCurrency"
                   value={formData.expectedDepositCurrency || 'KRW'}
                   onChange={(e) => setFormData(prev => ({ ...prev, expectedDepositCurrency: e.target.value }))}
-                  className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="px-3 py-2 border border-purple-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 bg-black/40 backdrop-blur-sm text-gray-200"
                 >
                   <option value="KRW">KRW</option>
                   <option value="USD">USD</option>
@@ -602,7 +649,7 @@ export function BrandPlanningFormModal({ isOpen, onClose, onSuccess }: BrandPlan
             </div>
 
             <div>
-              <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="description" className="block text-sm font-medium text-gray-300 mb-1">
                 적요
               </label>
               <input
@@ -611,12 +658,12 @@ export function BrandPlanningFormModal({ isOpen, onClose, onSuccess }: BrandPlan
                 name="description"
                 value={formData.description || ''}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-purple-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 bg-black/40 backdrop-blur-sm text-gray-200 placeholder-gray-500"
               />
             </div>
 
             <div>
-              <label htmlFor="depositDate" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="depositDate" className="block text-sm font-medium text-gray-300 mb-1">
                 입금일
               </label>
               <input
@@ -625,12 +672,12 @@ export function BrandPlanningFormModal({ isOpen, onClose, onSuccess }: BrandPlan
                 name="depositDate"
                 value={formData.depositDate || ''}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-purple-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 bg-black/40 backdrop-blur-sm text-gray-200 placeholder-gray-500"
               />
             </div>
 
             <div>
-              <label htmlFor="depositAmount" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="depositAmount" className="block text-sm font-medium text-gray-300 mb-1">
                 입금액
               </label>
               <div className="flex gap-2">
@@ -641,13 +688,13 @@ export function BrandPlanningFormModal({ isOpen, onClose, onSuccess }: BrandPlan
                   value={formData.depositAmount ? `${formData.depositCurrency === 'USD' ? '$' : '₩'}${formData.depositAmount.toLocaleString()}` : ''}
                   onChange={handleChange}
                   placeholder="₩1,000,000 또는 $1,000"
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="flex-1 px-3 py-2 border border-purple-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 bg-black/40 backdrop-blur-sm text-gray-200 placeholder-gray-500"
                 />
                 <select
                   name="depositCurrency"
                   value={formData.depositCurrency || 'KRW'}
                   onChange={(e) => setFormData(prev => ({ ...prev, depositCurrency: e.target.value }))}
-                  className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="px-3 py-2 border border-purple-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 bg-black/40 backdrop-blur-sm text-gray-200"
                 >
                   <option value="KRW">KRW</option>
                   <option value="USD">USD</option>
@@ -655,36 +702,9 @@ export function BrandPlanningFormModal({ isOpen, onClose, onSuccess }: BrandPlan
               </div>
             </div>
 
-            <div>
-              <label htmlFor="exchangeGainLoss" className="block text-sm font-medium text-gray-700 mb-1">
-                환차손익
-              </label>
-              <input
-                type="number"
-                id="exchangeGainLoss"
-                name="exchangeGainLoss"
-                value={formData.exchangeGainLoss || ''}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
 
             <div>
-              <label htmlFor="difference" className="block text-sm font-medium text-gray-700 mb-1">
-                차액
-              </label>
-              <input
-                type="number"
-                id="difference"
-                name="difference"
-                value={formData.difference || ''}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="createdDate" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="createdDate" className="block text-sm font-medium text-gray-300 mb-1">
                 작성일자
               </label>
               <input
@@ -693,12 +713,12 @@ export function BrandPlanningFormModal({ isOpen, onClose, onSuccess }: BrandPlan
                 name="createdDate"
                 value={formData.createdDate || ''}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-purple-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 bg-black/40 backdrop-blur-sm text-gray-200 placeholder-gray-500"
               />
             </div>
 
             <div>
-              <label htmlFor="invoiceAttachmentStatus" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="invoiceAttachmentStatus" className="block text-sm font-medium text-gray-300 mb-1">
                 세금계산서 첨부 상태
               </label>
               <SearchableSelect
@@ -715,11 +735,11 @@ export function BrandPlanningFormModal({ isOpen, onClose, onSuccess }: BrandPlan
             </div>
 
             <div className="col-span-2">
-              <label htmlFor="invoiceCopy" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="invoiceCopy" className="block text-sm font-medium text-gray-300 mb-1">
                 세금계산서 사본 (스크린샷)
               </label>
               <div className="space-y-2">
-                <label className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md cursor-pointer hover:bg-gray-50 w-fit">
+                <label className="flex items-center gap-2 px-4 py-2 border border-purple-500/30 rounded-md cursor-pointer hover:bg-black/40 backdrop-blur-sm w-fit">
                   <UploadIcon className="h-4 w-4" />
                   <span className="text-sm">파일 선택</span>
                   <input
@@ -732,14 +752,14 @@ export function BrandPlanningFormModal({ isOpen, onClose, onSuccess }: BrandPlan
                 {invoiceFileUrl && (
                   <div className="mt-2">
                     <img src={invoiceFileUrl} alt="세금계산서 사본" className="max-w-xs max-h-48 border rounded" />
-                    <p className="text-xs text-gray-500 mt-1">{invoiceFile?.name}</p>
+                    <p className="text-xs text-gray-400 mt-1">{invoiceFile?.name}</p>
                   </div>
                 )}
               </div>
             </div>
 
             <div>
-              <label htmlFor="issueNotes" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="issueNotes" className="block text-sm font-medium text-gray-300 mb-1">
                 ISSUE사항
               </label>
               <input
@@ -748,54 +768,13 @@ export function BrandPlanningFormModal({ isOpen, onClose, onSuccess }: BrandPlan
                 name="issueNotes"
                 value={formData.issueNotes || ''}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-purple-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 bg-black/40 backdrop-blur-sm text-gray-200 placeholder-gray-500"
               />
             </div>
 
-            <div>
-              <label htmlFor="year" className="block text-sm font-medium text-gray-700 mb-1">
-                년
-              </label>
-              <input
-                type="number"
-                id="year"
-                name="year"
-                value={formData.year || ''}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
 
             <div>
-              <label htmlFor="expectedDepositMonth" className="block text-sm font-medium text-gray-700 mb-1">
-                입금 예정월
-              </label>
-              <input
-                type="number"
-                id="expectedDepositMonth"
-                name="expectedDepositMonth"
-                value={formData.expectedDepositMonth || ''}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="depositMonth" className="block text-sm font-medium text-gray-700 mb-1">
-                입금 월
-              </label>
-              <input
-                type="number"
-                id="depositMonth"
-                name="depositMonth"
-                value={formData.depositMonth || ''}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="taxStatus" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="taxStatus" className="block text-sm font-medium text-gray-300 mb-1">
                 과/면세/영세
               </label>
               <input
@@ -804,12 +783,12 @@ export function BrandPlanningFormModal({ isOpen, onClose, onSuccess }: BrandPlan
                 name="taxStatus"
                 value={formData.taxStatus || ''}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-purple-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 bg-black/40 backdrop-blur-sm text-gray-200 placeholder-gray-500"
               />
             </div>
 
             <div>
-              <label htmlFor="invoiceSupplyPrice" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="invoiceSupplyPrice" className="block text-sm font-medium text-gray-300 mb-1">
                 세금계산서발행공급가
               </label>
               <input
@@ -818,12 +797,12 @@ export function BrandPlanningFormModal({ isOpen, onClose, onSuccess }: BrandPlan
                 name="invoiceSupplyPrice"
                 value={formData.invoiceSupplyPrice || ''}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-purple-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 bg-black/40 backdrop-blur-sm text-gray-200 placeholder-gray-500"
               />
             </div>
           </div>
 
-          <div className="flex gap-3 pt-6 border-t mt-6">
+          <div className="flex gap-3 pt-6 border-t border-purple-500/20 mt-6">
             <Button
               type="button"
               variant="outline"

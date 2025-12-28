@@ -21,3 +21,4 @@ CREATE TRIGGER update_brands_updated_at
 
 
 
+

@@ -20,6 +20,8 @@ export async function POST(request: Request) {
       );
     }
 
+    console.log('일괄 등록 요청 받음:', { team, recordsCount: records.length, firstRecord: records[0] });
+    
     const recordsToInsert = records.map((r: any) => ({
       team: team,
       category: r.category || null,
@@ -32,6 +34,10 @@ export async function POST(request: Request) {
       // project 필드는 제거되었으므로 projectCategory만 사용
       project_category: r.projectCategory || null,
       project_name: r.projectName || null,
+      project_category2: r.projectCategory2 || null,
+      project_category3: r.projectCategory3 || null,
+      project_code2: r.projectCode2 || null,
+      project_code3: r.projectCode3 || null,
       project_name2: r.projectName2 || null,
       project_name3: r.projectName3 || null,
       project_name4: r.projectName4 || null,
@@ -44,7 +50,6 @@ export async function POST(request: Request) {
       eoeo_manager: r.eoeoManager || null,
       contract_link: r.contractLink || null,
       estimate_link: r.estimateLink || null,
-      invoice_link: r.invoiceLink || null,
       installment_number: r.installmentNumber || null,
       attribution_year_month: r.attributionYearMonth || null,
       advance_balance: r.advanceBalance || null,
@@ -58,16 +63,13 @@ export async function POST(request: Request) {
       deposit_date: r.depositDate || null,
       deposit_amount: r.depositAmount || null,
       deposit_currency: r.depositCurrency || 'KRW',
-      exchange_gain_loss: r.exchangeGainLoss || null,
-      difference: r.difference || null,
       created_date: r.createdDate || null,
       invoice_copy: r.invoiceCopy || null,
       issue_notes: r.issueNotes || null,
-      year: r.year || null,
-      expected_deposit_month: r.expectedDepositMonth || null,
-      deposit_month: r.depositMonth || null,
       tax_status: r.taxStatus || null,
       invoice_supply_price: r.invoiceSupplyPrice || null,
+      invoice_attachment_status: r.invoiceAttachmentStatus || null,
+      deposit_status: r.depositStatus || null,
     }));
 
     let successCount = 0;
@@ -92,8 +94,10 @@ export async function POST(request: Request) {
                 .insert(record);
 
               if (singleError) {
-                const recordInfo = `거래처코드: ${record.vendor_code || '없음'}, 회사명: ${record.company_name || '없음'}, 입금액: ${record.deposit_amount || '없음'}`;
-                errors.push(`${recordInfo}\n오류: ${singleError.message}\n상세: ${JSON.stringify(singleError)}`);
+                const recordInfo = `거래처코드: ${record.vendor_code || '없음'}, 회사명: ${record.company_name || '없음'}, 입금액: ${record.deposit_amount || '없음'}, 프로젝트코드: ${record.project_code || '없음'}`;
+                const errorDetail = `${recordInfo}\n오류: ${singleError.message}\n상세: ${JSON.stringify(singleError)}`;
+                console.error('단일 레코드 삽입 실패:', errorDetail);
+                errors.push(errorDetail);
                 failedCount++;
               } else {
                 successCount++;

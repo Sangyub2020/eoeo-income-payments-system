@@ -71,7 +71,7 @@ export function BrandPlanningList({ onSuccess }: BrandPlanningListProps) {
     { key: 'invoiceEmail', label: '이메일', alwaysVisible: false },
     { key: 'eoeoManager', label: '담당자', alwaysVisible: false },
     { key: 'contractLink', label: '계약서', alwaysVisible: false },
-    { key: 'invoiceLink', label: '인보이스', alwaysVisible: false },
+    { key: 'estimateLink', label: '견적서', alwaysVisible: false },
     { key: 'installmentNumber', label: '차수', alwaysVisible: false },
     { key: 'attributionYearMonth', label: '귀속년월', alwaysVisible: false },
     { key: 'advanceBalance', label: '선/잔금', alwaysVisible: false },
@@ -116,7 +116,7 @@ export function BrandPlanningList({ onSuccess }: BrandPlanningListProps) {
     invoiceEmail: 180,
     eoeoManager: 100,
     contractLink: 120,
-    invoiceLink: 120,
+    estimateLink: 120,
     installmentNumber: 60,
     attributionYearMonth: 100,
     advanceBalance: 80,
@@ -1008,15 +1008,15 @@ export function BrandPlanningList({ onSuccess }: BrandPlanningListProps) {
                     />
                   </th>
                 )}
-                {visibleColumns.has('invoiceLink') && (
+                {visibleColumns.has('estimateLink') && (
                   <th 
                     className="text-left p-2 font-medium text-gray-200 whitespace-nowrap relative"
-                    style={{ width: `${columnWidths.invoiceLink}px`, minWidth: '50px' }}
+                    style={{ width: `${columnWidths.estimateLink}px`, minWidth: '50px' }}
                   >
-                    인보이스
+                    견적서
                     <div
                       className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 bg-transparent z-10"
-                      onMouseDown={(e) => handleResizeStart('invoiceLink', e)}
+                      onMouseDown={(e) => handleResizeStart('estimateLink', e)}
                     />
                   </th>
                 )}
@@ -1183,9 +1183,52 @@ export function BrandPlanningList({ onSuccess }: BrandPlanningListProps) {
                     </td>
                   )}
                   {visibleColumns.has('category') && (
-                    <td className="p-2 text-[13px] whitespace-nowrap truncate overflow-hidden" title={record.category || ''}>
-                      <div className="flex items-center gap-1 min-w-0">
-                        <span className="truncate">{record.category || '-'}</span>
+                    <td className="p-2 text-sm">
+                      <div className="flex items-center gap-1">
+                        {record.category ? (() => {
+                          const category = record.category;
+                          let bgColor = 'bg-purple-900/60';
+                          let textColor = 'text-purple-200';
+                          let borderColor = 'border-purple-500/70';
+                          
+                          if (category.includes('파트너십 - 서비스매출') || category.includes('용역사업 - 서비스매출')) {
+                            bgColor = 'bg-blue-900/60';
+                            textColor = 'text-blue-200';
+                            borderColor = 'border-blue-500/70';
+                          } else if (category.includes('파트너십 - 수출바우처') || category.includes('용역사업 - 수출바우처')) {
+                            bgColor = 'bg-cyan-900/60';
+                            textColor = 'text-cyan-200';
+                            borderColor = 'border-cyan-500/70';
+                          } else if (category === 'B2B') {
+                            bgColor = 'bg-green-900/60';
+                            textColor = 'text-green-200';
+                            borderColor = 'border-green-500/70';
+                          } else if (category.includes('재고') || category.includes('기재고')) {
+                            bgColor = 'bg-orange-900/60';
+                            textColor = 'text-orange-200';
+                            borderColor = 'border-orange-500/70';
+                          } else if (category === '배송비') {
+                            bgColor = 'bg-yellow-900/60';
+                            textColor = 'text-yellow-200';
+                            borderColor = 'border-yellow-500/70';
+                          } else if (category.includes('마케팅지원비')) {
+                            bgColor = 'bg-pink-900/60';
+                            textColor = 'text-pink-200';
+                            borderColor = 'border-pink-500/70';
+                          } else if (category === 'other') {
+                            bgColor = 'bg-gray-700/60';
+                            textColor = 'text-gray-300';
+                            borderColor = 'border-gray-500/70';
+                          }
+                          
+                          return (
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium ${bgColor} ${textColor} border ${borderColor}`}>
+                              {category}
+                            </span>
+                          );
+                        })() : (
+                          <span className="text-gray-400">-</span>
+                        )}
                         {(record as any).hasWarning && (
                           <span className="text-xs text-yellow-600 font-medium flex-shrink-0" title="필수 항목 누락">⚠️</span>
                         )}
@@ -1360,15 +1403,15 @@ export function BrandPlanningList({ onSuccess }: BrandPlanningListProps) {
                       ) : '-'}
                     </td>
                   )}
-                  {visibleColumns.has('invoiceLink') && (
+                  {visibleColumns.has('estimateLink') && (
                     <td className="p-2 text-[13px] whitespace-nowrap truncate overflow-hidden">
-                      {record.invoiceLink ? (
+                      {record.estimateLink ? (
                         <a 
-                          href={record.invoiceLink} 
+                          href={record.estimateLink} 
                           target="_blank" 
                           rel="noopener noreferrer" 
                           className="text-blue-600 hover:underline truncate block"
-                          title={record.invoiceLink}
+                          title={record.estimateLink}
                         >
                           링크
                         </a>

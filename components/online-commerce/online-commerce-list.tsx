@@ -188,6 +188,7 @@ export function OnlineCommerceList({ onSuccess }: OnlineCommerceListProps) {
       }
 
       const data = await response.json();
+      console.log('입금 목록 조회 응답:', { success: data.success, dataCount: data.data?.length });
       if (data.success) {
         // 통합 API는 이미 camelCase로 변환된 데이터를 반환
         const formattedRecords = data.data.map((r: any) => ({
@@ -197,11 +198,16 @@ export function OnlineCommerceList({ onSuccess }: OnlineCommerceListProps) {
           // 필수 필드 검증 플래그
           hasWarning: !r.vendorCode || !r.category || !r.projectCode,
         }));
+        console.log(`입금 목록 업데이트: ${formattedRecords.length}개 레코드`);
         // records만 업데이트하면 useEffect가 자동으로 필터링을 다시 실행합니다
         // 검색어와 필터 상태는 유지됩니다
         setRecords(formattedRecords);
+      } else {
+        console.error('입금 목록 조회 실패:', data);
+        setError(data.error || '입금 목록을 불러오는데 실패했습니다.');
       }
     } catch (err) {
+      console.error('입금 목록 조회 오류:', err);
       setError(err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.');
     } finally {
       setIsLoading(false);
@@ -391,8 +397,13 @@ export function OnlineCommerceList({ onSuccess }: OnlineCommerceListProps) {
   };
 
   const handleBulkModalSuccess = () => {
-    fetchRecords();
+    console.log('handleBulkModalSuccess 호출됨');
     setIsBulkModalOpen(false);
+    // 약간의 지연 후 데이터 새로고침 (API 처리 시간 고려)
+    setTimeout(() => {
+      console.log('fetchRecords 호출 시작');
+      fetchRecords();
+    }, 500);
     if (onSuccess) onSuccess();
   };
 
@@ -1281,9 +1292,52 @@ export function OnlineCommerceList({ onSuccess }: OnlineCommerceListProps) {
                     </td>
                   )}
                   {visibleColumns.has('category') && (
-                    <td className="p-2 text-[13px] whitespace-nowrap truncate overflow-hidden" title={record.category || ''}>
-                      <div className="flex items-center gap-1 min-w-0">
-                        <span className="truncate">{record.category || '-'}</span>
+                    <td className="p-2 text-sm">
+                      <div className="flex items-center gap-1">
+                        {record.category ? (() => {
+                          const category = record.category;
+                          let bgColor = 'bg-purple-900/60';
+                          let textColor = 'text-purple-200';
+                          let borderColor = 'border-purple-500/70';
+                          
+                          if (category.includes('파트너십 - 서비스매출') || category.includes('용역사업 - 서비스매출')) {
+                            bgColor = 'bg-blue-900/60';
+                            textColor = 'text-blue-200';
+                            borderColor = 'border-blue-500/70';
+                          } else if (category.includes('파트너십 - 수출바우처') || category.includes('용역사업 - 수출바우처')) {
+                            bgColor = 'bg-cyan-900/60';
+                            textColor = 'text-cyan-200';
+                            borderColor = 'border-cyan-500/70';
+                          } else if (category === 'B2B') {
+                            bgColor = 'bg-green-900/60';
+                            textColor = 'text-green-200';
+                            borderColor = 'border-green-500/70';
+                          } else if (category.includes('재고') || category.includes('기재고')) {
+                            bgColor = 'bg-orange-900/60';
+                            textColor = 'text-orange-200';
+                            borderColor = 'border-orange-500/70';
+                          } else if (category === '배송비') {
+                            bgColor = 'bg-yellow-900/60';
+                            textColor = 'text-yellow-200';
+                            borderColor = 'border-yellow-500/70';
+                          } else if (category.includes('마케팅지원비')) {
+                            bgColor = 'bg-pink-900/60';
+                            textColor = 'text-pink-200';
+                            borderColor = 'border-pink-500/70';
+                          } else if (category === 'other') {
+                            bgColor = 'bg-gray-700/60';
+                            textColor = 'text-gray-300';
+                            borderColor = 'border-gray-500/70';
+                          }
+                          
+                          return (
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium ${bgColor} ${textColor} border ${borderColor}`}>
+                              {category}
+                            </span>
+                          );
+                        })() : (
+                          <span className="text-gray-400">-</span>
+                        )}
                         {(record as any).hasWarning && (
                           <span className="text-xs text-yellow-600 font-medium flex-shrink-0" title="필수 항목 누락">⚠️</span>
                         )}

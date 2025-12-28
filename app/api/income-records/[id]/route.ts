@@ -63,7 +63,6 @@ export async function PUT(
       eoeoManager,
       contractLink,
       estimateLink,
-      invoiceLink,
       installmentNumber,
       attributionYearMonth,
       advanceBalance,
@@ -78,15 +77,10 @@ export async function PUT(
       depositDate,
       depositAmount,
       depositCurrency,
-      exchangeGainLoss,
-      difference,
       createdDate,
       invoiceCopy,
       invoiceAttachmentStatus,
       issueNotes,
-      year,
-      expectedDepositMonth,
-      depositMonth,
       taxStatus,
       invoiceSupplyPrice,
     } = body;
@@ -125,7 +119,6 @@ export async function PUT(
     if (eoeoManager !== undefined) updateData.eoeo_manager = eoeoManager || null;
     if (contractLink !== undefined) updateData.contract_link = contractLink || null;
     if (estimateLink !== undefined) updateData.estimate_link = estimateLink || null;
-    if (invoiceLink !== undefined) updateData.invoice_link = invoiceLink || null;
     if (installmentNumber !== undefined) updateData.installment_number = installmentNumber || null;
     if (attributionYearMonth !== undefined) updateData.attribution_year_month = attributionYearMonth || null;
     if (advanceBalance !== undefined) updateData.advance_balance = advanceBalance || null;
@@ -140,15 +133,10 @@ export async function PUT(
     if (depositDate !== undefined) updateData.deposit_date = depositDate || null;
     if (depositAmount !== undefined) updateData.deposit_amount = depositAmount || null;
     if (depositCurrency !== undefined) updateData.deposit_currency = depositCurrency || 'KRW';
-    if (exchangeGainLoss !== undefined) updateData.exchange_gain_loss = exchangeGainLoss || null;
-    if (difference !== undefined) updateData.difference = difference || null;
     if (createdDate !== undefined) updateData.created_date = createdDate || null;
     if (invoiceCopy !== undefined) updateData.invoice_copy = invoiceCopy || null;
     if (invoiceAttachmentStatus !== undefined) updateData.invoice_attachment_status = invoiceAttachmentStatus || null;
     if (issueNotes !== undefined) updateData.issue_notes = issueNotes || null;
-    if (year !== undefined) updateData.year = year || null;
-    if (expectedDepositMonth !== undefined) updateData.expected_deposit_month = expectedDepositMonth || null;
-    if (depositMonth !== undefined) updateData.deposit_month = depositMonth || null;
     if (taxStatus !== undefined) updateData.tax_status = taxStatus || null;
     if (invoiceSupplyPrice !== undefined) updateData.invoice_supply_price = invoiceSupplyPrice || null;
 
@@ -209,7 +197,6 @@ export async function PUT(
       eoeoManager: data.eoeo_manager,
       contractLink: data.contract_link,
       estimateLink: data.estimate_link,
-      invoiceLink: data.invoice_link,
       installmentNumber: data.installment_number,
       attributionYearMonth: data.attribution_year_month,
       advanceBalance: data.advance_balance,
@@ -224,14 +211,9 @@ export async function PUT(
       depositDate: data.deposit_date,
       depositAmount: data.deposit_amount,
       depositCurrency: data.deposit_currency,
-      exchangeGainLoss: data.exchange_gain_loss,
-      difference: data.difference,
       createdDate: data.created_date,
       invoiceCopy: data.invoice_copy,
       issueNotes: data.issue_notes,
-      year: data.year,
-      expectedDepositMonth: data.expected_deposit_month,
-      depositMonth: data.deposit_month,
       taxStatus: data.tax_status,
       invoiceSupplyPrice: data.invoice_supply_price,
       createdAt: data.created_at,

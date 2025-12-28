@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { InfluencerAccount } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Pagination } from '@/components/ui/pagination';
-import { Trash2, Edit2 } from 'lucide-react';
+import { Trash2, Edit2, Search, X } from 'lucide-react';
 import { InfluencerAccountEditModal } from './influencer-account-edit-modal';
 
 const ITEMS_PER_PAGE = 100;
@@ -17,6 +17,7 @@ export function InfluencerAccountList() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [editingAccount, setEditingAccount] = useState<InfluencerAccount | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // 열 너비 관리
   const [columnWidths, setColumnWidths] = useState<Record<string, number>>({
@@ -194,22 +195,42 @@ export function InfluencerAccountList() {
     setEditingAccount(null);
   };
 
+  // 검색 필터링 (Account Number 또는 Account Holder 명으로)
+  const filteredAccounts = accounts.filter(account => {
+    if (!searchQuery) return true;
+    const query = searchQuery.toLowerCase();
+    const accountNumber = (account.accountNumber || '').toLowerCase();
+    const fullName = (account.fullName || '').toLowerCase();
+    return accountNumber.includes(query) || fullName.includes(query);
+  });
+
+  // 통계 계산
+  const totalCount = accounts.length;
+  const personalCount = accounts.filter(a => a.recipientType === 'Personal').length;
+  const businessCount = accounts.filter(a => a.recipientType === 'Business').length;
+  const otherCount = accounts.filter(a => !a.recipientType || (a.recipientType !== 'Personal' && a.recipientType !== 'Business')).length;
+
   const getCurrentPageAccounts = () => {
     const start = (currentPage - 1) * ITEMS_PER_PAGE;
     const end = start + ITEMS_PER_PAGE;
-    return accounts.slice(start, end);
+    return filteredAccounts.slice(start, end);
   };
 
-  const totalPages = Math.ceil(accounts.length / ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(filteredAccounts.length / ITEMS_PER_PAGE);
   const currentPageAccounts = getCurrentPageAccounts();
   const allSelected = currentPageAccounts.length > 0 && currentPageAccounts.every(a => selectedIds.has(a.id!));
 
+  // 검색어 변경 시 첫 페이지로 리셋
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
+
   if (isLoading) {
     return (
-      <div className="bg-white rounded-lg border p-6">
+      <div className="rounded-lg border border-purple-500/20 bg-slate-800/40 backdrop-blur-xl shadow-lg shadow-purple-500/10 p-6">
         <div className="flex items-center justify-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <span className="ml-2 text-gray-600">계좌 목록을 불러오는 중...</span>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-500"></div>
+          <span className="ml-2 text-gray-300">계좌 목록을 불러오는 중...</span>
         </div>
       </div>
     );
@@ -217,8 +238,8 @@ export function InfluencerAccountList() {
 
   if (error) {
     return (
-      <div className="bg-white rounded-lg border p-6">
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+      <div className="rounded-lg border border-purple-500/20 bg-slate-800/40 backdrop-blur-xl shadow-lg shadow-purple-500/10 p-6">
+        <div className="bg-red-900/30 border border-red-500/50 text-red-300 px-4 py-3 rounded">
           {error}
         </div>
         <Button onClick={fetchAccounts} className="mt-4" variant="outline">
@@ -230,10 +251,65 @@ export function InfluencerAccountList() {
 
   return (
     <>
-      <div className="bg-white rounded-lg border">
+      <div className="rounded-lg border border-purple-500/20 bg-slate-800/40 backdrop-blur-xl shadow-lg shadow-purple-500/10">
+        {/* 통계 표시 */}
+        <div className="p-4 border-b border-gray-600">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-6">
+              <div className="text-sm">
+                <span className="text-gray-400">전체: </span>
+                <span className="font-medium text-gray-200">{totalCount}명</span>
+              </div>
+              <div className="text-sm">
+                <span className="text-gray-400">Personal: </span>
+                <span className="font-medium text-cyan-300">{personalCount}명</span>
+              </div>
+              <div className="text-sm">
+                <span className="text-gray-400">Business: </span>
+                <span className="font-medium text-purple-300">{businessCount}명</span>
+              </div>
+              {otherCount > 0 && (
+                <div className="text-sm">
+                  <span className="text-gray-400">기타: </span>
+                  <span className="font-medium text-gray-300">{otherCount}명</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* 검색 입력 */}
+          <div className="flex items-center gap-4">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Account Number 또는 Account Holder 명으로 검색..."
+                className="w-full pl-10 pr-4 py-2 border border-gray-600 bg-slate-700/50 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500"
+              />
+            </div>
+            {searchQuery && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSearchQuery('')}
+                className="text-gray-400 hover:text-gray-300"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+          {searchQuery && (
+            <p className="text-xs text-gray-400 mt-2">
+              검색 결과: {filteredAccounts.length}개 (전체 {totalCount}개)
+            </p>
+          )}
+        </div>
+
         {selectedIds.size > 0 && (
-          <div className="p-4 bg-blue-50 border-b flex items-center justify-between">
-            <span className="text-sm font-medium text-blue-700">
+          <div className="p-4 bg-cyan-900/30 border-b border-cyan-500/30 flex items-center justify-between">
+            <span className="text-sm font-medium text-cyan-300">
               {selectedIds.size}개 선택됨
             </span>
             <div className="flex gap-2">
@@ -252,140 +328,140 @@ export function InfluencerAccountList() {
 
         <div className="overflow-x-auto max-h-[calc(100vh-300px)]">
           <table className="w-full">
-            <thead className="bg-gray-50 sticky top-0 z-10">
-              <tr className="border-b">
+            <thead className="bg-slate-700 sticky top-0 z-10">
+              <tr className="border-b border-gray-600">
                 <th 
-                  className="text-left p-4 font-medium text-gray-700 text-sm relative"
+                  className="text-left p-4 font-medium text-gray-300 text-sm relative"
                   style={{ width: `${columnWidths.checkbox}px`, minWidth: '50px' }}
                 >
                   <input
                     type="checkbox"
                     checked={allSelected}
                     onChange={(e) => handleSelectAll(e.target.checked)}
-                    className="rounded border-gray-300"
+                    className="rounded border-gray-600 bg-slate-700"
                   />
                   <div
-                    className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 bg-transparent"
+                    className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-cyan-500 bg-transparent"
                     onMouseDown={(e) => handleResizeStart('checkbox', e)}
                   />
                 </th>
                 <th 
-                  className="text-left p-4 font-medium text-gray-700 text-sm relative"
+                  className="text-left p-4 font-medium text-gray-300 text-sm relative"
                   style={{ width: `${columnWidths.number}px`, minWidth: '50px' }}
                 >
                   순번
                   <div
-                    className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 bg-transparent z-10"
+                    className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-cyan-500 bg-transparent z-10"
                     onMouseDown={(e) => handleResizeStart('number', e)}
                   />
                 </th>
                 <th 
-                  className="text-left p-4 font-medium text-gray-700 text-sm relative"
+                  className="text-left p-4 font-medium text-gray-300 text-sm relative"
                   style={{ width: `${columnWidths.recipientType}px`, minWidth: '50px' }}
                 >
                   Recipient Type
                   <div
-                    className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 bg-transparent z-10"
+                    className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-cyan-500 bg-transparent z-10"
                     onMouseDown={(e) => handleResizeStart('recipientType', e)}
                   />
                 </th>
                 <th 
-                  className="text-left p-4 font-medium text-gray-700 text-sm relative"
+                  className="text-left p-4 font-medium text-gray-300 text-sm relative"
                   style={{ width: `${columnWidths.fullName}px`, minWidth: '50px' }}
                 >
                   Account Holder
                   <div
-                    className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 bg-transparent z-10"
+                    className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-cyan-500 bg-transparent z-10"
                     onMouseDown={(e) => handleResizeStart('fullName', e)}
                   />
                 </th>
                 <th 
-                  className="text-left p-4 font-medium text-gray-700 text-sm relative"
+                  className="text-left p-4 font-medium text-gray-300 text-sm relative"
                   style={{ width: `${columnWidths.tiktokAccount}px`, minWidth: '50px' }}
                 >
                   Tiktok Account
                   <div
-                    className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 bg-transparent z-10"
+                    className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-cyan-500 bg-transparent z-10"
                     onMouseDown={(e) => handleResizeStart('tiktokAccount', e)}
                   />
                 </th>
                 <th 
-                  className="text-left p-4 font-medium text-gray-700 text-sm relative"
+                  className="text-left p-4 font-medium text-gray-300 text-sm relative"
                   style={{ width: `${columnWidths.instagramAccount}px`, minWidth: '50px' }}
                 >
                   Instagram Account
                   <div
-                    className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 bg-transparent z-10"
+                    className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-cyan-500 bg-transparent z-10"
                     onMouseDown={(e) => handleResizeStart('instagramAccount', e)}
                   />
                 </th>
                 <th 
-                  className="text-left p-4 font-medium text-gray-700 text-sm relative"
+                  className="text-left p-4 font-medium text-gray-300 text-sm relative"
                   style={{ width: `${columnWidths.email}px`, minWidth: '50px' }}
                 >
                   Email
                   <div
-                    className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 bg-transparent z-10"
+                    className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-cyan-500 bg-transparent z-10"
                     onMouseDown={(e) => handleResizeStart('email', e)}
                   />
                 </th>
                 <th 
-                  className="text-left p-4 font-medium text-gray-700 text-sm relative"
+                  className="text-left p-4 font-medium text-gray-300 text-sm relative"
                   style={{ width: `${columnWidths.accountNumber}px`, minWidth: '50px' }}
                 >
                   Account Number
                   <div
-                    className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 bg-transparent z-10"
+                    className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-cyan-500 bg-transparent z-10"
                     onMouseDown={(e) => handleResizeStart('accountNumber', e)}
                   />
                 </th>
                 <th 
-                  className="text-left p-4 font-medium text-gray-700 text-sm relative"
+                  className="text-left p-4 font-medium text-gray-300 text-sm relative"
                   style={{ width: `${columnWidths.achRoutingNumber}px`, minWidth: '50px' }}
                 >
                   ACH routing number
                   <div
-                    className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 bg-transparent z-10"
+                    className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-cyan-500 bg-transparent z-10"
                     onMouseDown={(e) => handleResizeStart('achRoutingNumber', e)}
                   />
                 </th>
                 <th 
-                  className="text-left p-4 font-medium text-gray-700 text-sm relative"
+                  className="text-left p-4 font-medium text-gray-300 text-sm relative"
                   style={{ width: `${columnWidths.swiftCode}px`, minWidth: '50px' }}
                 >
                   SWIFT CODE
                   <div
-                    className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 bg-transparent z-10"
+                    className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-cyan-500 bg-transparent z-10"
                     onMouseDown={(e) => handleResizeStart('swiftCode', e)}
                   />
                 </th>
                 <th 
-                  className="text-left p-4 font-medium text-gray-700 text-sm relative"
+                  className="text-left p-4 font-medium text-gray-300 text-sm relative"
                   style={{ width: `${columnWidths.accountType}px`, minWidth: '50px' }}
                 >
                   Account Type
                   <div
-                    className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 bg-transparent z-10"
+                    className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-cyan-500 bg-transparent z-10"
                     onMouseDown={(e) => handleResizeStart('accountType', e)}
                   />
                 </th>
                 <th 
-                  className="text-left p-4 font-medium text-gray-700 text-sm relative"
+                  className="text-left p-4 font-medium text-gray-300 text-sm relative"
                   style={{ width: `${columnWidths.wiseTag}px`, minWidth: '50px' }}
                 >
                   Wise Tag
                   <div
-                    className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 bg-transparent z-10"
+                    className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-cyan-500 bg-transparent z-10"
                     onMouseDown={(e) => handleResizeStart('wiseTag', e)}
                   />
                 </th>
                 <th 
-                  className="text-left p-4 font-medium text-gray-700 text-sm relative"
+                  className="text-left p-4 font-medium text-gray-300 text-sm relative"
                   style={{ width: `${columnWidths.actions}px`, minWidth: '50px' }}
                 >
                   작업
                   <div
-                    className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 bg-transparent z-10"
+                    className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-cyan-500 bg-transparent z-10"
                     onMouseDown={(e) => handleResizeStart('actions', e)}
                   />
                 </th>
@@ -394,7 +470,7 @@ export function InfluencerAccountList() {
             <tbody>
               {currentPageAccounts.length === 0 ? (
                 <tr>
-                  <td colSpan={13} className="p-8 text-center text-gray-500 text-sm">
+                  <td colSpan={13} className="p-8 text-center text-gray-400 text-sm">
                     등록된 계좌가 없습니다.
                   </td>
                 </tr>
@@ -402,33 +478,47 @@ export function InfluencerAccountList() {
                 currentPageAccounts.map((account, index) => {
                   const rowNumber = (currentPage - 1) * ITEMS_PER_PAGE + index + 1;
                   return (
-                    <tr key={account.id} className="border-b hover:bg-gray-50">
+                    <tr key={account.id} className="border-b border-gray-600 hover:bg-slate-700/50">
                       <td className="p-4 text-sm">
                         <input
                           type="checkbox"
                           checked={selectedIds.has(account.id!)}
                           onChange={(e) => handleSelectOne(account.id!, e.target.checked)}
-                          className="rounded border-gray-300"
+                          className="rounded border-gray-600 bg-slate-700"
                         />
                       </td>
-                      <td className="p-4 text-gray-600 text-sm">{rowNumber}</td>
-                      <td className="p-4 text-sm">{account.recipientType || '-'}</td>
-                      <td className="p-4 font-medium text-sm">{account.fullName}</td>
+                      <td className="p-4 text-gray-400 text-sm">{rowNumber}</td>
+                      <td className="p-4 text-sm text-gray-300">{account.recipientType || '-'}</td>
+                      <td className="p-4 font-medium text-sm text-gray-200">{account.fullName}</td>
                       <td className="p-4 text-sm">
                         {account.recipientType === 'Business' 
                           ? (account.tiktokHandles && account.tiktokHandles.length > 0 
-                              ? account.tiktokHandles.join(', ') 
-                              : '-')
-                          : (account.tiktokHandle || '-')}
+                              ? (
+                                  <div className="flex flex-wrap gap-1">
+                                    {account.tiktokHandles.map((handle, idx) => (
+                                      <span key={idx} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-900/40 text-blue-300 border border-blue-500/50">
+                                        {handle}
+                                      </span>
+                                    ))}
+                                  </div>
+                                )
+                              : <span className="text-gray-400">-</span>)
+                          : (account.tiktokHandle 
+                              ? (
+                                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-900/40 text-blue-300 border border-blue-500/50">
+                                    {account.tiktokHandle}
+                                  </span>
+                                )
+                              : <span className="text-gray-400">-</span>)}
                       </td>
-                      <td className="p-4 text-sm">
+                      <td className="p-4 text-sm text-gray-300">
                         {account.recipientType === 'Business' 
                           ? (account.instagramHandles && account.instagramHandles.length > 0 
                               ? account.instagramHandles.join(', ') 
                               : '-')
                           : '-'}
                       </td>
-                      <td className="p-4 text-sm">
+                      <td className="p-4 text-sm text-gray-300">
                         {account.email ? (
                           account.email.includes('\n') ? (
                             <div className="whitespace-pre-line">{account.email}</div>
@@ -437,31 +527,73 @@ export function InfluencerAccountList() {
                           )
                         ) : '-'}
                       </td>
-                      <td className="p-4 text-gray-600 text-sm">{account.accountNumber || '-'}</td>
-                      <td className="p-4 text-gray-600 text-sm">{account.achRoutingNumber || '-'}</td>
-                      <td className="p-4 text-gray-600 text-sm">
+                      <td className="p-4 text-sm">
+                        {account.accountNumber ? (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-900/40 text-green-300 border border-green-500/50">
+                            {account.accountNumber}
+                          </span>
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
+                      </td>
+                      <td className="p-4 text-sm">
+                        {account.achRoutingNumber ? (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-900/40 text-green-300 border border-green-500/50">
+                            {account.achRoutingNumber}
+                          </span>
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
+                      </td>
+                      <td className="p-4 text-sm">
                         {account.swiftCode ? (
                           account.swiftCode.includes('\n') ? (
-                            <div className="whitespace-pre-line">{account.swiftCode}</div>
+                            <div className="flex flex-wrap gap-1">
+                              {account.swiftCode.split('\n').map((code, idx) => (
+                                <span key={idx} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-900/40 text-green-300 border border-green-500/50">
+                                  {code}
+                                </span>
+                              ))}
+                            </div>
                           ) : (
-                            account.swiftCode
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-900/40 text-green-300 border border-green-500/50">
+                              {account.swiftCode}
+                            </span>
                           )
-                        ) : '-'}
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
                       </td>
-                      <td className="p-4 text-gray-600 text-sm">{account.accountType || '-'}</td>
-                      <td className="p-4 text-gray-600 text-sm">{account.wiseTag || '-'}</td>
+                      <td className="p-4 text-sm">
+                        {account.accountType ? (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-900/40 text-green-300 border border-green-500/50">
+                            {account.accountType}
+                          </span>
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
+                      </td>
+                      <td className="p-4 text-sm">
+                        {account.wiseTag ? (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-900/40 text-green-300 border border-green-500/50">
+                            {account.wiseTag}
+                          </span>
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
+                      </td>
                       <td className="p-4 text-sm">
                         <div className="flex gap-2">
                           <button
                             onClick={() => setEditingAccount(account)}
-                            className="text-blue-600 hover:text-blue-800"
+                            className="text-cyan-400 hover:text-cyan-300"
                             title="수정"
                           >
                             <Edit2 className="h-4 w-4" />
                           </button>
                           <button
                             onClick={() => handleDelete([account.id!])}
-                            className="text-red-600 hover:text-red-800"
+                            className="text-red-400 hover:text-red-300"
                             title="삭제"
                             disabled={isDeleting}
                           >

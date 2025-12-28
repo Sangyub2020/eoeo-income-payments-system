@@ -383,19 +383,19 @@ export function InfluencerAccountBulkForm({ onSuccess }: InfluencerAccountBulkFo
   };
 
   return (
-    <div className="bg-white rounded-lg border p-6">
-      <h3 className="text-lg font-semibold mb-4">일괄 등록</h3>
+    <div className="rounded-lg border border-purple-500/20 bg-slate-800/40 backdrop-blur-xl shadow-lg shadow-purple-500/10 p-6">
+      <h3 className="text-lg font-semibold mb-4 text-gray-200">일괄 등록</h3>
       
-      <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-md">
+      <div className="mb-4 p-4 bg-cyan-900/30 border border-cyan-500/50 rounded-md">
         <div className="flex items-start justify-between mb-2">
           <div className="flex-1">
-            <p className="text-sm text-blue-800 mb-2">
+            <p className="text-sm text-cyan-300 mb-2">
               <strong>입력 형식:</strong> CSV 파일에서 복사하여 붙여넣기 하세요 (탭으로 구분)
             </p>
-        <p className="text-sm text-blue-700">
+        <p className="text-sm text-cyan-200">
           헤더 순서: Email [탭] Recipient Type [탭] Tiktok Account [탭] Instagram Account [탭] Full Name of the Bank Account Holder [탭] ACH routing number [탭] SWIFT code (BIC) [탭] Account Number [탭] Account Type [탭] WISE TAG [탭] Address (Building number, Street, City, State, Country) [탭] Phone Number (With the Country Code)
         </p>
-            <p className="text-xs text-blue-600 mt-2">
+            <p className="text-xs text-cyan-300/80 mt-2">
               * Recipient Type은 Personal 또는 Business를 입력하세요
               * Business일 경우 Tiktok Account와 Instagram Account는 쉼표(,)로 구분하여 여러 계정을 입력할 수 있습니다
             </p>
@@ -414,13 +414,13 @@ export function InfluencerAccountBulkForm({ onSuccess }: InfluencerAccountBulkFo
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
+        <div className="bg-red-900/30 border border-red-500/50 text-red-300 px-4 py-3 rounded mb-4">
           {error}
         </div>
       )}
 
       {warning && (
-        <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded mb-4">
+        <div className="bg-yellow-900/30 border border-yellow-500/50 text-yellow-300 px-4 py-3 rounded mb-4">
           {warning}
         </div>
       )}
@@ -428,8 +428,8 @@ export function InfluencerAccountBulkForm({ onSuccess }: InfluencerAccountBulkFo
       {success && result && (
         <div className={`border rounded mb-4 ${
           result.failed > 0 
-            ? 'bg-yellow-50 border-yellow-200 text-yellow-800' 
-            : 'bg-green-50 border-green-200 text-green-700'
+            ? 'bg-yellow-900/30 border-yellow-500/50 text-yellow-300' 
+            : 'bg-green-900/30 border-green-500/50 text-green-300'
         }`}>
           <div className="px-4 py-3">
             <p className="font-medium">
@@ -442,16 +442,16 @@ export function InfluencerAccountBulkForm({ onSuccess }: InfluencerAccountBulkFo
             )}
             {result.errors.length > 0 && (
               <details className="mt-3">
-                <summary className="cursor-pointer text-sm font-medium hover:underline">
+                <summary className="cursor-pointer text-sm font-medium hover:underline text-gray-300">
                   실패 상세 내역 보기 ({result.errors.length}건)
                 </summary>
-                <div className="mt-2 max-h-60 overflow-y-auto bg-white rounded p-3 border">
+                <div className="mt-2 max-h-60 overflow-y-auto bg-slate-700/50 rounded p-3 border border-gray-600">
                   <ul className="text-xs space-y-1 list-disc list-inside">
                     {result.errors.slice(0, 100).map((err, idx) => (
-                      <li key={idx} className="text-red-700">{err}</li>
+                      <li key={idx} className="text-red-300">{err}</li>
                     ))}
                     {result.errors.length > 100 && (
-                      <li className="text-gray-500 italic">
+                      <li className="text-gray-400 italic">
                         ... 외 {result.errors.length - 100}건의 오류가 더 있습니다.
                       </li>
                     )}
@@ -465,7 +465,7 @@ export function InfluencerAccountBulkForm({ onSuccess }: InfluencerAccountBulkFo
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label htmlFor="bulkText" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="bulkText" className="block text-sm font-medium text-gray-300 mb-2">
             계좌 정보 입력 (CSV에서 복사하여 붙여넣기)
           </label>
           <textarea
@@ -481,18 +481,18 @@ export function InfluencerAccountBulkForm({ onSuccess }: InfluencerAccountBulkFo
               }
             }}
             rows={10}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+            className="w-full px-3 py-2 border border-gray-600 bg-slate-700/50 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500 font-mono text-sm"
             placeholder="CSV 파일에서 복사하여 붙여넣기 하세요"
           />
           {bulkText.length > 0 && (
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-gray-400 mt-1">
               입력된 줄 수: {bulkText.split('\n').filter(line => line.trim()).length}줄
             </p>
           )}
         </div>
 
         <div className="flex items-center gap-4">
-          <label className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md cursor-pointer hover:bg-gray-50">
+          <label className="flex items-center gap-2 px-4 py-2 border border-gray-600 bg-slate-700/50 text-gray-300 rounded-md cursor-pointer hover:bg-slate-700/70">
             <Upload className="h-4 w-4" />
             <span className="text-sm">파일 업로드</span>
             <input

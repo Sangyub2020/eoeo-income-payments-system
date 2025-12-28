@@ -27,6 +27,15 @@ export function MultiSelect({
   const dropdownRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // 디버깅: options가 변경될 때마다 로그 출력
+  useEffect(() => {
+    console.log('MultiSelect options 업데이트:', {
+      optionsCount: options.length,
+      firstFew: options.slice(0, 5),
+      allOptions: options
+    });
+  }, [options]);
+
   // 중복된 value를 가진 옵션 제거 (첫 번째 것만 유지)
   const uniqueOptions = options.reduce((acc, opt) => {
     if (!acc.find(item => item.value === opt.value)) {
@@ -77,11 +86,24 @@ export function MultiSelect({
     onChange([]);
   };
 
+  const handleToggleOpen = () => {
+    if (!disabled) {
+      console.log('MultiSelect 드롭다운 토글:', {
+        isOpen: !isOpen,
+        optionsCount: options.length,
+        uniqueOptionsCount: uniqueOptions.length,
+        filteredOptionsCount: filteredOptions.length,
+        searchQuery
+      });
+      setIsOpen(!isOpen);
+    }
+  };
+
   return (
     <div ref={dropdownRef} className={`relative ${className}`}>
       <button
         type="button"
-        onClick={() => !disabled && setIsOpen(!isOpen)}
+        onClick={handleToggleOpen}
         disabled={disabled}
         className={`w-full min-h-[42px] px-3 py-2 border border-purple-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 text-left flex items-center justify-between ${
           disabled ? 'bg-slate-800/40 cursor-not-allowed text-gray-500' : 'bg-black/40 backdrop-blur-xl cursor-pointer hover:border-purple-500/50 text-gray-200'
@@ -130,17 +152,31 @@ export function MultiSelect({
                 ref={inputRef}
                 type="text"
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  console.log('MultiSelect 검색어 변경:', e.target.value);
+                  setSearchQuery(e.target.value);
+                }}
                 placeholder="검색..."
                 className="w-full pl-8 pr-3 py-2 bg-black/40 border border-purple-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 text-gray-200 placeholder-gray-500"
               />
             </div>
           </div>
           <div className="overflow-y-auto max-h-48">
-            {filteredOptions.length === 0 ? (
-              <div className="px-4 py-2 text-sm text-gray-400">검색 결과가 없습니다.</div>
-            ) : (
-              filteredOptions.map((option) => {
+            {(() => {
+              console.log('MultiSelect 드롭다운 렌더링:', {
+                filteredOptionsCount: filteredOptions.length,
+                uniqueOptionsCount: uniqueOptions.length,
+                optionsCount: options.length,
+                searchQuery
+              });
+              if (filteredOptions.length === 0) {
+                return (
+                  <div className="px-4 py-2 text-sm text-gray-400">
+                    {uniqueOptions.length === 0 ? `브랜드 목록이 없습니다. (options: ${options.length}개)` : '검색 결과가 없습니다.'}
+                  </div>
+                );
+              }
+              return filteredOptions.map((option) => {
                 const isSelected = value.includes(option.value);
                 return (
                   <button
@@ -161,8 +197,8 @@ export function MultiSelect({
                     </span>
                   </button>
                 );
-              })
-            )}
+              });
+            })()}
           </div>
         </div>
       )}

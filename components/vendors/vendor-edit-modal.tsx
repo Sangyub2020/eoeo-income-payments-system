@@ -56,12 +56,12 @@ export function VendorEditModal({ vendor, onClose, onSuccess }: VendorEditModalP
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
-        <div className="flex items-center justify-between p-6 border-b">
-          <h2 className="text-xl font-semibold">거래처 수정</h2>
+      <div className="bg-slate-800 rounded-lg shadow-xl w-full max-w-md mx-4 border border-purple-500/20">
+        <div className="flex items-center justify-between p-6 border-b border-gray-600">
+          <h2 className="text-xl font-semibold text-gray-200">거래처 수정</h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="text-gray-400 hover:text-gray-300 transition-colors"
           >
             <X className="h-5 w-5" />
           </button>
@@ -69,14 +69,14 @@ export function VendorEditModal({ vendor, onClose, onSuccess }: VendorEditModalP
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+            <div className="bg-red-900/30 border border-red-500/50 text-red-300 px-4 py-3 rounded">
               {error}
             </div>
           )}
 
           <div>
-            <label htmlFor="code" className="block text-sm font-medium text-gray-700 mb-1">
-              거래처 코드 <span className="text-red-500">*</span>
+            <label htmlFor="code" className="block text-sm font-medium text-gray-300 mb-1">
+              거래처 코드 <span className="text-red-400">*</span>
             </label>
             <input
               type="text"
@@ -85,14 +85,14 @@ export function VendorEditModal({ vendor, onClose, onSuccess }: VendorEditModalP
               value={formData.code}
               onChange={handleChange}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-600 bg-slate-700/50 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500"
               placeholder="예: V001"
             />
           </div>
 
           <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-              거래처명 <span className="text-red-500">*</span>
+            <label htmlFor="name" className="block text-sm font-medium text-gray-300 mb-1">
+              거래처명 <span className="text-red-400">*</span>
             </label>
             <input
               type="text"
@@ -101,13 +101,13 @@ export function VendorEditModal({ vendor, onClose, onSuccess }: VendorEditModalP
               value={formData.name}
               onChange={handleChange}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-600 bg-slate-700/50 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500"
               placeholder="거래처명을 입력하세요"
             />
           </div>
 
           <div>
-            <label htmlFor="businessNumber" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="businessNumber" className="block text-sm font-medium text-gray-300 mb-1">
               사업자번호
             </label>
             <input
@@ -116,13 +116,13 @@ export function VendorEditModal({ vendor, onClose, onSuccess }: VendorEditModalP
               name="businessNumber"
               value={formData.businessNumber}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-600 bg-slate-700/50 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500"
               placeholder="123-45-67890"
             />
           </div>
 
           <div>
-            <label htmlFor="invoiceEmail" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="invoiceEmail" className="block text-sm font-medium text-gray-300 mb-1">
               세금계산서 발행 이메일
             </label>
             <input
@@ -131,7 +131,7 @@ export function VendorEditModal({ vendor, onClose, onSuccess }: VendorEditModalP
               name="invoiceEmail"
               value={formData.invoiceEmail}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-600 bg-slate-700/50 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500"
               placeholder="invoice@example.com"
             />
           </div>

@@ -21,7 +21,7 @@ export default function BrandsPage() {
         <p className="text-gray-400 mt-2">브랜드 정보를 등록하고 관리합니다</p>
       </div>
 
-      <Tabs defaultValue="register" className="w-full">
+      <Tabs defaultValue="list" className="w-full">
         <TabsList>
           <TabsTrigger value="register">등록</TabsTrigger>
           <TabsTrigger value="list">목록</TabsTrigger>

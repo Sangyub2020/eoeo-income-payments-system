@@ -39,6 +39,7 @@ export async function GET(request: Request) {
       }
     }
 
+    console.log('브랜드 API 응답:', { count: allData.length, firstFew: allData.slice(0, 3) });
     return NextResponse.json({ success: true, data: allData, count: allData.length });
   } catch (error) {
     console.error('브랜드 조회 오류:', error);

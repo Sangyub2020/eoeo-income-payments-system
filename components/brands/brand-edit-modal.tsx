@@ -53,12 +53,12 @@ export function BrandEditModal({ brand, onClose, onSuccess }: BrandEditModalProp
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
-        <div className="flex items-center justify-between p-6 border-b">
-          <h2 className="text-xl font-semibold">브랜드 수정</h2>
+      <div className="bg-slate-800 rounded-lg shadow-xl w-full max-w-md mx-4 border border-purple-500/20">
+        <div className="flex items-center justify-between p-6 border-b border-gray-600">
+          <h2 className="text-xl font-semibold text-gray-200">브랜드 수정</h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="text-gray-400 hover:text-gray-300 transition-colors"
           >
             <X className="h-5 w-5" />
           </button>
@@ -66,14 +66,14 @@ export function BrandEditModal({ brand, onClose, onSuccess }: BrandEditModalProp
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+            <div className="bg-red-900/30 border border-red-500/50 text-red-300 px-4 py-3 rounded">
               {error}
             </div>
           )}
 
           <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-              브랜드명 <span className="text-red-500">*</span>
+            <label htmlFor="name" className="block text-sm font-medium text-gray-300 mb-1">
+              브랜드명 <span className="text-red-400">*</span>
             </label>
             <input
               type="text"
@@ -82,7 +82,7 @@ export function BrandEditModal({ brand, onClose, onSuccess }: BrandEditModalProp
               value={formData.name}
               onChange={handleChange}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-600 bg-slate-700/50 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500"
               placeholder="브랜드명을 입력하세요"
             />
           </div>

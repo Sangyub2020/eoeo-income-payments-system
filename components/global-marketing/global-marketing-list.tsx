@@ -1234,9 +1234,52 @@ export function GlobalMarketingList({ onSuccess }: GlobalMarketingListProps) {
                     </td>
                   )}
                   {visibleColumns.has('category') && (
-                    <td className="p-2 text-[13px] whitespace-nowrap truncate overflow-hidden" title={record.category || ''}>
-                      <div className="flex items-center gap-1 min-w-0">
-                        <span className="truncate">{record.category || '-'}</span>
+                    <td className="p-2 text-sm">
+                      <div className="flex items-center gap-1">
+                        {record.category ? (() => {
+                          const category = record.category;
+                          let bgColor = 'bg-purple-900/60';
+                          let textColor = 'text-purple-200';
+                          let borderColor = 'border-purple-500/70';
+                          
+                          if (category.includes('파트너십 - 서비스매출') || category.includes('용역사업 - 서비스매출')) {
+                            bgColor = 'bg-blue-900/60';
+                            textColor = 'text-blue-200';
+                            borderColor = 'border-blue-500/70';
+                          } else if (category.includes('파트너십 - 수출바우처') || category.includes('용역사업 - 수출바우처')) {
+                            bgColor = 'bg-cyan-900/60';
+                            textColor = 'text-cyan-200';
+                            borderColor = 'border-cyan-500/70';
+                          } else if (category === 'B2B') {
+                            bgColor = 'bg-green-900/60';
+                            textColor = 'text-green-200';
+                            borderColor = 'border-green-500/70';
+                          } else if (category.includes('재고') || category.includes('기재고')) {
+                            bgColor = 'bg-orange-900/60';
+                            textColor = 'text-orange-200';
+                            borderColor = 'border-orange-500/70';
+                          } else if (category === '배송비') {
+                            bgColor = 'bg-yellow-900/60';
+                            textColor = 'text-yellow-200';
+                            borderColor = 'border-yellow-500/70';
+                          } else if (category.includes('마케팅지원비')) {
+                            bgColor = 'bg-pink-900/60';
+                            textColor = 'text-pink-200';
+                            borderColor = 'border-pink-500/70';
+                          } else if (category === 'other') {
+                            bgColor = 'bg-gray-700/60';
+                            textColor = 'text-gray-300';
+                            borderColor = 'border-gray-500/70';
+                          }
+                          
+                          return (
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium ${bgColor} ${textColor} border ${borderColor}`}>
+                              {category}
+                            </span>
+                          );
+                        })() : (
+                          <span className="text-gray-400">-</span>
+                        )}
                         {(record as any).hasWarning && (
                           <span className="text-xs text-yellow-600 font-medium flex-shrink-0" title="필수 항목 누락">⚠️</span>
                         )}

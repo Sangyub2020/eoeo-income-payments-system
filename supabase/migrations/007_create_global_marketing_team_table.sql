@@ -57,3 +57,4 @@ CREATE TRIGGER update_global_marketing_team_updated_at
 
 
 
+

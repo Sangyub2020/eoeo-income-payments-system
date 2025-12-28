@@ -8,3 +8,4 @@ ADD COLUMN IF NOT EXISTS recipient_type VARCHAR(20) CHECK (recipient_type IN ('P
 
 
 
+

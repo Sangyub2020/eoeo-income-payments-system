@@ -32,14 +32,9 @@ export function OnlineCommerceSingleForm({ onSuccess }: OnlineCommerceSingleForm
     description: '',
     depositDate: '',
     depositAmount: undefined,
-    exchangeGainLoss: undefined,
-    difference: undefined,
     createdDate: '',
     invoiceCopy: '',
     issueNotes: '',
-    year: undefined,
-    expectedDepositMonth: undefined,
-    depositMonth: undefined,
     taxStatus: '',
     invoiceSupplyPrice: undefined,
   });
@@ -94,14 +89,9 @@ export function OnlineCommerceSingleForm({ onSuccess }: OnlineCommerceSingleForm
         description: '',
         depositDate: '',
         depositAmount: undefined,
-        exchangeGainLoss: undefined,
-        difference: undefined,
         createdDate: '',
         invoiceCopy: '',
         issueNotes: '',
-        year: undefined,
-        expectedDepositMonth: undefined,
-        depositMonth: undefined,
         taxStatus: '',
         invoiceSupplyPrice: undefined,
       });
@@ -120,7 +110,7 @@ export function OnlineCommerceSingleForm({ onSuccess }: OnlineCommerceSingleForm
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: value === '' ? undefined : (name.includes('Amount') || name.includes('Number') || name.includes('Month') || name.includes('Year') || name === 'ratio' || name === 'count' || name === 'year' || name === 'expectedDepositMonth' || name === 'depositMonth' || name === 'installmentNumber' || name === 'exchangeGainLoss' || name === 'difference' || name === 'expectedDepositAmount' || name === 'depositAmount' || name === 'invoiceSupplyPrice')
+      [name]: value === '' ? undefined : (name.includes('Amount') || name.includes('Number') || name === 'ratio' || name === 'count' || name === 'installmentNumber' || name === 'expectedDepositAmount' || name === 'depositAmount' || name === 'invoiceSupplyPrice')
         ? (value === '' ? undefined : Number(value))
         : value,
     }));
@@ -453,33 +443,6 @@ export function OnlineCommerceSingleForm({ onSuccess }: OnlineCommerceSingleForm
             />
           </div>
 
-          <div>
-            <label htmlFor="exchangeGainLoss" className="block text-sm font-medium text-gray-700 mb-1">
-              환차손익
-            </label>
-            <input
-              type="number"
-              id="exchangeGainLoss"
-              name="exchangeGainLoss"
-              value={formData.exchangeGainLoss || ''}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="difference" className="block text-sm font-medium text-gray-700 mb-1">
-              차액
-            </label>
-            <input
-              type="number"
-              id="difference"
-              name="difference"
-              value={formData.difference || ''}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
 
           <div>
             <label htmlFor="createdDate" className="block text-sm font-medium text-gray-700 mb-1">
@@ -523,47 +486,6 @@ export function OnlineCommerceSingleForm({ onSuccess }: OnlineCommerceSingleForm
             />
           </div>
 
-          <div>
-            <label htmlFor="year" className="block text-sm font-medium text-gray-700 mb-1">
-              년
-            </label>
-            <input
-              type="number"
-              id="year"
-              name="year"
-              value={formData.year || ''}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="expectedDepositMonth" className="block text-sm font-medium text-gray-700 mb-1">
-              입금 예정월
-            </label>
-            <input
-              type="number"
-              id="expectedDepositMonth"
-              name="expectedDepositMonth"
-              value={formData.expectedDepositMonth || ''}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="depositMonth" className="block text-sm font-medium text-gray-700 mb-1">
-              입금 월
-            </label>
-            <input
-              type="number"
-              id="depositMonth"
-              name="depositMonth"
-              value={formData.depositMonth || ''}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
 
           <div>
             <label htmlFor="taxStatus" className="block text-sm font-medium text-gray-700 mb-1">

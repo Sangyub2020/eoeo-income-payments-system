@@ -131,17 +131,17 @@ export function InfluencerAccountSingleForm({ onSuccess }: InfluencerAccountSing
   };
 
   return (
-    <div className="bg-white rounded-lg border p-6">
-      <h3 className="text-lg font-semibold mb-4">단일 등록</h3>
+    <div className="rounded-lg border border-purple-500/20 bg-slate-800/40 backdrop-blur-xl shadow-lg shadow-purple-500/10 p-6">
+      <h3 className="text-lg font-semibold mb-4 text-gray-200">단일 등록</h3>
       
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
+        <div className="bg-red-900/30 border border-red-500/50 text-red-300 px-4 py-3 rounded mb-4">
           {error}
         </div>
       )}
 
       {success && (
-        <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded mb-4">
+        <div className="bg-green-900/30 border border-green-500/50 text-green-300 px-4 py-3 rounded mb-4">
           인플루언서 계좌가 성공적으로 등록되었습니다.
         </div>
       )}
@@ -149,7 +149,7 @@ export function InfluencerAccountSingleForm({ onSuccess }: InfluencerAccountSing
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-1">
               Email
             </label>
             <input
@@ -158,7 +158,7 @@ export function InfluencerAccountSingleForm({ onSuccess }: InfluencerAccountSing
               name="email"
               value={formData.email}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-600 bg-slate-700/50 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500"
               placeholder="email@example.com"
             />
           </div>
@@ -167,7 +167,7 @@ export function InfluencerAccountSingleForm({ onSuccess }: InfluencerAccountSing
             <>
               <div className="col-span-2">
                 <div className="flex items-center justify-between mb-2">
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-gray-300">
                     Tiktok Accounts
                   </label>
                   <Button
@@ -187,7 +187,7 @@ export function InfluencerAccountSingleForm({ onSuccess }: InfluencerAccountSing
                       type="text"
                       value={handle}
                       onChange={(e) => updateTiktokAccount(index, e.target.value)}
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="flex-1 px-3 py-2 border border-gray-600 bg-slate-700/50 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500"
                       placeholder={`@username${index + 1}`}
                     />
                     <Button
@@ -202,12 +202,12 @@ export function InfluencerAccountSingleForm({ onSuccess }: InfluencerAccountSing
                   </div>
                 ))}
                 {(!formData.tiktokHandles || formData.tiktokHandles.length === 0) && (
-                  <p className="text-sm text-gray-500">+ 버튼을 눌러 계정을 추가하세요</p>
+                  <p className="text-sm text-gray-400">+ 버튼을 눌러 계정을 추가하세요</p>
                 )}
               </div>
               <div className="col-span-2">
                 <div className="flex items-center justify-between mb-2">
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-gray-300">
                     Instagram Accounts
                   </label>
                   <Button
@@ -227,7 +227,7 @@ export function InfluencerAccountSingleForm({ onSuccess }: InfluencerAccountSing
                       type="text"
                       value={handle}
                       onChange={(e) => updateInstagramAccount(index, e.target.value)}
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="flex-1 px-3 py-2 border border-gray-600 bg-slate-700/50 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500"
                       placeholder={`@username${index + 1}`}
                     />
                     <Button
@@ -242,13 +242,13 @@ export function InfluencerAccountSingleForm({ onSuccess }: InfluencerAccountSing
                   </div>
                 ))}
                 {(!formData.instagramHandles || formData.instagramHandles.length === 0) && (
-                  <p className="text-sm text-gray-500">+ 버튼을 눌러 계정을 추가하세요</p>
+                  <p className="text-sm text-gray-400">+ 버튼을 눌러 계정을 추가하세요</p>
                 )}
               </div>
             </>
           ) : (
             <div>
-              <label htmlFor="tiktokHandle" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="tiktokHandle" className="block text-sm font-medium text-gray-300 mb-1">
                 Tiktok handle
               </label>
               <input
@@ -257,14 +257,14 @@ export function InfluencerAccountSingleForm({ onSuccess }: InfluencerAccountSing
                 name="tiktokHandle"
                 value={formData.tiktokHandle}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-600 bg-slate-700/50 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500"
                 placeholder="@username"
               />
             </div>
           )}
 
           <div>
-            <label htmlFor="recipientType" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="recipientType" className="block text-sm font-medium text-gray-300 mb-1">
               Recipient Type
             </label>
             <select
@@ -272,7 +272,7 @@ export function InfluencerAccountSingleForm({ onSuccess }: InfluencerAccountSing
               name="recipientType"
               value={formData.recipientType || ''}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-600 bg-slate-700/50 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500"
             >
               <option value="">선택하세요</option>
               <option value="Personal">Personal</option>
@@ -281,7 +281,7 @@ export function InfluencerAccountSingleForm({ onSuccess }: InfluencerAccountSing
           </div>
 
           <div>
-            <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="fullName" className="block text-sm font-medium text-gray-300 mb-1">
               Full Name of the Bank Account Holder
             </label>
             <input
@@ -290,16 +290,16 @@ export function InfluencerAccountSingleForm({ onSuccess }: InfluencerAccountSing
               name="fullName"
               value={formData.fullName}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-600 bg-slate-700/50 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500"
               placeholder="홍길동"
             />
             {!formData.fullName && (
-              <p className="text-xs text-yellow-600 mt-1">⚠️ 모든 계좌는 계좌 소유자 이름이 필수입니다.</p>
+              <p className="text-xs text-yellow-400 mt-1">⚠️ 모든 계좌는 계좌 소유자 이름이 필수입니다.</p>
             )}
           </div>
 
           <div>
-            <label htmlFor="achRoutingNumber" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="achRoutingNumber" className="block text-sm font-medium text-gray-300 mb-1">
               ACH routing number
             </label>
             <input
@@ -308,13 +308,13 @@ export function InfluencerAccountSingleForm({ onSuccess }: InfluencerAccountSing
               name="achRoutingNumber"
               value={formData.achRoutingNumber}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-600 bg-slate-700/50 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500"
               placeholder="123456789"
             />
           </div>
 
           <div>
-            <label htmlFor="swiftCode" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="swiftCode" className="block text-sm font-medium text-gray-300 mb-1">
               SWIFT code (BIC)
             </label>
             <input
@@ -323,13 +323,13 @@ export function InfluencerAccountSingleForm({ onSuccess }: InfluencerAccountSing
               name="swiftCode"
               value={formData.swiftCode}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-600 bg-slate-700/50 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500"
               placeholder="SWIFTCODE"
             />
           </div>
 
           <div>
-            <label htmlFor="accountNumber" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="accountNumber" className="block text-sm font-medium text-gray-300 mb-1">
               Account Number
             </label>
             <input
@@ -338,13 +338,13 @@ export function InfluencerAccountSingleForm({ onSuccess }: InfluencerAccountSing
               name="accountNumber"
               value={formData.accountNumber}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-600 bg-slate-700/50 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500"
               placeholder="1234567890"
             />
           </div>
 
           <div>
-            <label htmlFor="accountType" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="accountType" className="block text-sm font-medium text-gray-300 mb-1">
               Account Type
             </label>
             <input
@@ -353,13 +353,13 @@ export function InfluencerAccountSingleForm({ onSuccess }: InfluencerAccountSing
               name="accountType"
               value={formData.accountType}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-600 bg-slate-700/50 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500"
               placeholder="Checking, Savings 등"
             />
           </div>
 
           <div>
-            <label htmlFor="wiseTag" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="wiseTag" className="block text-sm font-medium text-gray-300 mb-1">
               WISE TAG
             </label>
             <input
@@ -368,13 +368,13 @@ export function InfluencerAccountSingleForm({ onSuccess }: InfluencerAccountSing
               name="wiseTag"
               value={formData.wiseTag}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-600 bg-slate-700/50 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500"
               placeholder="WISE TAG"
             />
           </div>
 
           <div>
-            <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-300 mb-1">
               Phone Number (With the Country Code)
             </label>
             <input
@@ -383,13 +383,13 @@ export function InfluencerAccountSingleForm({ onSuccess }: InfluencerAccountSing
               name="phoneNumber"
               value={formData.phoneNumber}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-600 bg-slate-700/50 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500"
               placeholder="+82 10-1234-5678"
             />
           </div>
 
           <div className="col-span-2">
-            <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="address" className="block text-sm font-medium text-gray-300 mb-1">
               Address (Building number, Street, City, State, Country)
             </label>
             <textarea
@@ -398,7 +398,7 @@ export function InfluencerAccountSingleForm({ onSuccess }: InfluencerAccountSing
               value={formData.address}
               onChange={handleChange}
               rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-600 bg-slate-700/50 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500"
               placeholder="123 Main St, Seoul, Seoul, South Korea"
             />
           </div>

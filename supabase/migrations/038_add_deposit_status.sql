@@ -31,3 +31,4 @@ WHERE (deposit_amount IS NULL OR deposit_amount = 0)
 -- 인덱스 생성
 CREATE INDEX IF NOT EXISTS idx_income_records_deposit_status ON income_records(deposit_status);
 
+

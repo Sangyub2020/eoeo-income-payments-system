@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { Brand } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Pagination } from '@/components/ui/pagination';
-import { Trash2, Edit2 } from 'lucide-react';
+import { Trash2, Edit2, Search, X } from 'lucide-react';
 import { BrandEditModal } from './brand-edit-modal';
 
 const ITEMS_PER_PAGE = 100;
@@ -17,6 +17,7 @@ export function BrandList() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [editingBrand, setEditingBrand] = useState<Brand | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const fetchBrands = async () => {
     setIsLoading(true);
@@ -36,6 +37,8 @@ export function BrandList() {
           createdAt: b.created_at,
           updatedAt: b.updated_at,
         }));
+        // 브랜드명으로 오름차순 정렬
+        formattedBrands.sort((a: { name?: string }, b: { name?: string }) => (a.name || '').localeCompare(b.name || ''));
         setBrands(formattedBrands);
       }
     } catch (err) {
@@ -94,22 +97,32 @@ export function BrandList() {
     }
   };
 
+  // 검색 필터링
+  const filteredBrands = brands.filter(brand => 
+    brand.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   const getCurrentPageBrands = () => {
     const start = (currentPage - 1) * ITEMS_PER_PAGE;
     const end = start + ITEMS_PER_PAGE;
-    return brands.slice(start, end);
+    return filteredBrands.slice(start, end);
   };
 
-  const totalPages = Math.ceil(brands.length / ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(filteredBrands.length / ITEMS_PER_PAGE);
   const currentPageBrands = getCurrentPageBrands();
 
+  // 검색어 변경 시 첫 페이지로 리셋
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
+
   if (isLoading) {
-    return <div className="text-center py-8">로딩 중...</div>;
+    return <div className="text-center py-8 text-gray-300">로딩 중...</div>;
   }
 
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+      <div className="bg-red-900/30 border border-red-500/50 text-red-300 px-4 py-3 rounded">
         {error}
         <Button onClick={fetchBrands} className="mt-2" variant="outline">
           다시 시도
@@ -119,81 +132,111 @@ export function BrandList() {
   }
 
   return (
-    <div className="bg-white rounded-lg border">
-      <div className="p-4 border-b flex items-center justify-between">
+    <div className="rounded-lg border border-purple-500/20 bg-slate-800/40 backdrop-blur-xl shadow-lg shadow-purple-500/10">
+      <div className="p-4 border-b border-gray-600">
+        <div className="flex items-center gap-4 mb-4">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="브랜드명으로 검색..."
+              className="w-full pl-10 pr-4 py-2 border border-gray-600 bg-slate-700/50 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500"
+            />
+          </div>
+          {searchQuery && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setSearchQuery('')}
+              className="text-gray-400 hover:text-gray-300"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
+        {searchQuery && (
+          <p className="text-xs text-gray-400 mb-2">
+            검색 결과: {filteredBrands.length}개 (전체 {brands.length}개)
+          </p>
+        )}
         <div className="flex items-center gap-4">
           <input
             type="checkbox"
             checked={currentPageBrands.length > 0 && currentPageBrands.every(b => selectedIds.has(b.id!))}
             onChange={(e) => handleSelectAll(e.target.checked)}
-            className="rounded border-gray-300"
+            className="rounded border-gray-600 bg-slate-700"
           />
-          <span className="text-sm text-gray-600">
-            전체 {brands.length}개 중 {selectedIds.size}개 선택
+          <span className="text-sm text-gray-300">
+            전체 {filteredBrands.length}개 중 {selectedIds.size}개 선택
           </span>
         </div>
         {selectedIds.size > 0 && (
-          <Button
-            variant="destructive"
-            onClick={() => handleDelete(Array.from(selectedIds))}
-            disabled={isDeleting}
-          >
-            선택 삭제
-          </Button>
+          <div className="mt-2">
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => handleDelete(Array.from(selectedIds))}
+              disabled={isDeleting}
+            >
+              선택 삭제
+            </Button>
+          </div>
         )}
       </div>
 
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
-          <thead className="bg-gray-50 sticky top-0">
-            <tr className="border-b">
-              <th className="text-left p-3 font-medium text-gray-700 w-12">
+          <thead className="bg-slate-700 sticky top-0">
+            <tr className="border-b border-gray-600">
+              <th className="text-left p-3 font-medium text-gray-300 w-12">
                 <input
                   type="checkbox"
                   checked={currentPageBrands.length > 0 && currentPageBrands.every(b => selectedIds.has(b.id!))}
                   onChange={(e) => handleSelectAll(e.target.checked)}
-                  className="rounded border-gray-300"
+                  className="rounded border-gray-600 bg-slate-700"
                 />
               </th>
-              <th className="text-left p-3 font-medium text-gray-700">번호</th>
-              <th className="text-left p-3 font-medium text-gray-700">브랜드명</th>
-              <th className="text-left p-3 font-medium text-gray-700">작업</th>
+              <th className="text-left p-3 font-medium text-gray-300">번호</th>
+              <th className="text-left p-3 font-medium text-gray-300">브랜드명</th>
+              <th className="text-left p-3 font-medium text-gray-300">작업</th>
             </tr>
           </thead>
           <tbody>
             {currentPageBrands.length === 0 ? (
               <tr>
-                <td colSpan={4} className="p-8 text-center text-gray-500">
+                <td colSpan={4} className="p-8 text-center text-gray-400">
                   등록된 브랜드가 없습니다.
                 </td>
               </tr>
             ) : (
               currentPageBrands.map((brand, index) => (
-                <tr key={brand.id} className="border-b hover:bg-gray-50">
+                <tr key={brand.id} className="border-b border-gray-600 hover:bg-slate-700/50">
                   <td className="p-3">
                     <input
                       type="checkbox"
                       checked={selectedIds.has(brand.id!)}
                       onChange={(e) => handleSelectOne(brand.id!, e.target.checked)}
-                      className="rounded border-gray-300"
+                      className="rounded border-gray-600 bg-slate-700"
                     />
                   </td>
-                  <td className="p-3 text-gray-600">
+                  <td className="p-3 text-gray-400">
                     {(currentPage - 1) * ITEMS_PER_PAGE + index + 1}
                   </td>
-                  <td className="p-3">{brand.name}</td>
+                  <td className="p-3 text-gray-300">{brand.name}</td>
                   <td className="p-3">
                     <div className="flex gap-2">
                       <button
                         onClick={() => setEditingBrand(brand)}
-                        className="text-blue-600 hover:text-blue-800"
+                        className="text-cyan-400 hover:text-cyan-300"
                         title="수정"
                       >
                         <Edit2 className="h-4 w-4" />
                       </button>
                       <button
                         onClick={() => handleDelete([brand.id!])}
-                        className="text-red-600 hover:text-red-800"
+                        className="text-red-400 hover:text-red-300"
                         title="삭제"
                         disabled={isDeleting}
                       >

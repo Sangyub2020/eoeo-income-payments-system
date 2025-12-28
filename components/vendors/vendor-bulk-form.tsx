@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Upload, FileText } from 'lucide-react';
 import { Vendor } from '@/lib/types';
 
 interface VendorBulkFormProps {
@@ -125,39 +124,27 @@ export function VendorBulkForm({ onSuccess }: VendorBulkFormProps) {
     }
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const text = event.target?.result as string;
-      setBulkText(text);
-    };
-    reader.readAsText(file);
-  };
-
   return (
-    <div className="bg-white rounded-lg border p-6">
-      <h3 className="text-lg font-semibold mb-4">일괄 등록</h3>
+    <div className="rounded-lg border border-purple-500/20 bg-slate-800/40 backdrop-blur-xl shadow-lg shadow-purple-500/10 p-6">
+      <h3 className="text-lg font-semibold mb-4 text-gray-200">일괄 등록</h3>
       
-      <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-md">
-        <p className="text-sm text-blue-800 mb-2">
+      <div className="mb-4 p-4 bg-cyan-900/30 border border-cyan-500/50 rounded-md">
+        <p className="text-sm text-cyan-300 mb-2">
           <strong>입력 형식:</strong> CSV 파일에서 복사하여 붙여넣기 하세요 (탭으로 구분)
         </p>
-        <p className="text-sm text-blue-700">
+        <p className="text-sm text-cyan-200">
           형식: 코드 [탭] 거래처명 [탭] 사업자번호(선택) [탭] 세금계산서 이메일(선택)
         </p>
-        <p className="text-xs text-blue-600 mt-2">
+        <p className="text-xs text-cyan-300/80 mt-2">
           예시: V001 [탭] (주)테스트 [탭] 123-45-67890 [탭] invoice@test.com
         </p>
-        <p className="text-xs text-blue-500 mt-1 italic">
+        <p className="text-xs text-cyan-300/70 mt-1 italic">
           * Excel이나 Google Sheets에서 복사하면 자동으로 탭으로 구분됩니다
         </p>
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
+        <div className="bg-red-900/30 border border-red-500/50 text-red-300 px-4 py-3 rounded mb-4">
           {error}
         </div>
       )}
@@ -165,8 +152,8 @@ export function VendorBulkForm({ onSuccess }: VendorBulkFormProps) {
       {success && result && (
         <div className={`border rounded mb-4 ${
           result.failed > 0 
-            ? 'bg-yellow-50 border-yellow-200 text-yellow-800' 
-            : 'bg-green-50 border-green-200 text-green-700'
+            ? 'bg-yellow-900/30 border-yellow-500/50 text-yellow-300' 
+            : 'bg-green-900/30 border-green-500/50 text-green-300'
         }`}>
           <div className="px-4 py-3">
             <p className="font-medium">
@@ -179,16 +166,16 @@ export function VendorBulkForm({ onSuccess }: VendorBulkFormProps) {
             )}
             {result.errors.length > 0 && (
               <details className="mt-3">
-                <summary className="cursor-pointer text-sm font-medium hover:underline">
+                <summary className="cursor-pointer text-sm font-medium hover:underline text-gray-300">
                   실패 상세 내역 보기 ({result.errors.length}건)
                 </summary>
-                <div className="mt-2 max-h-60 overflow-y-auto bg-white rounded p-3 border">
+                <div className="mt-2 max-h-60 overflow-y-auto bg-slate-700/50 rounded p-3 border border-gray-600">
                   <ul className="text-xs space-y-1 list-disc list-inside">
                     {result.errors.slice(0, 100).map((err, idx) => (
-                      <li key={idx} className="text-red-700">{err}</li>
+                      <li key={idx} className="text-red-300">{err}</li>
                     ))}
                     {result.errors.length > 100 && (
-                      <li className="text-gray-500 italic">
+                      <li className="text-gray-400 italic">
                         ... 외 {result.errors.length - 100}건의 오류가 더 있습니다.
                       </li>
                     )}
@@ -202,7 +189,7 @@ export function VendorBulkForm({ onSuccess }: VendorBulkFormProps) {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label htmlFor="bulkText" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="bulkText" className="block text-sm font-medium text-gray-300 mb-2">
             거래처 정보 입력 (CSV에서 복사하여 붙여넣기)
           </label>
           <textarea
@@ -218,27 +205,14 @@ export function VendorBulkForm({ onSuccess }: VendorBulkFormProps) {
               }
             }}
             rows={10}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+            className="w-full px-3 py-2 border border-gray-600 bg-slate-700/50 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500 font-mono text-sm"
             placeholder="CSV 파일에서 복사하여 붙여넣기 하세요&#10;각 줄은 탭으로 구분된 형식입니다"
           />
           {bulkText.length > 0 && (
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-gray-400 mt-1">
               입력된 줄 수: {bulkText.split('\n').filter(line => line.trim()).length}줄
             </p>
           )}
-        </div>
-
-        <div className="flex items-center gap-4">
-          <label className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md cursor-pointer hover:bg-gray-50">
-            <Upload className="h-4 w-4" />
-            <span className="text-sm">파일 업로드</span>
-            <input
-              type="file"
-              accept=".txt,.csv"
-              onChange={handleFileUpload}
-              className="hidden"
-            />
-          </label>
         </div>
 
         <div className="flex justify-end gap-2 pt-4">

@@ -131,15 +131,10 @@ export interface OnlineCommerceTeam {
   depositDate?: string;
   depositAmount?: number;
   depositCurrency?: string;
-  exchangeGainLoss?: number;
-  difference?: number;
   createdDate?: string;
   invoiceCopy?: string;
   invoiceAttachmentStatus?: 'required' | 'completed' | 'not_required'; // 첨부필요, 첨부완료, 첨부 불요
   issueNotes?: string;
-  year?: number;
-  expectedDepositMonth?: number;
-  depositMonth?: number;
   taxStatus?: string;
   invoiceSupplyPrice?: number;
   createdAt?: string;
@@ -190,15 +185,10 @@ export interface GlobalMarketingTeam {
   depositDate?: string;
   depositAmount?: number;
   depositCurrency?: string;
-  exchangeGainLoss?: number;
-  difference?: number;
   createdDate?: string;
   invoiceCopy?: string;
   invoiceAttachmentStatus?: 'required' | 'completed' | 'not_required'; // 첨부필요, 첨부완료, 첨부 불요
   issueNotes?: string;
-  year?: number;
-  expectedDepositMonth?: number;
-  depositMonth?: number;
   taxStatus?: string;
   invoiceSupplyPrice?: number;
   createdAt?: string;
@@ -238,15 +228,10 @@ export interface OtherIncome {
   depositDate?: string;
   depositAmount?: number;
   depositCurrency?: string;
-  exchangeGainLoss?: number;
-  difference?: number;
   createdDate?: string;
   invoiceCopy?: string;
   invoiceAttachmentStatus?: 'required' | 'completed' | 'not_required'; // 첨부필요, 첨부완료, 첨부 불요
   issueNotes?: string;
-  year?: number;
-  expectedDepositMonth?: number;
-  depositMonth?: number;
   taxStatus?: string;
   invoiceSupplyPrice?: number;
   createdAt?: string;
@@ -273,7 +258,8 @@ export interface GlobalSalesTeam {
   projectName?: string; // 긴 형식의 프로젝트명
   eoeoManager?: string;
   contractLink?: string;
-  invoiceLink?: string; // 인보이스 링크
+  estimateLink?: string;
+  invoiceLink?: string;
   installmentNumber?: number;
   attributionYearMonth?: string;
   advanceBalance?: string;
@@ -288,15 +274,10 @@ export interface GlobalSalesTeam {
   depositDate?: string;
   depositAmount?: number;
   depositCurrency?: string;
-  exchangeGainLoss?: number;
-  difference?: number;
   createdDate?: string;
   invoiceCopy?: string;
   invoiceAttachmentStatus?: 'required' | 'completed' | 'not_required'; // 첨부필요, 첨부완료, 첨부 불요
   issueNotes?: string;
-  year?: number;
-  expectedDepositMonth?: number;
-  depositMonth?: number;
   taxStatus?: string;
   invoiceSupplyPrice?: number;
   createdAt?: string;
@@ -337,16 +318,11 @@ export interface OtherIncome {
   depositAmount?: number;
   depositCurrency?: string;
   oneTimeExpenseAmount?: number;
-  exchangeGainLoss?: number;
-  difference?: number;
   createdDate?: string;
   invoiceCopy?: string;
   invoiceAttachmentStatus?: 'required' | 'completed' | 'not_required'; // 첨부필요, 첨부완료, 첨부 불요
   depositStatus?: '입금완료' | '입금예정' | '입금지연';
   issueNotes?: string;
-  year?: number;
-  expectedDepositMonth?: number;
-  depositMonth?: number;
   taxStatus?: string;
   invoiceSupplyPrice?: number;
   createdAt?: string;
@@ -373,7 +349,7 @@ export interface BrandPlanningTeam {
   projectName?: string;
   eoeoManager?: string;
   contractLink?: string;
-  invoiceLink?: string; // 인보이스 링크
+  estimateLink?: string;
   installmentNumber?: number;
   attributionYearMonth?: string;
   advanceBalance?: string;
@@ -388,15 +364,10 @@ export interface BrandPlanningTeam {
   depositDate?: string;
   depositAmount?: number;
   depositCurrency?: string;
-  exchangeGainLoss?: number;
-  difference?: number;
   createdDate?: string;
   invoiceCopy?: string;
   invoiceAttachmentStatus?: 'required' | 'completed' | 'not_required'; // 첨부필요, 첨부완료, 첨부 불요
   issueNotes?: string;
-  year?: number;
-  expectedDepositMonth?: number;
-  depositMonth?: number;
   taxStatus?: string;
   invoiceSupplyPrice?: number;
   createdAt?: string;
@@ -437,16 +408,11 @@ export interface OtherIncome {
   depositAmount?: number;
   depositCurrency?: string;
   oneTimeExpenseAmount?: number;
-  exchangeGainLoss?: number;
-  difference?: number;
   createdDate?: string;
   invoiceCopy?: string;
   invoiceAttachmentStatus?: 'required' | 'completed' | 'not_required'; // 첨부필요, 첨부완료, 첨부 불요
   depositStatus?: '입금완료' | '입금예정' | '입금지연';
   issueNotes?: string;
-  year?: number;
-  expectedDepositMonth?: number;
-  depositMonth?: number;
   taxStatus?: string;
   invoiceSupplyPrice?: number;
   createdAt?: string;

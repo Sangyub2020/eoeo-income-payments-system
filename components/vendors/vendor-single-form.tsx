@@ -64,17 +64,17 @@ export function VendorSingleForm({ onSuccess }: VendorSingleFormProps) {
   };
 
   return (
-    <div className="bg-white rounded-lg border p-6">
-      <h3 className="text-lg font-semibold mb-4">단일 등록</h3>
+    <div className="rounded-lg border border-purple-500/20 bg-slate-800/40 backdrop-blur-xl shadow-lg shadow-purple-500/10 p-6">
+      <h3 className="text-lg font-semibold mb-4 text-gray-200">단일 등록</h3>
       
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
+        <div className="bg-red-900/30 border border-red-500/50 text-red-300 px-4 py-3 rounded mb-4">
           {error}
         </div>
       )}
 
       {success && (
-        <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded mb-4">
+        <div className="bg-green-900/30 border border-green-500/50 text-green-300 px-4 py-3 rounded mb-4">
           거래처가 성공적으로 등록되었습니다.
         </div>
       )}
@@ -82,8 +82,8 @@ export function VendorSingleForm({ onSuccess }: VendorSingleFormProps) {
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label htmlFor="code" className="block text-sm font-medium text-gray-700 mb-1">
-              코드 <span className="text-red-500">*</span>
+            <label htmlFor="code" className="block text-sm font-medium text-gray-300 mb-1">
+              코드 <span className="text-red-400">*</span>
             </label>
             <input
               type="text"
@@ -92,14 +92,14 @@ export function VendorSingleForm({ onSuccess }: VendorSingleFormProps) {
               value={formData.code}
               onChange={handleChange}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-600 bg-slate-700/50 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500"
               placeholder="예: V001"
             />
           </div>
 
           <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-              거래처명 <span className="text-red-500">*</span>
+            <label htmlFor="name" className="block text-sm font-medium text-gray-300 mb-1">
+              거래처명 <span className="text-red-400">*</span>
             </label>
             <input
               type="text"
@@ -108,13 +108,13 @@ export function VendorSingleForm({ onSuccess }: VendorSingleFormProps) {
               value={formData.name}
               onChange={handleChange}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-600 bg-slate-700/50 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500"
               placeholder="거래처명을 입력하세요"
             />
           </div>
 
           <div>
-            <label htmlFor="businessNumber" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="businessNumber" className="block text-sm font-medium text-gray-300 mb-1">
               사업자번호
             </label>
             <input
@@ -123,13 +123,13 @@ export function VendorSingleForm({ onSuccess }: VendorSingleFormProps) {
               name="businessNumber"
               value={formData.businessNumber}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-600 bg-slate-700/50 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500"
               placeholder="123-45-67890"
             />
           </div>
 
           <div>
-            <label htmlFor="invoiceEmail" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="invoiceEmail" className="block text-sm font-medium text-gray-300 mb-1">
               세금계산서 발행 이메일
             </label>
             <input
@@ -138,7 +138,7 @@ export function VendorSingleForm({ onSuccess }: VendorSingleFormProps) {
               name="invoiceEmail"
               value={formData.invoiceEmail}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-600 bg-slate-700/50 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500"
               placeholder="invoice@example.com"
             />
           </div>
