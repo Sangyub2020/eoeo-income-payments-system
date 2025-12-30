@@ -99,7 +99,7 @@ export function BrandPlanningList({ onSuccess }: BrandPlanningListProps) {
   const [columnWidths, setColumnWidths] = useState<Record<string, number>>({
     checkbox: 50,
     number: 60,
-    category: 120,
+    category: 150,
     projectCode: 150,
     project: 150,
     vendorCode: 100,
@@ -890,11 +890,11 @@ export function BrandPlanningList({ onSuccess }: BrandPlanningListProps) {
                 )}
                 {visibleColumns.has('expectedDepositAmount') && (
                   <th 
-                    className="text-right p-2 font-medium text-gray-200 cursor-pointer hover:bg-white/10 select-none whitespace-nowrap relative"
+                    className="text-left p-2 font-medium text-gray-200 cursor-pointer hover:bg-white/10 select-none whitespace-nowrap relative"
                     style={{ width: `${columnWidths.expectedDepositAmount}px`, minWidth: '50px' }}
                     onClick={() => handleSort('expectedDepositAmount')}
                   >
-                    <div className="flex items-center justify-end gap-1">
+                    <div className="flex items-center justify-start gap-1">
                       <span>예정금액</span>
                       {sortField === 'expectedDepositAmount' ? (
                         sortDirection === 'asc' ? (
@@ -938,11 +938,11 @@ export function BrandPlanningList({ onSuccess }: BrandPlanningListProps) {
                 )}
                 {visibleColumns.has('depositAmount') && (
                   <th 
-                    className="text-right p-2 font-medium text-gray-200 cursor-pointer hover:bg-white/10 select-none whitespace-nowrap relative"
+                    className="text-left p-2 font-medium text-gray-200 cursor-pointer hover:bg-white/10 select-none whitespace-nowrap relative"
                     style={{ width: `${columnWidths.depositAmount}px`, minWidth: '50px' }}
                     onClick={() => handleSort('depositAmount')}
                   >
-                    <div className="flex items-center justify-end gap-1">
+                    <div className="flex items-center justify-start gap-1">
                       <span>입금액</span>
                       {sortField === 'depositAmount' ? (
                         sortDirection === 'asc' ? (
@@ -1157,7 +1157,7 @@ export function BrandPlanningList({ onSuccess }: BrandPlanningListProps) {
           <tbody>
             {currentPageRecords.length === 0 ? (
               <tr>
-                <td colSpan={visibleColumns.size} className="p-8 text-center text-gray-400">
+                <td colSpan={visibleColumns.size} className="p-8 text-left text-gray-400">
                   {searchQuery ? '검색 결과가 없습니다.' : '등록된 입금 정보가 없습니다.'}
                 </td>
               </tr>
@@ -1306,10 +1306,10 @@ export function BrandPlanningList({ onSuccess }: BrandPlanningListProps) {
                     <td className="p-2 text-[13px] whitespace-nowrap truncate overflow-hidden" title={record.expectedDepositDate ? formatDate(record.expectedDepositDate) : ''}>{record.expectedDepositDate ? formatDate(record.expectedDepositDate) : '-'}</td>
                   )}
                   {visibleColumns.has('expectedDepositAmount') && (
-                    <td className="p-2 text-[13px] text-right whitespace-nowrap truncate overflow-hidden" title={record.expectedDepositAmount ? formatCurrency(record.expectedDepositAmount, record.expectedDepositCurrency) : ''}>{record.expectedDepositAmount ? formatCurrency(record.expectedDepositAmount, record.expectedDepositCurrency) : '-'}</td>
+                    <td className="p-2 text-[13px] text-left whitespace-nowrap truncate overflow-hidden" title={record.expectedDepositAmount ? formatCurrency(record.expectedDepositAmount, record.expectedDepositCurrency) : ''}>{record.expectedDepositAmount ? formatCurrency(record.expectedDepositAmount, record.expectedDepositCurrency) : '-'}</td>
                   )}
                   {visibleColumns.has('oneTimeExpenseAmount') && (
-                    <td className="p-2 text-[13px] text-right whitespace-nowrap truncate overflow-hidden" title={record.oneTimeExpenseAmount ? formatCurrency(record.oneTimeExpenseAmount) : ''}>{record.oneTimeExpenseAmount ? formatCurrency(record.oneTimeExpenseAmount) : '-'}</td>
+                    <td className="p-2 text-[13px] text-left whitespace-nowrap truncate overflow-hidden" title={record.oneTimeExpenseAmount ? formatCurrency(record.oneTimeExpenseAmount) : ''}>{record.oneTimeExpenseAmount ? formatCurrency(record.oneTimeExpenseAmount) : '-'}</td>
                   )}
                   {visibleColumns.has('invoiceAttachment') && (
                     <td className="p-2 text-[13px] whitespace-nowrap">
@@ -1377,7 +1377,7 @@ export function BrandPlanningList({ onSuccess }: BrandPlanningListProps) {
                     <td className="p-2 text-[13px] whitespace-nowrap truncate overflow-hidden" title={record.depositDate ? formatDate(record.depositDate) : ''}>{record.depositDate ? formatDate(record.depositDate) : '-'}</td>
                   )}
                   {visibleColumns.has('depositAmount') && (
-                    <td className="p-2 text-[13px] text-right font-medium whitespace-nowrap truncate overflow-hidden" title={record.depositAmount ? formatCurrency(record.depositAmount, record.depositCurrency) : ''}>{record.depositAmount ? formatCurrency(record.depositAmount, record.depositCurrency) : '-'}</td>
+                    <td className="p-2 text-[13px] text-left font-medium whitespace-nowrap truncate overflow-hidden" title={record.depositAmount ? formatCurrency(record.depositAmount, record.depositCurrency) : ''}>{record.depositAmount ? formatCurrency(record.depositAmount, record.depositCurrency) : '-'}</td>
                   )}
                   {visibleColumns.has('businessRegistrationNumber') && (
                     <td className="p-2 text-[13px] whitespace-nowrap truncate overflow-hidden" title={record.businessRegistrationNumber || ''}>{record.businessRegistrationNumber || '-'}</td>

@@ -238,7 +238,7 @@ export function VendorList() {
             <tbody>
               {currentPageVendors.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="p-8 text-center text-gray-400">
+                  <td colSpan={6} className="p-8 text-left text-gray-400">
                     등록된 거래처가 없습니다.
                   </td>
                 </tr>

@@ -665,19 +665,6 @@ export function OtherIncomeFormModal({ isOpen, onClose, onSuccess }: OtherIncome
             </div>
 
 
-            <div>
-              <label htmlFor="createdDate" className="block text-sm font-medium text-gray-300 mb-1">
-                작성일자
-              </label>
-              <input
-                type="date"
-                id="createdDate"
-                name="createdDate"
-                value={formData.createdDate || ''}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-purple-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 bg-black/40 backdrop-blur-sm text-gray-200 placeholder-gray-500"
-              />
-            </div>
 
             <div>
               <label htmlFor="invoiceAttachmentStatus" className="block text-sm font-medium text-gray-300 mb-1">

@@ -470,7 +470,7 @@ export function InfluencerAccountList() {
             <tbody>
               {currentPageAccounts.length === 0 ? (
                 <tr>
-                  <td colSpan={13} className="p-8 text-center text-gray-400 text-sm">
+                  <td colSpan={13} className="p-8 text-left text-gray-400 text-sm">
                     등록된 계좌가 없습니다.
                   </td>
                 </tr>

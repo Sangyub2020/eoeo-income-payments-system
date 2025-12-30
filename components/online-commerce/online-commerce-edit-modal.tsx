@@ -26,6 +26,7 @@ export function OnlineCommerceEditModal({ record, onClose, onSuccess }: OnlineCo
   const [invoiceFileUrl, setInvoiceFileUrl] = useState<string | null>(null);
   const [vendors, setVendors] = useState<Array<{ code: string; name: string; business_number?: string; invoice_email?: string }>>([]);
   const [projects, setProjects] = useState<Array<{ code: string; name: string }>>([]);
+  const [projectCodeToCategoryMap, setProjectCodeToCategoryMap] = useState<Map<string, string>>(new Map());
   const [brands, setBrands] = useState<Array<{ value: string; label: string }>>([]);
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
 
@@ -36,6 +37,7 @@ export function OnlineCommerceEditModal({ record, onClose, onSuccess }: OnlineCo
     }
     fetchVendors();
     fetchProjects();
+    fetchProjectCodeToCategoryMapping();
     fetchBrands();
     if (record.invoiceCopy) {
       setInvoiceFileUrl(record.invoiceCopy);
@@ -95,6 +97,32 @@ export function OnlineCommerceEditModal({ record, onClose, onSuccess }: OnlineCo
       }
     } catch (err) {
       console.error('프로젝트 조회 오류:', err);
+    }
+  };
+
+  // 프로젝트 코드 -> 프로젝트 유형 매핑 가져오기
+  const fetchProjectCodeToCategoryMapping = async () => {
+    try {
+      const response = await fetch('/api/income-records?limit=10000&team=online_commerce', { cache: 'no-store' });
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.data) {
+          const mapping = new Map<string, string>();
+          // 프로젝트 코드와 프로젝트 유형의 관계를 추출
+          data.data.forEach((record: any) => {
+            if (record.projectCode && record.projectCategory) {
+              // 이미 매핑이 있으면 유지, 없으면 추가
+              if (!mapping.has(record.projectCode)) {
+                mapping.set(record.projectCode, record.projectCategory);
+              }
+            }
+          });
+          setProjectCodeToCategoryMap(mapping);
+          console.log('프로젝트 코드 -> 유형 매핑:', Array.from(mapping.entries()));
+        }
+      }
+    } catch (err) {
+      console.error('프로젝트 코드 매핑 조회 오류:', err);
     }
   };
 
@@ -164,25 +192,19 @@ export function OnlineCommerceEditModal({ record, onClose, onSuccess }: OnlineCo
       setFormData((prev) => ({
         ...prev,
         projectCode: '',
-        projectName: '',
+        projectCategory: '',
       }));
       return;
     }
 
-    const project = projects.find(p => p.code === projectCode);
-    if (project) {
-      setFormData((prev) => ({
-        ...prev,
-        projectCode,
-        projectName: project.name,
-      }));
-    } else {
-      setFormData((prev) => ({
-        ...prev,
-        projectCode,
-        projectName: '',
-      }));
-    }
+    // 프로젝트 코드에 해당하는 프로젝트 유형 찾기
+    const projectCategory = projectCodeToCategoryMap.get(projectCode) || '';
+    
+    setFormData((prev) => ({
+      ...prev,
+      projectCode,
+      projectCategory: projectCategory || prev.projectCategory || '',
+    }));
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -382,12 +404,21 @@ export function OnlineCommerceEditModal({ record, onClose, onSuccess }: OnlineCo
       processedValue = value.replace(/[₩$,]/g, '');
     }
     
-    setFormData((prev) => ({
-      ...prev,
-      [name]: processedValue === '' ? undefined : (name.includes('Amount') || name.includes('Number') || name === 'ratio' || name === 'count' || name === 'installmentNumber' || name === 'expectedDepositAmount' || name === 'depositAmount' || name === 'invoiceSupplyPrice')
-        ? (processedValue === '' ? undefined : Number(processedValue))
-        : processedValue,
-    }));
+    setFormData((prev) => {
+      const newData: any = {
+        ...prev,
+        [name]: processedValue === '' ? undefined : (name.includes('Amount') || name.includes('Number') || name === 'ratio' || name === 'count' || name === 'installmentNumber' || name === 'expectedDepositAmount' || name === 'depositAmount' || name === 'invoiceSupplyPrice')
+          ? (processedValue === '' ? undefined : Number(processedValue))
+          : processedValue,
+      };
+      
+      // 입금액이 입력되고 입금여부가 입금예정인 경우 자동으로 입금완료로 변경
+      if (name === 'depositAmount' && processedValue && Number(processedValue) > 0 && prev.depositStatus === '입금예정') {
+        newData.depositStatus = '입금완료';
+      }
+      
+      return newData;
+    });
   };
 
   return (
@@ -726,6 +757,22 @@ export function OnlineCommerceEditModal({ record, onClose, onSuccess }: OnlineCo
             </div>
 
             <div>
+              <label htmlFor="depositStatus" className="block text-sm font-medium text-gray-300 mb-1">
+                입금여부
+              </label>
+              <SearchableSelect
+                value={formData.depositStatus || ''}
+                onChange={(value) => handleChange({ target: { name: 'depositStatus', value } } as any)}
+                options={[
+                  { value: '입금완료', label: '입금완료' },
+                  { value: '입금예정', label: '입금예정' },
+                  { value: '입금지연', label: '입금지연' },
+                ]}
+                placeholder="선택하세요"
+              />
+            </div>
+
+            <div>
               <label htmlFor="depositAmount" className="block text-sm font-medium text-gray-300 mb-1">
                 입금액
               </label>
@@ -749,21 +796,6 @@ export function OnlineCommerceEditModal({ record, onClose, onSuccess }: OnlineCo
                   <option value="USD">USD</option>
                 </select>
               </div>
-            </div>
-
-
-            <div>
-              <label htmlFor="createdDate" className="block text-sm font-medium text-gray-300 mb-1">
-                작성일자
-              </label>
-              <input
-                type="date"
-                id="createdDate"
-                name="createdDate"
-                value={formData.createdDate || ''}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-purple-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 bg-black/40 backdrop-blur-sm text-gray-200 placeholder-gray-500"
-              />
             </div>
 
             <div>

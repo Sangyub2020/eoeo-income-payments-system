@@ -235,7 +235,7 @@ export function ProjectList() {
             <tbody>
               {currentPageProjects.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="p-8 text-center text-gray-400">
+                  <td colSpan={4} className="p-8 text-left text-gray-400">
                     등록된 프로젝트가 없습니다.
                   </td>
                 </tr>

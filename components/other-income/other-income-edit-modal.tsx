@@ -280,11 +280,18 @@ export function OtherIncomeEditModal({ record, onClose, onSuccess }: OtherIncome
       
       setFormData((prev) => {
         const currency = hasDollar ? 'USD' : (hasWon ? 'KRW' : (name === 'expectedDepositAmount' ? (prev.expectedDepositCurrency || 'KRW') : (prev.depositCurrency || 'KRW')));
-        return {
+        const newData: any = {
           ...prev,
           [name]: amount,
           [name === 'expectedDepositAmount' ? 'expectedDepositCurrency' : 'depositCurrency']: currency,
         };
+        
+        // 입금액이 입력되고 입금여부가 입금예정인 경우 자동으로 입금완료로 변경
+        if (name === 'depositAmount' && amount && amount > 0 && prev.depositStatus === '입금예정') {
+          newData.depositStatus = '입금완료';
+        }
+        
+        return newData;
       });
       return;
     }
@@ -621,6 +628,22 @@ export function OtherIncomeEditModal({ record, onClose, onSuccess }: OtherIncome
             </div>
 
             <div>
+              <label htmlFor="depositStatus" className="block text-sm font-medium text-gray-300 mb-1">
+                입금여부
+              </label>
+              <SearchableSelect
+                value={formData.depositStatus || ''}
+                onChange={(value) => handleChange({ target: { name: 'depositStatus', value } } as any)}
+                options={[
+                  { value: '입금완료', label: '입금완료' },
+                  { value: '입금예정', label: '입금예정' },
+                  { value: '입금지연', label: '입금지연' },
+                ]}
+                placeholder="선택하세요"
+              />
+            </div>
+
+            <div>
               <label htmlFor="depositAmount" className="block text-sm font-medium text-gray-300 mb-1">
                 입금액
               </label>
@@ -644,21 +667,6 @@ export function OtherIncomeEditModal({ record, onClose, onSuccess }: OtherIncome
                   <option value="USD">USD</option>
                 </select>
               </div>
-            </div>
-
-
-            <div>
-              <label htmlFor="createdDate" className="block text-sm font-medium text-gray-300 mb-1">
-                작성일자
-              </label>
-              <input
-                type="date"
-                id="createdDate"
-                name="createdDate"
-                value={formData.createdDate || ''}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-purple-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 bg-black/40 backdrop-blur-sm text-gray-200 placeholder-gray-500"
-              />
             </div>
 
             <div>

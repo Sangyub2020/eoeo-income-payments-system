@@ -117,7 +117,7 @@ export function BrandList() {
   }, [searchQuery]);
 
   if (isLoading) {
-    return <div className="text-center py-8 text-gray-300">로딩 중...</div>;
+    return <div className="text-left py-8 text-gray-300">로딩 중...</div>;
   }
 
   if (error) {
@@ -206,7 +206,7 @@ export function BrandList() {
           <tbody>
             {currentPageBrands.length === 0 ? (
               <tr>
-                <td colSpan={4} className="p-8 text-center text-gray-400">
+                <td colSpan={4} className="p-8 text-left text-gray-400">
                   등록된 브랜드가 없습니다.
                 </td>
               </tr>

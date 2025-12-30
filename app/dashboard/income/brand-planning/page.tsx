@@ -3,6 +3,7 @@
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { BrandPlanningList } from '@/components/brand-planning/brand-planning-list';
 import { BrandPlanningMonthlyChart } from '@/components/brand-planning/brand-planning-monthly-chart';
+import { BrandPlanningAdvanceBalanceList } from '@/components/brand-planning/brand-planning-advance-balance-list';
 import { useState } from 'react';
 
 export default function BrandPlanningPage() {
@@ -23,6 +24,7 @@ export default function BrandPlanningPage() {
         <TabsList>
           <TabsTrigger value="monthly">월별 현황</TabsTrigger>
           <TabsTrigger value="list">목록</TabsTrigger>
+          <TabsTrigger value="advance-balance">선/잔금 관리</TabsTrigger>
         </TabsList>
 
         <TabsContent value="monthly">
@@ -31,6 +33,10 @@ export default function BrandPlanningPage() {
 
         <TabsContent value="list">
           <BrandPlanningList onSuccess={handleSuccess} />
+        </TabsContent>
+
+        <TabsContent value="advance-balance">
+          <BrandPlanningAdvanceBalanceList onSuccess={handleSuccess} />
         </TabsContent>
       </Tabs>
     </div>

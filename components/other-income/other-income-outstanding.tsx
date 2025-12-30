@@ -1,16 +1,16 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { GlobalMarketingTeam } from '@/lib/types';
+import { OtherIncome } from '@/lib/types';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { Card } from '@/components/ui/card';
 
-interface GlobalMarketingOutstandingProps {
+interface OtherIncomeOutstandingProps {
   onSuccess?: () => void;
 }
 
-export function GlobalMarketingOutstanding({ onSuccess }: GlobalMarketingOutstandingProps) {
-  const [records, setRecords] = useState<GlobalMarketingTeam[]>([]);
+export function OtherIncomeOutstanding({ onSuccess }: OtherIncomeOutstandingProps) {
+  const [records, setRecords] = useState<OtherIncome[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -74,7 +74,7 @@ export function GlobalMarketingOutstanding({ onSuccess }: GlobalMarketingOutstan
   const fetchRecords = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch('/api/income-records?team=global_marketing');
+      const response = await fetch('/api/income-records?team=other_income');
       if (!response.ok) {
         throw new Error('데이터를 불러오는데 실패했습니다.');
       }
@@ -86,7 +86,7 @@ export function GlobalMarketingOutstanding({ onSuccess }: GlobalMarketingOutstan
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         
-        const outstandingRecords = allRecords.filter((record: GlobalMarketingTeam) => {
+        const outstandingRecords = allRecords.filter((record: OtherIncome) => {
           // 입금예정일이 공백이고 입금액이 공백인 경우
           if (!record.expectedDepositDate && (!record.depositAmount || record.depositAmount === 0)) {
             return true;

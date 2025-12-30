@@ -3,6 +3,7 @@
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { OtherIncomeList } from '@/components/other-income/other-income-list';
 import { OtherIncomeMonthlyChart } from '@/components/other-income/other-income-monthly-chart';
+import { OtherIncomeAdvanceBalanceList } from '@/components/other-income/other-income-advance-balance-list';
 import { useState } from 'react';
 
 export default function OtherIncomePage() {
@@ -23,6 +24,7 @@ export default function OtherIncomePage() {
         <TabsList>
           <TabsTrigger value="monthly">월별 현황</TabsTrigger>
           <TabsTrigger value="list">목록</TabsTrigger>
+          <TabsTrigger value="advance-balance">선/잔금 관리</TabsTrigger>
         </TabsList>
 
         <TabsContent value="monthly">
@@ -31,6 +33,10 @@ export default function OtherIncomePage() {
 
         <TabsContent value="list">
           <OtherIncomeList onSuccess={handleSuccess} />
+        </TabsContent>
+
+        <TabsContent value="advance-balance">
+          <OtherIncomeAdvanceBalanceList onSuccess={handleSuccess} />
         </TabsContent>
       </Tabs>
     </div>

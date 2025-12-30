@@ -14,6 +14,59 @@ export function GlobalSalesOutstanding({ onSuccess }: GlobalSalesOutstandingProp
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // 열 너비 관리
+  const [columnWidths, setColumnWidths] = useState<Record<string, number>>({
+    projectCategory: 200,
+    projectName: 150,
+    companyName: 150,
+    brandName: 120,
+    expectedDepositDate: 120,
+    expectedDepositAmount: 150,
+    eoeoManager: 100,
+    description: 200,
+  });
+
+  const [resizingColumn, setResizingColumn] = useState<string | null>(null);
+  const [resizeStartX, setResizeStartX] = useState(0);
+  const [resizeStartWidth, setResizeStartWidth] = useState(0);
+
+  const handleResizeStart = (columnKey: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setResizingColumn(columnKey);
+    setResizeStartX(e.clientX);
+    setResizeStartWidth(columnWidths[columnKey] || 100);
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+  };
+
+  useEffect(() => {
+    const handleResize = (e: MouseEvent) => {
+      if (!resizingColumn) return;
+      const diff = e.clientX - resizeStartX;
+      const newWidth = Math.max(50, resizeStartWidth + diff);
+      setColumnWidths(prev => ({
+        ...prev,
+        [resizingColumn]: newWidth,
+      }));
+    };
+
+    const handleResizeEnd = () => {
+      setResizingColumn(null);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+
+    if (resizingColumn) {
+      document.addEventListener('mousemove', handleResize);
+      document.addEventListener('mouseup', handleResizeEnd);
+      return () => {
+        document.removeEventListener('mousemove', handleResize);
+        document.removeEventListener('mouseup', handleResizeEnd);
+      };
+    }
+  }, [resizingColumn, resizeStartX, resizeStartWidth]);
+
   useEffect(() => {
     fetchRecords();
   }, []);
@@ -106,23 +159,95 @@ export function GlobalSalesOutstanding({ onSuccess }: GlobalSalesOutstandingProp
       <Card>
         <h3 className="text-lg font-semibold mb-4 text-gray-200">미수금 목록</h3>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-sm" style={{ tableLayout: 'fixed' }}>
             <thead className="bg-slate-800 border-b border-purple-500/20">
               <tr>
-                <th className="text-left p-3 font-medium text-gray-200">프로젝트 유형</th>
-                <th className="text-left p-3 font-medium text-gray-200">프로젝트 이름</th>
-                <th className="text-left p-3 font-medium text-gray-200">회사명</th>
-                <th className="text-left p-3 font-medium text-gray-200">브랜드명</th>
-                <th className="text-left p-3 font-medium text-gray-200">입금예정일</th>
-                <th className="text-right p-3 font-medium text-gray-200">예정금액</th>
-                <th className="text-left p-3 font-medium text-gray-200">담당자</th>
-                <th className="text-left p-3 font-medium text-gray-200">적요</th>
+                <th 
+                  className="text-left p-3 font-medium text-gray-200 relative"
+                  style={{ width: `${columnWidths.projectCategory}px`, minWidth: '50px' }}
+                >
+                  프로젝트 유형
+                  <div
+                    className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 bg-transparent z-10"
+                    onMouseDown={(e) => handleResizeStart('projectCategory', e)}
+                  />
+                </th>
+                <th 
+                  className="text-left p-3 font-medium text-gray-200 relative"
+                  style={{ width: `${columnWidths.projectName}px`, minWidth: '50px' }}
+                >
+                  프로젝트 이름
+                  <div
+                    className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 bg-transparent z-10"
+                    onMouseDown={(e) => handleResizeStart('projectName', e)}
+                  />
+                </th>
+                <th 
+                  className="text-left p-3 font-medium text-gray-200 relative"
+                  style={{ width: `${columnWidths.companyName}px`, minWidth: '50px' }}
+                >
+                  회사명
+                  <div
+                    className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 bg-transparent z-10"
+                    onMouseDown={(e) => handleResizeStart('companyName', e)}
+                  />
+                </th>
+                <th 
+                  className="text-left p-3 font-medium text-gray-200 relative"
+                  style={{ width: `${columnWidths.brandName}px`, minWidth: '50px' }}
+                >
+                  브랜드명
+                  <div
+                    className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 bg-transparent z-10"
+                    onMouseDown={(e) => handleResizeStart('brandName', e)}
+                  />
+                </th>
+                <th 
+                  className="text-left p-3 font-medium text-gray-200 relative"
+                  style={{ width: `${columnWidths.expectedDepositDate}px`, minWidth: '50px' }}
+                >
+                  입금예정일
+                  <div
+                    className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 bg-transparent z-10"
+                    onMouseDown={(e) => handleResizeStart('expectedDepositDate', e)}
+                  />
+                </th>
+                <th 
+                  className="text-left p-3 font-medium text-gray-200 relative"
+                  style={{ width: `${columnWidths.expectedDepositAmount}px`, minWidth: '50px' }}
+                >
+                  예정금액
+                  <div
+                    className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 bg-transparent z-10"
+                    onMouseDown={(e) => handleResizeStart('expectedDepositAmount', e)}
+                  />
+                </th>
+                <th 
+                  className="text-left p-3 font-medium text-gray-200 relative"
+                  style={{ width: `${columnWidths.eoeoManager}px`, minWidth: '50px' }}
+                >
+                  담당자
+                  <div
+                    className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 bg-transparent z-10"
+                    onMouseDown={(e) => handleResizeStart('eoeoManager', e)}
+                  />
+                </th>
+                <th 
+                  className="text-left p-3 font-medium text-gray-200 relative"
+                  style={{ width: `${columnWidths.description}px`, minWidth: '50px' }}
+                >
+                  적요
+                  <div
+                    className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 bg-transparent z-10"
+                    onMouseDown={(e) => handleResizeStart('description', e)}
+                  />
+                </th>
               </tr>
             </thead>
             <tbody>
               {records.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="p-8 text-center text-gray-400">
+                  <td colSpan={8} className="p-8 text-left text-gray-400">
                     미수금이 없습니다.
                   </td>
                 </tr>
@@ -134,20 +259,32 @@ export function GlobalSalesOutstanding({ onSuccess }: GlobalSalesOutstandingProp
                     record.projectCategory2,
                     record.projectCategory3,
                   ].filter(Boolean);
-                  const projectCategoryDisplay = projectCategories.length > 0 
-                    ? projectCategories.join(', ') 
-                    : '-';
                   
                   return (
                     <tr key={record.id} className="border-b border-purple-500/10 hover:bg-white/5">
-                      <td className="p-3 whitespace-nowrap text-gray-300">{projectCategoryDisplay}</td>
+                      <td className="p-3 text-gray-300">
+                        {projectCategories.length > 0 ? (
+                          <div className="flex flex-wrap gap-1">
+                            {projectCategories.map((category, idx) => (
+                              <span
+                                key={idx}
+                                className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-purple-900/60 text-purple-200 border border-purple-500/70"
+                              >
+                                {category}
+                              </span>
+                            ))}
+                          </div>
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
+                      </td>
                       <td className="p-3 whitespace-nowrap text-gray-300">{record.projectName || '-'}</td>
                       <td className="p-3 whitespace-nowrap text-gray-300">{record.companyName || '-'}</td>
                       <td className="p-3 whitespace-pre-line text-gray-300">{Array.isArray(record.brandNames) && record.brandNames.length > 0 ? record.brandNames.join('\n') : (record.brandName || '-')}</td>
                       <td className="p-3 whitespace-nowrap text-gray-300">
                         {record.expectedDepositDate ? formatDate(record.expectedDepositDate) : '-'}
                       </td>
-                      <td className="p-3 text-right whitespace-nowrap text-gray-300">
+                      <td className="p-3 text-left whitespace-nowrap text-gray-300">
                         {record.expectedDepositAmount 
                           ? formatCurrency(record.expectedDepositAmount, record.expectedDepositCurrency)
                           : '-'}

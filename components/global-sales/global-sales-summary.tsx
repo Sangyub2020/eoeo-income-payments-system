@@ -172,18 +172,18 @@ export function GlobalSalesSummary() {
               <thead>
                 <tr className="border-b bg-gray-50">
                   <th className="text-left p-4 font-medium text-gray-700">Project</th>
-                  <th className="text-right p-4 font-medium text-gray-700">입금액</th>
-                  <th className="text-right p-4 font-medium text-gray-700">건수</th>
-                  <th className="text-right p-4 font-medium text-gray-700">평균 입금액</th>
+                  <th className="text-left p-4 font-medium text-gray-700">입금액</th>
+                  <th className="text-left p-4 font-medium text-gray-700">건수</th>
+                  <th className="text-left p-4 font-medium text-gray-700">평균 입금액</th>
                 </tr>
               </thead>
               <tbody>
                 {summary.map((item, index) => (
                   <tr key={item.project} className="border-b hover:bg-gray-50">
                     <td className="p-4 font-medium">{item.project}</td>
-                    <td className="p-4 text-right font-medium">{formatCurrency(item.totalAmount)}</td>
-                    <td className="p-4 text-right">{item.count}건</td>
-                    <td className="p-4 text-right text-gray-600">
+                    <td className="p-4 text-left font-medium">{formatCurrency(item.totalAmount)}</td>
+                    <td className="p-4 text-left">{item.count}건</td>
+                    <td className="p-4 text-left text-gray-600">
                       {formatCurrency(Math.round(item.totalAmount / item.count))}
                     </td>
                   </tr>
