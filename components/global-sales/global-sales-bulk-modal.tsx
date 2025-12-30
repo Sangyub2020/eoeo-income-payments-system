@@ -968,17 +968,6 @@ B2B,V002,XYZ트레이딩,987-65-43210,billing@xyztrade.com,P002,수출,미국 �
                             />
                           </div>
 
-                          <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-1">
-                              건수
-                            </label>
-                            <input
-                              type="number"
-                              value={record.count || ''}
-                              onChange={(e) => updateRecord(index, { count: e.target.value ? Number(e.target.value) : undefined })}
-                              className="w-full px-3 py-2 border border-purple-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 bg-black/40 backdrop-blur-sm text-gray-200 placeholder-gray-500"
-                            />
-                          </div>
 
                           <div>
                             <label className="block text-sm font-medium text-gray-300 mb-1">
