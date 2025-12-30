@@ -125,15 +125,8 @@ export function OnlineCommerceBulkModal({ isOpen, onClose, onSuccess }: OnlineCo
 
     try {
 
-    // 허용된 거래유형 값 목록
-    const validCategories = [
-      '파트너십 - 서비스매출',
-      '파트너십 - 수출바우처',
-      'B2B',
-      '재고 바이백',
-      '배송비',
-      'other',
-    ];
+    // 허용된 거래유형 값 목록 (CATEGORIES 상수 사용)
+    const validCategories = CATEGORIES;
 
     // 구분자 확인
     const delimiter = text.includes('\t') ? '\t' : ',';

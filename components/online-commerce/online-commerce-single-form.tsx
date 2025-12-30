@@ -22,11 +22,9 @@ export function OnlineCommerceSingleForm({ onSuccess }: OnlineCommerceSingleForm
     eoeoManager: '',
     contractLink: '',
     estimateLink: '',
-    installmentNumber: undefined,
     attributionYearMonth: '',
     advanceBalance: '',
     ratio: undefined,
-    count: undefined,
     expectedDepositDate: '',
     expectedDepositAmount: undefined,
     description: '',
@@ -79,11 +77,9 @@ export function OnlineCommerceSingleForm({ onSuccess }: OnlineCommerceSingleForm
         eoeoManager: '',
         contractLink: '',
         estimateLink: '',
-        installmentNumber: undefined,
         attributionYearMonth: '',
         advanceBalance: '',
         ratio: undefined,
-        count: undefined,
         expectedDepositDate: '',
         expectedDepositAmount: undefined,
         description: '',
@@ -110,7 +106,7 @@ export function OnlineCommerceSingleForm({ onSuccess }: OnlineCommerceSingleForm
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: value === '' ? undefined : (name.includes('Amount') || name.includes('Number') || name === 'ratio' || name === 'count' || name === 'installmentNumber' || name === 'expectedDepositAmount' || name === 'depositAmount' || name === 'invoiceSupplyPrice')
+      [name]: value === '' ? undefined : (name.includes('Amount') || name.includes('Number') || name === 'ratio' || name === 'expectedDepositAmount' || name === 'depositAmount' || name === 'invoiceSupplyPrice')
         ? (value === '' ? undefined : Number(value))
         : value,
     }));
@@ -234,7 +230,7 @@ export function OnlineCommerceSingleForm({ onSuccess }: OnlineCommerceSingleForm
 
           <div>
             <label htmlFor="project" className="block text-sm font-medium text-gray-700 mb-1">
-              project
+              project category
             </label>
             <input
               type="text"
@@ -303,20 +299,6 @@ export function OnlineCommerceSingleForm({ onSuccess }: OnlineCommerceSingleForm
           </div>
 
           <div>
-            <label htmlFor="installmentNumber" className="block text-sm font-medium text-gray-700 mb-1">
-              차수
-            </label>
-            <input
-              type="number"
-              id="installmentNumber"
-              name="installmentNumber"
-              value={formData.installmentNumber || ''}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          <div>
             <label htmlFor="attributionYearMonth" className="block text-sm font-medium text-gray-700 mb-1">
               귀속년월
             </label>
@@ -360,19 +342,6 @@ export function OnlineCommerceSingleForm({ onSuccess }: OnlineCommerceSingleForm
           </div>
 
           <div>
-            <label htmlFor="count" className="block text-sm font-medium text-gray-700 mb-1">
-              건수
-            </label>
-            <input
-              type="number"
-              id="count"
-              name="count"
-              value={formData.count || ''}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
           <div>
             <label htmlFor="expectedDepositDate" className="block text-sm font-medium text-gray-700 mb-1">
               입금예정일

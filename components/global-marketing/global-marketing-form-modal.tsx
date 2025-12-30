@@ -246,6 +246,19 @@ export function GlobalMarketingFormModal({ isOpen, onClose, onSuccess }: GlobalM
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     
+    // 비율 필드 처리 (자동으로 % 붙이기)
+    if (name === 'ratio') {
+      // 숫자만 추출 (% 제거)
+      const numericValue = value.replace(/[%]/g, '').replace(/[^\d.]/g, '');
+      // 숫자가 있으면 %를 붙여서 저장, 없으면 빈 문자열
+      const ratioValue = numericValue ? `${numericValue}%` : '';
+      setFormData((prev) => ({
+        ...prev,
+        ratio: ratioValue,
+      }));
+      return;
+    }
+    
     // 입금액 필드 처리 (통화 기호 인식)
     if (name === 'expectedDepositAmount') {
       // 숫자만 추출 (통화 기호, 쉼표, 공백 등 제거)
@@ -293,7 +306,7 @@ export function GlobalMarketingFormModal({ isOpen, onClose, onSuccess }: GlobalM
     
     setFormData((prev) => ({
       ...prev,
-      [name]: value === '' ? undefined : (name.includes('Amount') || name.includes('Number') || name === 'ratio' || name === 'count' || name === 'installmentNumber' || name === 'oneTimeExpenseAmount' || name === 'invoiceSupplyPrice')
+      [name]: value === '' ? undefined : (name.includes('Amount') || name.includes('Number') || name === 'ratio' || name === 'oneTimeExpenseAmount' || name === 'invoiceSupplyPrice')
         ? (value === '' ? undefined : Number(value))
         : value,
     }));
@@ -321,20 +334,20 @@ export function GlobalMarketingFormModal({ isOpen, onClose, onSuccess }: GlobalM
             </div>
           )}
 
-          <div className="grid grid-cols-3 gap-4">
-            <div>
-              <label htmlFor="category" className="block text-sm font-medium text-gray-300 mb-1">
-                구분 <span className="text-red-400">*</span>
-              </label>
-              <SearchableSelect
-                value={formData.category || ''}
-                onChange={(value) => handleChange({ target: { name: 'category', value } } as any)}
-                options={GLOBAL_MARKETING_CATEGORIES.map(cat => ({ value: cat, label: cat }))}
-                placeholder="선택하세요"
-                required
-              />
-            </div>
+          <div className="mb-4">
+            <label htmlFor="category" className="block text-sm font-medium text-gray-300 mb-1">
+              구분 <span className="text-red-400">*</span>
+            </label>
+            <SearchableSelect
+              value={formData.category || ''}
+              onChange={(value) => handleChange({ target: { name: 'category', value } } as any)}
+              options={GLOBAL_MARKETING_CATEGORIES.map(cat => ({ value: cat, label: cat }))}
+              placeholder="선택하세요"
+              required
+            />
+          </div>
 
+          <div className="grid grid-cols-4 gap-4 mb-4">
             <div>
               <label htmlFor="vendorCode" className="block text-sm font-medium text-gray-300 mb-1">
                 거래처코드 <span className="text-red-400">*</span>
@@ -350,7 +363,7 @@ export function GlobalMarketingFormModal({ isOpen, onClose, onSuccess }: GlobalM
 
             <div>
               <label htmlFor="companyName" className="block text-sm font-medium text-gray-300 mb-1">
-                Company Name
+                Company Name <span className="text-cyan-400 text-xs">(자동 기입)</span>
               </label>
               <input
                 type="text"
@@ -358,11 +371,43 @@ export function GlobalMarketingFormModal({ isOpen, onClose, onSuccess }: GlobalM
                 name="companyName"
                 value={formData.companyName || ''}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-purple-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 bg-black/40 backdrop-blur-sm"
+                className="w-full px-3 py-2 border border-purple-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 bg-stone-700/30 backdrop-blur-sm"
                 readOnly
               />
             </div>
 
+            <div>
+              <label htmlFor="businessRegistrationNumber" className="block text-sm font-medium text-gray-300 mb-1">
+                사업자등록번호 <span className="text-cyan-400 text-xs">(자동 기입)</span>
+              </label>
+              <input
+                type="text"
+                id="businessRegistrationNumber"
+                name="businessRegistrationNumber"
+                value={formData.businessRegistrationNumber || ''}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-purple-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 bg-stone-700/30 backdrop-blur-sm"
+                readOnly
+              />
+            </div>
+
+            <div>
+              <label htmlFor="invoiceEmail" className="block text-sm font-medium text-gray-300 mb-1">
+                세금계산서 발행 이메일 <span className="text-cyan-400 text-xs">(자동 기입)</span>
+              </label>
+              <input
+                type="email"
+                id="invoiceEmail"
+                name="invoiceEmail"
+                value={formData.invoiceEmail || ''}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-purple-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 bg-stone-700/30 backdrop-blur-sm"
+                readOnly
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-4">
             <div>
               <label htmlFor="brandNames" className="block text-sm font-medium text-gray-300 mb-1">
                 Brand Name
@@ -373,36 +418,6 @@ export function GlobalMarketingFormModal({ isOpen, onClose, onSuccess }: GlobalM
                 options={brands}
                 placeholder="브랜드를 선택하세요"
                 className="w-full"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="businessRegistrationNumber" className="block text-sm font-medium text-gray-300 mb-1">
-                사업자등록번호
-              </label>
-              <input
-                type="text"
-                id="businessRegistrationNumber"
-                name="businessRegistrationNumber"
-                value={formData.businessRegistrationNumber || ''}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-purple-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 bg-black/40 backdrop-blur-sm"
-                readOnly
-              />
-            </div>
-
-            <div>
-              <label htmlFor="invoiceEmail" className="block text-sm font-medium text-gray-300 mb-1">
-                세금계산서 발행 이메일
-              </label>
-              <input
-                type="email"
-                id="invoiceEmail"
-                name="invoiceEmail"
-                value={formData.invoiceEmail || ''}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-purple-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 bg-black/40 backdrop-blur-sm"
-                readOnly
               />
             </div>
 
@@ -418,7 +433,9 @@ export function GlobalMarketingFormModal({ isOpen, onClose, onSuccess }: GlobalM
                 className="w-full"
               />
             </div>
+          </div>
 
+          <div className="grid grid-cols-4 gap-4 mb-4">
             <div>
               <label htmlFor="projectName" className="block text-sm font-medium text-gray-300 mb-1">
                 Project name
@@ -496,20 +513,9 @@ export function GlobalMarketingFormModal({ isOpen, onClose, onSuccess }: GlobalM
                 </a>
               )}
             </div>
+          </div>
 
-            <div>
-              <label htmlFor="installmentNumber" className="block text-sm font-medium text-gray-300 mb-1">
-                차수
-              </label>
-              <input
-                type="number"
-                id="installmentNumber"
-                name="installmentNumber"
-                value={formData.installmentNumber || ''}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-purple-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 bg-black/40 backdrop-blur-sm text-gray-200 placeholder-gray-500"
-              />
-            </div>
+          <div className="grid grid-cols-3 gap-4">
 
             <div>
               <label htmlFor="attributionYearMonth" className="block text-sm font-medium text-gray-300 mb-1">
@@ -529,43 +535,36 @@ export function GlobalMarketingFormModal({ isOpen, onClose, onSuccess }: GlobalM
               <label htmlFor="advanceBalance" className="block text-sm font-medium text-gray-300 mb-1">
                 선/잔금
               </label>
-              <input
-                type="text"
+              <select
                 id="advanceBalance"
                 name="advanceBalance"
                 value={formData.advanceBalance || ''}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-purple-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 bg-black/40 backdrop-blur-sm text-gray-200 placeholder-gray-500"
-              />
+                className="w-full px-3 py-2 border border-purple-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 bg-black/40 backdrop-blur-sm text-gray-200"
+              >
+                <option value="">선택하세요</option>
+                <option value="선금">선금</option>
+                <option value="잔금">잔금</option>
+                <option value="일시불">일시불</option>
+              </select>
             </div>
 
             <div>
               <label htmlFor="ratio" className="block text-sm font-medium text-gray-300 mb-1">
                 비율
               </label>
-              <input
-                type="number"
-                step="0.01"
-                id="ratio"
-                name="ratio"
-                value={formData.ratio || ''}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-purple-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 bg-black/40 backdrop-blur-sm text-gray-200 placeholder-gray-500"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="count" className="block text-sm font-medium text-gray-300 mb-1">
-                건수
-              </label>
-              <input
-                type="number"
-                id="count"
-                name="count"
-                value={formData.count || ''}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-purple-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 bg-black/40 backdrop-blur-sm text-gray-200 placeholder-gray-500"
-              />
+              <div className="relative">
+                <input
+                  type="text"
+                  id="ratio"
+                  name="ratio"
+                  value={formData.ratio ? formData.ratio.replace('%', '') : ''}
+                  onChange={handleChange}
+                  placeholder="예: 70"
+                  className="w-full px-3 py-2 pr-8 border border-purple-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 bg-black/40 backdrop-blur-sm text-gray-200 placeholder-gray-500"
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">%</span>
+              </div>
             </div>
 
             <div>
@@ -578,7 +577,7 @@ export function GlobalMarketingFormModal({ isOpen, onClose, onSuccess }: GlobalM
                 name="expectedDepositDate"
                 value={formData.expectedDepositDate || ''}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-purple-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 bg-black/40 backdrop-blur-sm text-gray-200 placeholder-gray-500"
+                className="w-full px-3 py-2 border border-purple-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 bg-black/40 backdrop-blur-sm text-gray-200 placeholder-gray-500 [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:cursor-pointer"
               />
             </div>
 
@@ -656,7 +655,7 @@ export function GlobalMarketingFormModal({ isOpen, onClose, onSuccess }: GlobalM
                 name="depositDate"
                 value={formData.depositDate || ''}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-purple-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 bg-black/40 backdrop-blur-sm text-gray-200 placeholder-gray-500"
+                className="w-full px-3 py-2 border border-purple-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 bg-black/40 backdrop-blur-sm text-gray-200 placeholder-gray-500 [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:cursor-pointer"
               />
             </div>
 

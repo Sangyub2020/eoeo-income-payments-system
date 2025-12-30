@@ -4,6 +4,8 @@ export const CATEGORIES = [
   'B2B',
   '재고 바이백',
   '배송비',
+  '환불 수취',
+  '환불 지급',
   'other',
 ] as const;
 
@@ -17,7 +19,14 @@ export const GLOBAL_MARKETING_CATEGORIES = [
   'B2B',
   '배송비',
   '기재고판매',
+  '환불 수취',
+  '환불 지급',
 ] as const;
 
-
-
+// 회계 데이터 관리가 필요한 거래유형 (4개)
+export const ACCOUNTING_REQUIRED_CATEGORIES = [
+  '파트너십 - 수출바우처',
+  '파트너십 - 서비스매출',
+  '용역사업 - 수출바우처',
+  '용역사업 - 서비스매출',
+] as const;

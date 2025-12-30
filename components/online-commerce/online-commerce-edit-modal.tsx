@@ -397,9 +397,76 @@ export function OnlineCommerceEditModal({ record, onClose, onSuccess }: OnlineCo
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     
+    // 비율 필드 처리 (자동으로 % 붙이기)
+    if (name === 'ratio') {
+      // 숫자만 추출 (% 제거)
+      const numericValue = value.replace(/[%]/g, '').replace(/[^\d.]/g, '');
+      // 숫자가 있으면 %를 붙여서 저장, 없으면 빈 문자열
+      const ratioValue = numericValue ? `${numericValue}%` : '';
+      setFormData((prev) => ({
+        ...prev,
+        ratio: ratioValue,
+      }));
+      return;
+    }
+    
+    // 입금예정금액 필드 처리 (통화 기호 인식)
+    if (name === 'expectedDepositAmount') {
+      // 숫자만 추출 (통화 기호, 쉼표, 공백 등 제거)
+      const numericValue = value.replace(/[₩$,\s원USD]/gi, '').replace(/[^\d]/g, '');
+      const amount = numericValue ? Number(numericValue) : undefined;
+      
+      // 통화 감지
+      const hasWon = value.includes('₩') || value.includes('원');
+      const hasDollar = value.includes('$') || value.includes('USD') || value.toUpperCase().includes('USD');
+      
+      setFormData((prev) => {
+        const newData: any = {
+          ...prev,
+          expectedDepositAmount: amount,
+          expectedDepositCurrency: hasDollar ? 'USD' : (hasWon ? 'KRW' : (prev.expectedDepositCurrency || 'KRW')),
+        };
+        
+        // 입금액이 입력되고 입금여부가 입금예정인 경우 자동으로 입금완료로 변경
+        if (name === 'depositAmount' && amount && amount > 0 && prev.depositStatus === '입금예정') {
+          newData.depositStatus = '입금완료';
+        }
+        
+        return newData;
+      });
+      return;
+    }
+    
+    // 입금액 필드 처리 (통화 기호 인식)
+    if (name === 'depositAmount') {
+      // 숫자만 추출 (통화 기호, 쉼표, 공백 등 제거)
+      const numericValue = value.replace(/[₩$,\s원USD]/gi, '').replace(/[^\d]/g, '');
+      const amount = numericValue ? Number(numericValue) : undefined;
+      
+      // 통화 감지
+      const hasWon = value.includes('₩') || value.includes('원');
+      const hasDollar = value.includes('$') || value.includes('USD') || value.toUpperCase().includes('USD');
+      
+      setFormData((prev) => {
+        const newData: any = {
+          ...prev,
+          depositAmount: amount,
+          depositCurrency: hasDollar ? 'USD' : (hasWon ? 'KRW' : (prev.depositCurrency || 'KRW')),
+        };
+        
+        // 입금액이 입력되고 입금여부가 입금예정인 경우 자동으로 입금완료로 변경
+        if (amount && amount > 0 && prev.depositStatus === '입금예정') {
+          newData.depositStatus = '입금완료';
+        }
+        
+        return newData;
+      });
+      return;
+    }
+    
     // 입금액과 입금예정금액 필드의 경우 포맷팅 문자 제거
     let processedValue = value;
-    if (name === 'expectedDepositAmount' || name === 'depositAmount') {
+    if (name.includes('Amount') && name !== 'expectedDepositAmount' && name !== 'depositAmount') {
       // ₩, $, 쉼표 제거
       processedValue = value.replace(/[₩$,]/g, '');
     }
@@ -407,7 +474,7 @@ export function OnlineCommerceEditModal({ record, onClose, onSuccess }: OnlineCo
     setFormData((prev) => {
       const newData: any = {
         ...prev,
-        [name]: processedValue === '' ? undefined : (name.includes('Amount') || name.includes('Number') || name === 'ratio' || name === 'count' || name === 'installmentNumber' || name === 'expectedDepositAmount' || name === 'depositAmount' || name === 'invoiceSupplyPrice')
+        [name]: processedValue === '' ? undefined : (name.includes('Number') || name === 'invoiceSupplyPrice')
           ? (processedValue === '' ? undefined : Number(processedValue))
           : processedValue,
       };
@@ -441,20 +508,20 @@ export function OnlineCommerceEditModal({ record, onClose, onSuccess }: OnlineCo
             </div>
           )}
 
-          <div className="grid grid-cols-3 gap-4">
-            <div>
-              <label htmlFor="category" className="block text-sm font-medium text-gray-300 mb-1">
-                거래유형 <span className="text-red-400">*</span>
-              </label>
-              <SearchableSelect
-                value={formData.category || ''}
-                onChange={(value) => handleChange({ target: { name: 'category', value } } as any)}
-                options={CATEGORIES.map(cat => ({ value: cat, label: cat }))}
-                placeholder="선택하세요"
-                required
-              />
-            </div>
+          <div className="mb-4">
+            <label htmlFor="category" className="block text-sm font-medium text-gray-300 mb-1">
+              거래유형 <span className="text-red-400">*</span>
+            </label>
+            <SearchableSelect
+              value={formData.category || ''}
+              onChange={(value) => handleChange({ target: { name: 'category', value } } as any)}
+              options={CATEGORIES.map(cat => ({ value: cat, label: cat }))}
+              placeholder="선택하세요"
+              required
+            />
+          </div>
 
+          <div className="grid grid-cols-4 gap-4 mb-4">
             <div>
               <label htmlFor="vendorCode" className="block text-sm font-medium text-gray-300 mb-1">
                 거래처코드 <span className="text-red-400">*</span>
@@ -465,6 +532,66 @@ export function OnlineCommerceEditModal({ record, onClose, onSuccess }: OnlineCo
                 options={vendors.map(v => ({ value: v.code, label: `${v.code} - ${v.name}` }))}
                 placeholder="선택하세요"
                 required
+              />
+            </div>
+
+            <div>
+              <label htmlFor="companyName" className="block text-sm font-medium text-gray-300 mb-1">
+                Company Name <span className="text-cyan-400 text-xs">(자동 기입)</span>
+              </label>
+              <input
+                type="text"
+                id="companyName"
+                name="companyName"
+                value={formData.companyName || ''}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-purple-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 bg-stone-700/30 backdrop-blur-sm"
+                readOnly
+              />
+            </div>
+
+            <div>
+              <label htmlFor="businessRegistrationNumber" className="block text-sm font-medium text-gray-300 mb-1">
+                사업자등록번호 <span className="text-cyan-400 text-xs">(자동 기입)</span>
+              </label>
+              <input
+                type="text"
+                id="businessRegistrationNumber"
+                name="businessRegistrationNumber"
+                value={formData.businessRegistrationNumber || ''}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-purple-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 bg-stone-700/30 backdrop-blur-sm"
+                readOnly
+              />
+            </div>
+
+            <div>
+              <label htmlFor="invoiceEmail" className="block text-sm font-medium text-gray-300 mb-1">
+                세금계산서 발행 이메일 <span className="text-cyan-400 text-xs">(자동 기입)</span>
+              </label>
+              <input
+                type="email"
+                id="invoiceEmail"
+                name="invoiceEmail"
+                value={formData.invoiceEmail || ''}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-purple-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 bg-stone-700/30 backdrop-blur-sm"
+                readOnly
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-4">
+            <div>
+              <label htmlFor="brandNames" className="block text-sm font-medium text-gray-300 mb-1">
+                Brand Name
+              </label>
+              <MultiSelect
+                value={selectedBrands}
+                onChange={setSelectedBrands}
+                options={brands}
+                placeholder="브랜드를 선택하세요"
+                className="w-full"
               />
             </div>
 
@@ -482,33 +609,22 @@ export function OnlineCommerceEditModal({ record, onClose, onSuccess }: OnlineCo
             </div>
 
             <div>
-              <label htmlFor="companyName" className="block text-sm font-medium text-gray-300 mb-1">
-                Company Name
+              <label htmlFor="project" className="block text-sm font-medium text-gray-300 mb-1">
+                project category <span className="text-cyan-400 text-xs">(자동 기입)</span>
               </label>
               <input
                 type="text"
-                id="companyName"
-                name="companyName"
-                value={formData.companyName || ''}
+                id="project"
+                name="project"
+                value={formData.project || ''}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-purple-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 bg-black/40 backdrop-blur-sm"
+                className="w-full px-3 py-2 border border-purple-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 bg-stone-700/30 backdrop-blur-sm text-gray-200 placeholder-gray-500"
                 readOnly
               />
             </div>
+          </div>
 
-            <div>
-              <label htmlFor="brandNames" className="block text-sm font-medium text-gray-300 mb-1">
-                Brand Name
-              </label>
-              <MultiSelect
-                value={selectedBrands}
-                onChange={setSelectedBrands}
-                options={brands}
-                placeholder="브랜드를 선택하세요"
-                className="w-full"
-              />
-            </div>
-
+          <div className="grid grid-cols-4 gap-4 mb-4">
             <div>
               <label htmlFor="projectName" className="block text-sm font-medium text-gray-300 mb-1">
                 Project name
@@ -520,36 +636,6 @@ export function OnlineCommerceEditModal({ record, onClose, onSuccess }: OnlineCo
                 value={formData.projectName || ''}
                 onChange={handleChange}
                 className="w-full px-3 py-2 border border-purple-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 bg-black/40 backdrop-blur-sm text-gray-200 placeholder-gray-500"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="businessRegistrationNumber" className="block text-sm font-medium text-gray-300 mb-1">
-                사업자등록번호
-              </label>
-              <input
-                type="text"
-                id="businessRegistrationNumber"
-                name="businessRegistrationNumber"
-                value={formData.businessRegistrationNumber || ''}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-purple-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 bg-black/40 backdrop-blur-sm"
-                readOnly
-              />
-            </div>
-
-            <div>
-              <label htmlFor="invoiceEmail" className="block text-sm font-medium text-gray-300 mb-1">
-                세금계산서 발행 이메일
-              </label>
-              <input
-                type="email"
-                id="invoiceEmail"
-                name="invoiceEmail"
-                value={formData.invoiceEmail || ''}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-purple-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 bg-black/40 backdrop-blur-sm"
-                readOnly
               />
             </div>
 
@@ -616,21 +702,9 @@ export function OnlineCommerceEditModal({ record, onClose, onSuccess }: OnlineCo
                 </a>
               )}
             </div>
+          </div>
 
-            <div>
-              <label htmlFor="installmentNumber" className="block text-sm font-medium text-gray-300 mb-1">
-                차수
-              </label>
-              <input
-                type="number"
-                id="installmentNumber"
-                name="installmentNumber"
-                value={formData.installmentNumber || ''}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-purple-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 bg-black/40 backdrop-blur-sm text-gray-200 placeholder-gray-500"
-              />
-            </div>
-
+          <div className="grid grid-cols-3 gap-4">
             <div>
               <label htmlFor="attributionYearMonth" className="block text-sm font-medium text-gray-300 mb-1">
                 귀속년월
@@ -649,43 +723,36 @@ export function OnlineCommerceEditModal({ record, onClose, onSuccess }: OnlineCo
               <label htmlFor="advanceBalance" className="block text-sm font-medium text-gray-300 mb-1">
                 선/잔금
               </label>
-              <input
-                type="text"
+              <select
                 id="advanceBalance"
                 name="advanceBalance"
                 value={formData.advanceBalance || ''}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-purple-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 bg-black/40 backdrop-blur-sm text-gray-200 placeholder-gray-500"
-              />
+                className="w-full px-3 py-2 border border-purple-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 bg-black/40 backdrop-blur-sm text-gray-200"
+              >
+                <option value="">선택하세요</option>
+                <option value="선금">선금</option>
+                <option value="잔금">잔금</option>
+                <option value="일시불">일시불</option>
+              </select>
             </div>
 
             <div>
               <label htmlFor="ratio" className="block text-sm font-medium text-gray-300 mb-1">
                 비율
               </label>
-              <input
-                type="number"
-                step="0.01"
-                id="ratio"
-                name="ratio"
-                value={formData.ratio || ''}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-purple-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 bg-black/40 backdrop-blur-sm text-gray-200 placeholder-gray-500"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="count" className="block text-sm font-medium text-gray-300 mb-1">
-                건수
-              </label>
-              <input
-                type="number"
-                id="count"
-                name="count"
-                value={formData.count || ''}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-purple-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 bg-black/40 backdrop-blur-sm text-gray-200 placeholder-gray-500"
-              />
+              <div className="relative">
+                <input
+                  type="text"
+                  id="ratio"
+                  name="ratio"
+                  value={formData.ratio ? formData.ratio.replace('%', '') : ''}
+                  onChange={handleChange}
+                  placeholder="예: 70"
+                  className="w-full px-3 py-2 pr-8 border border-purple-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 bg-black/40 backdrop-blur-sm text-gray-200 placeholder-gray-500"
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">%</span>
+              </div>
             </div>
 
             <div>
@@ -698,7 +765,7 @@ export function OnlineCommerceEditModal({ record, onClose, onSuccess }: OnlineCo
                 name="expectedDepositDate"
                 value={formData.expectedDepositDate || ''}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-purple-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 bg-black/40 backdrop-blur-sm text-gray-200 placeholder-gray-500"
+                className="w-full px-3 py-2 border border-purple-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 bg-black/40 backdrop-blur-sm text-gray-200 placeholder-gray-500 [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:cursor-pointer"
               />
             </div>
 
@@ -711,15 +778,18 @@ export function OnlineCommerceEditModal({ record, onClose, onSuccess }: OnlineCo
                   type="text"
                   id="expectedDepositAmount"
                   name="expectedDepositAmount"
-                  value={formData.expectedDepositAmount ? formData.expectedDepositAmount.toString() : ''}
+                  value={formData.expectedDepositAmount ? `${formData.expectedDepositCurrency === 'USD' ? '$' : '₩'}${formData.expectedDepositAmount.toLocaleString()}` : ''}
                   onChange={handleChange}
-                  placeholder="1000000"
+                  placeholder={formData.expectedDepositCurrency === 'USD' ? '$1,000' : '₩1,000,000'}
                   className="flex-1 px-3 py-2 border border-purple-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 bg-black/40 backdrop-blur-sm text-gray-200 placeholder-gray-500"
                 />
                 <select
                   name="expectedDepositCurrency"
                   value={formData.expectedDepositCurrency || 'KRW'}
-                  onChange={(e) => setFormData(prev => ({ ...prev, expectedDepositCurrency: e.target.value }))}
+                  onChange={(e) => {
+                    const newCurrency = e.target.value;
+                    setFormData(prev => ({ ...prev, expectedDepositCurrency: newCurrency }));
+                  }}
                   className="px-3 py-2 border border-purple-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 bg-black/40 backdrop-blur-sm text-gray-200"
                 >
                   <option value="KRW">KRW</option>
@@ -752,7 +822,7 @@ export function OnlineCommerceEditModal({ record, onClose, onSuccess }: OnlineCo
                 name="depositDate"
                 value={formData.depositDate || ''}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-purple-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 bg-black/40 backdrop-blur-sm text-gray-200 placeholder-gray-500"
+                className="w-full px-3 py-2 border border-purple-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 bg-black/40 backdrop-blur-sm text-gray-200 placeholder-gray-500 [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:cursor-pointer"
               />
             </div>
 
@@ -781,15 +851,18 @@ export function OnlineCommerceEditModal({ record, onClose, onSuccess }: OnlineCo
                   type="text"
                   id="depositAmount"
                   name="depositAmount"
-                  value={formData.depositAmount ? formData.depositAmount.toString() : ''}
+                  value={formData.depositAmount ? `${formData.depositCurrency === 'USD' ? '$' : '₩'}${formData.depositAmount.toLocaleString()}` : ''}
                   onChange={handleChange}
-                  placeholder="1000000"
+                  placeholder={formData.depositCurrency === 'USD' ? '$1,000' : '₩1,000,000'}
                   className="flex-1 px-3 py-2 border border-purple-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 bg-black/40 backdrop-blur-sm text-gray-200 placeholder-gray-500"
                 />
                 <select
                   name="depositCurrency"
                   value={formData.depositCurrency || 'KRW'}
-                  onChange={(e) => setFormData(prev => ({ ...prev, depositCurrency: e.target.value }))}
+                  onChange={(e) => {
+                    const newCurrency = e.target.value;
+                    setFormData(prev => ({ ...prev, depositCurrency: newCurrency }));
+                  }}
                   className="px-3 py-2 border border-purple-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 bg-black/40 backdrop-blur-sm text-gray-200"
                 >
                   <option value="KRW">KRW</option>

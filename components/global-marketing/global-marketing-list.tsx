@@ -5,11 +5,12 @@ import { GlobalMarketingTeam } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Pagination } from '@/components/ui/pagination';
-import { Trash2, Plus, Upload, Edit2, Search, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
+import { Trash2, Plus, Upload, Edit2, Search, ArrowUp, ArrowDown, ArrowUpDown, Settings, Download } from 'lucide-react';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { GlobalMarketingFormModal } from './global-marketing-form-modal';
 import { GlobalMarketingBulkModal } from './global-marketing-bulk-modal';
 import { GlobalMarketingEditModal } from './global-marketing-edit-modal';
+import { MultiSelect } from '@/components/ui/multi-select';
 
 const ITEMS_PER_PAGE = 100;
 
@@ -32,9 +33,23 @@ export function GlobalMarketingList({ onSuccess }: GlobalMarketingListProps) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [editingRecord, setEditingRecord] = useState<GlobalMarketingTeam | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchColumns, setSearchColumns] = useState<string[]>(['companyName', 'projectName', 'brandName']); // 기본값: 회사명, 프로젝트명, 브랜드명
   const [sortField, setSortField] = useState<SortField>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  const [isColumnSelectorOpen, setIsColumnSelectorOpen] = useState(false);
   const [depositStatusFilter, setDepositStatusFilter] = useState<'입금완료' | '입금예정' | '입금지연' | null>(null);
+  
+  // 검색 가능한 컬럼 옵션
+  const searchableColumns = [
+    { value: 'companyName', label: '회사명' },
+    { value: 'projectName', label: '프로젝트명' },
+    { value: 'brandName', label: '브랜드명' },
+    { value: 'vendorCode', label: '거래처코드' },
+    { value: 'category', label: '거래 유형' },
+    { value: 'project', label: '프로젝트 유형' },
+    { value: 'eoeoManager', label: '담당자' },
+    { value: 'description', label: '적요' },
+  ];
   
   // 모든 열 정의
   const allColumns = [
@@ -274,24 +289,34 @@ export function GlobalMarketingList({ onSuccess }: GlobalMarketingListProps) {
       });
     }
 
-    // 검색 필터링 (회사명, Project Name)
-    if (searchQuery.trim() !== '') {
+    // 검색 필터링
+    if (searchQuery.trim() !== '' && searchColumns.length > 0) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(record => {
-        const companyName = record.companyName?.toLowerCase() || '';
-        const projectName = record.projectName?.toLowerCase() || '';
-        return companyName.includes(query) || projectName.includes(query);
+        return searchColumns.some(column => {
+          const value = (record as any)[column];
+          if (value === null || value === undefined) return false;
+          
+          // brandNames 배열 처리
+          if (column === 'brandName' && Array.isArray((record as any).brandNames)) {
+            return (record as any).brandNames.some((brand: string) => 
+              brand?.toLowerCase().includes(query)
+            );
+          }
+          
+          return String(value).toLowerCase().includes(query);
+        });
       });
     }
 
     const sorted = sortRecords(filtered);
     setFilteredRecords(sorted);
-  }, [searchQuery, records, sortField, sortDirection, sortRecords, depositStatusFilter, getDepositStatus]);
+  }, [searchQuery, searchColumns, records, sortField, sortDirection, sortRecords, depositStatusFilter, getDepositStatus]);
 
   // 검색/정렬/필터 변경 시에만 페이지 리셋
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, sortField, sortDirection, depositStatusFilter]);
+  }, [searchQuery, searchColumns, sortField, sortDirection, depositStatusFilter]);
 
   // 필터링된 결과가 변경되면 현재 페이지가 유효한 범위 내에 있는지 확인
   useEffect(() => {
@@ -535,6 +560,65 @@ export function GlobalMarketingList({ onSuccess }: GlobalMarketingListProps) {
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-lg font-semibold text-gray-200">입금 목록 ({filteredRecords.length}개)</h3>
             <div className="flex gap-2">
+            <div className="relative">
+              <Button 
+                onClick={() => setIsColumnSelectorOpen(!isColumnSelectorOpen)} 
+                variant="outline"
+              >
+                <Settings className="h-4 w-4 mr-2" />
+                열 선택
+              </Button>
+              {isColumnSelectorOpen && (
+                <div className="absolute right-0 top-full mt-2 bg-black/80 backdrop-blur-xl border border-purple-500/30 rounded-lg shadow-lg z-50 p-4 min-w-[250px] max-h-[400px] overflow-y-auto">
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="font-semibold text-sm text-gray-200">표시할 열 선택</h4>
+                    <button
+                      onClick={() => {
+                        setVisibleColumns(new Set(allColumns.map(col => col.key)));
+                      }}
+                      className="text-xs text-blue-600 hover:text-blue-800"
+                    >
+                      모두 선택
+                    </button>
+                  </div>
+                  <div className="space-y-2 mb-4">
+                    {allColumns.map((column) => (
+                      <label
+                        key={column.key}
+                        className="flex items-center gap-2 cursor-pointer hover:bg-white/10 p-1 rounded"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={visibleColumns.has(column.key)}
+                          onChange={(e) => {
+                            if (column.alwaysVisible) return;
+                            const newVisible = new Set(visibleColumns);
+                            if (e.target.checked) {
+                              newVisible.add(column.key);
+                            } else {
+                              newVisible.delete(column.key);
+                            }
+                            setVisibleColumns(newVisible);
+                          }}
+                          disabled={column.alwaysVisible}
+                          className="rounded border-gray-300"
+                        />
+                        <span className="text-sm">{column.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                  <div className="flex justify-end pt-3 border-t">
+                    <Button
+                      onClick={() => setIsColumnSelectorOpen(false)}
+                      size="sm"
+                      className="px-4"
+                    >
+                      확인
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
             <Button onClick={() => setIsModalOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
               데이터 추가
@@ -542,6 +626,10 @@ export function GlobalMarketingList({ onSuccess }: GlobalMarketingListProps) {
             <Button onClick={() => setIsBulkModalOpen(true)} variant="outline">
               <Upload className="h-4 w-4 mr-2" />
               일괄 추가
+            </Button>
+            <Button onClick={handleDownloadCSV} variant="outline">
+              <Download className="h-4 w-4 mr-2" />
+              CSV 다운로드
             </Button>
           </div>
           </div>
@@ -596,10 +684,20 @@ export function GlobalMarketingList({ onSuccess }: GlobalMarketingListProps) {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
               <input
                 type="text"
-                placeholder="검색 (회사명, Project Name)..."
+                placeholder="검색어를 입력하세요..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 bg-black/40 border border-purple-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 text-gray-200 placeholder-gray-500 backdrop-blur-sm"
+              />
+            </div>
+            <div className="w-64">
+              <label className="block text-xs text-gray-300 mb-1">검색 컬럼</label>
+              <MultiSelect
+                value={searchColumns}
+                onChange={setSearchColumns}
+                options={searchableColumns}
+                placeholder="검색할 컬럼 선택"
+                className="w-full"
               />
             </div>
           </div>
@@ -1333,13 +1431,13 @@ export function GlobalMarketingList({ onSuccess }: GlobalMarketingListProps) {
                     <td className="p-2 text-[13px] whitespace-nowrap truncate overflow-hidden" title={record.expectedDepositDate ? formatDate(record.expectedDepositDate) : ''}>{record.expectedDepositDate ? formatDate(record.expectedDepositDate) : '-'}</td>
                   )}
                   {visibleColumns.has('expectedDepositAmount') && (
-                    <td className="p-2 text-[13px] text-left whitespace-nowrap truncate overflow-hidden" title={record.expectedDepositAmount ? formatCurrency(record.expectedDepositAmount, record.expectedDepositCurrency) : ''}>{record.expectedDepositAmount ? formatCurrency(record.expectedDepositAmount, record.expectedDepositCurrency) : '-'}</td>
+                    <td className="p-2 text-[13px] text-left whitespace-nowrap truncate overflow-hidden" title={record.expectedDepositAmount ? formatCurrency(record.expectedDepositAmount, record.expectedDepositCurrency || 'KRW') : ''}>{record.expectedDepositAmount ? formatCurrency(record.expectedDepositAmount, record.expectedDepositCurrency || 'KRW') : '-'}</td>
                   )}
                   {visibleColumns.has('depositDate') && (
                     <td className="p-2 text-[13px] whitespace-nowrap truncate overflow-hidden" title={record.depositDate ? formatDate(record.depositDate) : ''}>{record.depositDate ? formatDate(record.depositDate) : '-'}</td>
                   )}
                   {visibleColumns.has('depositAmount') && (
-                    <td className="p-2 text-[13px] text-left font-medium whitespace-nowrap truncate overflow-hidden" title={record.depositAmount ? formatCurrency(record.depositAmount, record.depositCurrency) : ''}>{record.depositAmount ? formatCurrency(record.depositAmount, record.depositCurrency) : '-'}</td>
+                    <td className="p-2 text-[13px] text-left font-medium whitespace-nowrap truncate overflow-hidden" title={record.depositAmount ? formatCurrency(record.depositAmount, record.depositCurrency || 'KRW') : ''}>{record.depositAmount ? formatCurrency(record.depositAmount, record.depositCurrency || 'KRW') : '-'}</td>
                   )}
                   {visibleColumns.has('invoiceSupplyPrice') && (
                     <td className="p-2 text-[13px] text-left whitespace-nowrap truncate overflow-hidden" title={record.invoiceSupplyPrice ? formatCurrency(record.invoiceSupplyPrice, 'KRW') : ''}>{record.invoiceSupplyPrice ? formatCurrency(record.invoiceSupplyPrice, 'KRW') : '-'}</td>

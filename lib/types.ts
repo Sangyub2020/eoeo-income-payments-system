@@ -117,11 +117,9 @@ export interface OnlineCommerceTeam {
   eoeoManager?: string;
   contractLink?: string;
   estimateLink?: string;
-  installmentNumber?: number;
   attributionYearMonth?: string;
   advanceBalance?: string;
-  ratio?: number;
-  count?: number;
+  ratio?: string;
   expectedDepositDate?: string;
   depositStatus?: '입금완료' | '입금예정' | '입금지연';
   oneTimeExpenseAmount?: number;
@@ -137,6 +135,11 @@ export interface OnlineCommerceTeam {
   issueNotes?: string;
   taxStatus?: string;
   invoiceSupplyPrice?: number;
+  // 회계 데이터 관리 필드
+  projectPeriodStart?: string; // 예: "2501" (25년 1월)
+  projectPeriodEnd?: string; // 예: "2506" (25년 6월)
+  targetMarginRate?: number; // 타겟 마진율 (예: 25.00)
+  finalMonthActualCost?: number; // 마지막달 실제 총 비용
   createdAt?: string;
   updatedAt?: string;
   hasWarning?: boolean; // 필수 항목 누락 경고 플래그
@@ -171,11 +174,9 @@ export interface GlobalMarketingTeam {
   eoeoManager?: string;
   contractLink?: string;
   estimateLink?: string;
-  installmentNumber?: number;
   attributionYearMonth?: string;
   advanceBalance?: string;
-  ratio?: number;
-  count?: number;
+  ratio?: string;
   expectedDepositDate?: string;
   depositStatus?: '입금완료' | '입금예정' | '입금지연';
   oneTimeExpenseAmount?: number;
@@ -191,6 +192,11 @@ export interface GlobalMarketingTeam {
   issueNotes?: string;
   taxStatus?: string;
   invoiceSupplyPrice?: number;
+  // 회계 데이터 관리 필드
+  projectPeriodStart?: string; // 예: "2501" (25년 1월)
+  projectPeriodEnd?: string; // 예: "2506" (25년 6월)
+  targetMarginRate?: number; // 타겟 마진율 (예: 25.00)
+  finalMonthActualCost?: number; // 마지막달 실제 총 비용
   createdAt?: string;
   updatedAt?: string;
   hasWarning?: boolean;
@@ -216,11 +222,9 @@ export interface OtherIncome {
   eoeoManager?: string;
   contractLink?: string;
   estimateLink?: string;
-  installmentNumber?: number;
   attributionYearMonth?: string;
   advanceBalance?: string;
-  ratio?: number;
-  count?: number;
+  ratio?: string;
   expectedDepositDate?: string;
   expectedDepositAmount?: number;
   expectedDepositCurrency?: string;
@@ -234,6 +238,11 @@ export interface OtherIncome {
   issueNotes?: string;
   taxStatus?: string;
   invoiceSupplyPrice?: number;
+  // 회계 데이터 관리 필드
+  projectPeriodStart?: string; // 예: "2501" (25년 1월)
+  projectPeriodEnd?: string; // 예: "2506" (25년 6월)
+  targetMarginRate?: number; // 타겟 마진율 (예: 25.00)
+  finalMonthActualCost?: number; // 마지막달 실제 총 비용
   createdAt?: string;
   updatedAt?: string;
   hasWarning?: boolean; // 필수 항목 누락 경고 플래그
@@ -260,11 +269,9 @@ export interface GlobalSalesTeam {
   contractLink?: string;
   estimateLink?: string;
   invoiceLink?: string;
-  installmentNumber?: number;
   attributionYearMonth?: string;
   advanceBalance?: string;
-  ratio?: number;
-  count?: number;
+  ratio?: string;
   expectedDepositDate?: string;
   depositStatus?: '입금완료' | '입금예정' | '입금지연';
   oneTimeExpenseAmount?: number;
@@ -280,54 +287,14 @@ export interface GlobalSalesTeam {
   issueNotes?: string;
   taxStatus?: string;
   invoiceSupplyPrice?: number;
+  // 회계 데이터 관리 필드
+  projectPeriodStart?: string; // 예: "2501" (25년 1월)
+  projectPeriodEnd?: string; // 예: "2506" (25년 6월)
+  targetMarginRate?: number; // 타겟 마진율 (예: 25.00)
+  finalMonthActualCost?: number; // 마지막달 실제 총 비용
   createdAt?: string;
   updatedAt?: string;
   hasWarning?: boolean;
-}
-
-export interface OtherIncome {
-  id?: string;
-  category?: string;
-  vendorCode?: string;
-  companyName?: string;
-  brandName?: string;
-  brandNames?: string[];
-  businessRegistrationNumber?: string;
-  invoiceEmail?: string;
-  projectCode?: string;
-  projectCode2?: string;
-  projectCode3?: string;
-  project?: string;
-  projectCategory?: string;
-  projectCategory2?: string;
-  projectCategory3?: string;
-  projectName?: string;
-  eoeoManager?: string;
-  contractLink?: string;
-  estimateLink?: string;
-  installmentNumber?: number;
-  attributionYearMonth?: string;
-  advanceBalance?: string;
-  ratio?: number;
-  count?: number;
-  expectedDepositDate?: string;
-  expectedDepositAmount?: number;
-  expectedDepositCurrency?: string;
-  description?: string;
-  depositDate?: string;
-  depositAmount?: number;
-  depositCurrency?: string;
-  oneTimeExpenseAmount?: number;
-  createdDate?: string;
-  invoiceCopy?: string;
-  invoiceAttachmentStatus?: 'required' | 'completed' | 'not_required'; // 첨부필요, 첨부완료, 첨부 불요
-  depositStatus?: '입금완료' | '입금예정' | '입금지연';
-  issueNotes?: string;
-  taxStatus?: string;
-  invoiceSupplyPrice?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  hasWarning?: boolean; // 필수 항목 누락 경고 플래그
 }
 
 export interface BrandPlanningTeam {
@@ -350,11 +317,9 @@ export interface BrandPlanningTeam {
   eoeoManager?: string;
   contractLink?: string;
   estimateLink?: string;
-  installmentNumber?: number;
   attributionYearMonth?: string;
   advanceBalance?: string;
-  ratio?: number;
-  count?: number;
+  ratio?: string;
   expectedDepositDate?: string;
   depositStatus?: '입금완료' | '입금예정' | '입금지연';
   oneTimeExpenseAmount?: number;
@@ -370,53 +335,23 @@ export interface BrandPlanningTeam {
   issueNotes?: string;
   taxStatus?: string;
   invoiceSupplyPrice?: number;
+  // 회계 데이터 관리 필드
+  projectPeriodStart?: string; // 예: "2501" (25년 1월)
+  projectPeriodEnd?: string; // 예: "2506" (25년 6월)
+  targetMarginRate?: number; // 타겟 마진율 (예: 25.00)
+  finalMonthActualCost?: number; // 마지막달 실제 총 비용
   createdAt?: string;
   updatedAt?: string;
   hasWarning?: boolean;
 }
 
-export interface OtherIncome {
+// 리얼회계용 월별 실비 집행액 타입
+export interface ProjectMonthlyExpense {
   id?: string;
-  category?: string;
-  vendorCode?: string;
-  companyName?: string;
-  brandName?: string;
-  brandNames?: string[];
-  businessRegistrationNumber?: string;
-  invoiceEmail?: string;
-  projectCode?: string;
-  projectCode2?: string;
-  projectCode3?: string;
-  project?: string;
-  projectCategory?: string;
-  projectCategory2?: string;
-  projectCategory3?: string;
-  projectName?: string;
-  eoeoManager?: string;
-  contractLink?: string;
-  estimateLink?: string;
-  installmentNumber?: number;
-  attributionYearMonth?: string;
-  advanceBalance?: string;
-  ratio?: number;
-  count?: number;
-  expectedDepositDate?: string;
-  expectedDepositAmount?: number;
-  expectedDepositCurrency?: string;
-  description?: string;
-  depositDate?: string;
-  depositAmount?: number;
-  depositCurrency?: string;
-  oneTimeExpenseAmount?: number;
-  createdDate?: string;
-  invoiceCopy?: string;
-  invoiceAttachmentStatus?: 'required' | 'completed' | 'not_required'; // 첨부필요, 첨부완료, 첨부 불요
-  depositStatus?: '입금완료' | '입금예정' | '입금지연';
-  issueNotes?: string;
-  taxStatus?: string;
-  invoiceSupplyPrice?: number;
+  incomeRecordId: string;
+  month: string; // 예: "2501" (25년 1월)
+  expenseAmount: number;
+  expenseCurrency?: string; // 'KRW' | 'USD'
   createdAt?: string;
   updatedAt?: string;
-  hasWarning?: boolean; // 필수 항목 누락 경고 플래그
 }
-

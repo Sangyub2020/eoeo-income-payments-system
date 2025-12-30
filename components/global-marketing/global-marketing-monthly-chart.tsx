@@ -3,15 +3,21 @@
 import { useEffect, useState } from 'react';
 import { ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { GlobalMarketingTeam } from '@/lib/types';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, formatDate } from '@/lib/utils';
 import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Card } from '@/components/ui/card';
+import { GripVertical } from 'lucide-react';
 
 export function GlobalMarketingMonthlyChart() {
   const [records, setRecords] = useState<GlobalMarketingTeam[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedYear, setSelectedYear] = useState<string>('');
+  const [excludedIds, setExcludedIds] = useState<Set<string>>(new Set());
+  const [draggedItem, setDraggedItem] = useState<{ id: string; from: 'included' | 'excluded' } | null>(null);
+  const [filterYear, setFilterYear] = useState<string>('');
+  const [filterMonth, setFilterMonth] = useState<string>('');
+  const [filterBrand, setFilterBrand] = useState<string>('');
 
   // 귀속연월 파싱 함수: "2512" -> { year: "2025", month: "12", fullYear: 2025 }
   const parseAttributionYearMonth = (attributionYearMonth: string) => {
@@ -31,7 +37,21 @@ export function GlobalMarketingMonthlyChart() {
 
   useEffect(() => {
     fetchRecords();
+    // localStorage에서 저장된 선택 상태 불러오기
+    const savedExcluded = localStorage.getItem('global_marketing_excluded_ids');
+    if (savedExcluded) {
+      setExcludedIds(new Set(JSON.parse(savedExcluded)));
+    }
   }, []);
+
+  // 선택 상태가 변경될 때마다 localStorage에 저장
+  useEffect(() => {
+    if (excludedIds.size > 0) {
+      localStorage.setItem('global_marketing_excluded_ids', JSON.stringify(Array.from(excludedIds)));
+    } else {
+      localStorage.removeItem('global_marketing_excluded_ids');
+    }
+  }, [excludedIds]);
 
   const fetchRecords = async () => {
     try {
@@ -70,13 +90,20 @@ export function GlobalMarketingMonthlyChart() {
   };
 
   // 선택된 연도에 해당하는 데이터만 필터링
-  const filteredRecords = selectedYear 
+  const filteredRecordsByYear = selectedYear 
     ? records.filter(record => {
         if (!record.attributionYearMonth) return false;
         const parsed = parseAttributionYearMonth(record.attributionYearMonth);
         return parsed && parsed.year === selectedYear;
       })
     : records;
+
+  // 매출 집계에 포함할 데이터 필터링
+  const filteredRecords = filteredRecordsByYear.filter(record => {
+    // excludedIds에 있는 것은 제외
+    if (excludedIds.has(record.id || '')) return false;
+    return true;
+  });
 
   // 귀속연월 기준으로 데이터 집계
   const monthlyData = filteredRecords.reduce((acc, record) => {
@@ -178,6 +205,102 @@ export function GlobalMarketingMonthlyChart() {
     }
     return sum;
   }, 0);
+
+  // 드래그앤드롭 핸들러
+  const handleDragStart = (e: React.DragEvent, id: string, from: 'included' | 'excluded') => {
+    setDraggedItem({ id, from });
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = (e: React.DragEvent, target: 'included' | 'excluded') => {
+    e.preventDefault();
+    if (!draggedItem) return;
+
+    const id = draggedItem.id;
+    const newExcludedIds = new Set(excludedIds);
+
+    // 새 위치에 따라 excludedIds 업데이트
+    if (target === 'included') {
+      // 매출 집계로 이동: excludedIds에서 제거
+      newExcludedIds.delete(id);
+    } else {
+      // 매출 제외로 이동: excludedIds에 추가
+      newExcludedIds.add(id);
+    }
+
+    setExcludedIds(newExcludedIds);
+    setDraggedItem(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedItem(null);
+  };
+
+  // 데이터탭용: 모든 레코드 (매출 집계/제외 선택용)
+  const allRecordsForDataTabBase = filteredRecordsByYear.filter(r => r.id);
+  
+  // 연도/월/브랜드 필터 적용
+  const allRecordsForDataTab = allRecordsForDataTabBase.filter(record => {
+    // 연도/월 필터
+    if (filterYear || filterMonth) {
+      if (!record.attributionYearMonth) return false;
+      const parsed = parseAttributionYearMonth(record.attributionYearMonth);
+      if (!parsed) return false;
+      
+      if (filterYear && parsed.year !== filterYear) return false;
+      if (filterMonth && parsed.month !== filterMonth) return false;
+    }
+    
+    // 브랜드명 필터
+    if (filterBrand) {
+      const brandNames = Array.isArray(record.brandNames) && record.brandNames.length > 0
+        ? record.brandNames
+        : record.brandName ? [record.brandName] : [];
+      const brandMatch = brandNames.some(brand => 
+        brand && brand.toLowerCase().includes(filterBrand.toLowerCase())
+      );
+      if (!brandMatch) return false;
+    }
+    
+    return true;
+  });
+
+  // 사용 가능한 연도 목록 (데이터탭용)
+  const availableYearsForFilter = Array.from(
+    new Set(
+      allRecordsForDataTabBase
+        .filter(r => r.attributionYearMonth)
+        .map(r => {
+          const parsed = parseAttributionYearMonth(r.attributionYearMonth!);
+          return parsed ? parsed.year : null;
+        })
+        .filter((year): year is string => year !== null)
+    )
+  ).sort().reverse();
+
+  // 사용 가능한 월 목록 (선택된 연도에 따라)
+  const availableMonthsForFilter = filterYear
+    ? Array.from(
+        new Set(
+          allRecordsForDataTabBase
+            .filter(r => {
+              if (!r.attributionYearMonth) return false;
+              const parsed = parseAttributionYearMonth(r.attributionYearMonth);
+              return parsed && parsed.year === filterYear;
+            })
+            .map(r => {
+              const parsed = parseAttributionYearMonth(r.attributionYearMonth!);
+              return parsed ? parsed.month : null;
+            })
+            .filter((month): month is string => month !== null)
+        )
+      ).sort((a, b) => parseInt(a) - parseInt(b))
+    : [];
 
   if (isLoading) {
     return (
@@ -304,6 +427,198 @@ export function GlobalMarketingMonthlyChart() {
             />
           </ComposedChart>
         </ResponsiveContainer>
+      </Card>
+
+      {/* 데이터탭 */}
+      <Card>
+        <div className="mb-4">
+          <div className="flex justify-between items-center mb-2">
+            <h3 className="text-lg font-semibold text-gray-200">매출 집계 데이터 관리</h3>
+            <div className="flex items-center gap-2">
+              <label className="text-sm text-gray-300">연도:</label>
+              <SearchableSelect
+                value={filterYear}
+                onChange={(value) => {
+                  setFilterYear(value || '');
+                  setFilterMonth(''); // 연도 변경 시 월 초기화
+                }}
+                options={[
+                  { value: '', label: '전체' },
+                  ...availableYearsForFilter.map(year => ({ value: year, label: `${year}년` }))
+                ]}
+                placeholder="연도 선택"
+                className="w-32"
+              />
+              {filterYear && (
+                <>
+                  <label className="text-sm text-gray-300 ml-2">월:</label>
+                  <SearchableSelect
+                    value={filterMonth}
+                    onChange={(value) => setFilterMonth(value || '')}
+                    options={[
+                      { value: '', label: '전체' },
+                      ...availableMonthsForFilter.map(month => ({ value: month, label: `${parseInt(month)}월` }))
+                    ]}
+                    placeholder="월 선택"
+                    className="w-28"
+                  />
+                </>
+              )}
+              <label className="text-sm text-gray-300 ml-2">브랜드:</label>
+              <input
+                type="text"
+                value={filterBrand}
+                onChange={(e) => setFilterBrand(e.target.value)}
+                placeholder="브랜드명 검색"
+                className="w-40 px-3 py-1.5 border border-purple-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 bg-black/40 backdrop-blur-sm text-gray-200 placeholder-gray-500 text-sm"
+              />
+            </div>
+          </div>
+          <div className="flex gap-4 text-sm">
+            <div className="text-cyan-400">
+              매출 집계: <span className="font-bold">{allRecordsForDataTab.filter(r => !excludedIds.has(r.id || '')).length}개</span>
+            </div>
+            <div className="text-red-400">
+              매출 제외: <span className="font-bold">{allRecordsForDataTab.filter(r => excludedIds.has(r.id || '')).length}개</span>
+            </div>
+          </div>
+        </div>
+        <div className="mt-4">
+            <div className="grid grid-cols-2 gap-4">
+              {/* 왼쪽: 매출 집계 */}
+              <div className="border border-cyan-500/30 rounded-lg p-4 bg-cyan-500/10">
+                <h4 className="text-lg font-semibold text-cyan-400 mb-3">매출 집계</h4>
+                <div 
+                  className="min-h-[400px] max-h-[600px] overflow-y-auto space-y-2"
+                  onDragOver={handleDragOver}
+                  onDrop={(e) => handleDrop(e, 'included')}
+                >
+                  {allRecordsForDataTab
+                    .filter(r => !excludedIds.has(r.id || ''))
+                    .map((record) => (
+                      <div
+                        key={record.id}
+                        draggable
+                        onDragStart={(e) => handleDragStart(e, record.id || '', 'included')}
+                        onDragEnd={handleDragEnd}
+                        className="bg-slate-700/50 border border-cyan-500/30 rounded p-3 cursor-move hover:bg-slate-700/70 transition-colors flex items-center gap-2"
+                      >
+                        <GripVertical className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <div className="grid grid-cols-7 gap-2 text-xs">
+                            <div>
+                              <div className="text-gray-400 mb-1">거래유형</div>
+                              <div className="text-gray-200">{record.category || '-'}</div>
+                            </div>
+                            <div>
+                              <div className="text-gray-400 mb-1">프로젝트 유형</div>
+                              <div className="text-gray-200">{record.projectCategory || record.project || '-'}</div>
+                            </div>
+                            <div>
+                              <div className="text-gray-400 mb-1">Project Name</div>
+                              <div className="text-gray-200 truncate">{record.projectName || '-'}</div>
+                            </div>
+                            <div>
+                              <div className="text-gray-400 mb-1">브랜드명</div>
+                              <div className="text-gray-200">
+                                {Array.isArray(record.brandNames) && record.brandNames.length > 0
+                                  ? record.brandNames.join(', ')
+                                  : record.brandName || '-'}
+                              </div>
+                            </div>
+                            <div>
+                              <div className="text-gray-400 mb-1">입금액</div>
+                              <div className="text-gray-200">{formatCurrency(record.depositAmount || 0)}</div>
+                            </div>
+                            <div>
+                              <div className="text-gray-400 mb-1">세금계산서 발행 공급가</div>
+                              <div className="text-gray-200">{record.invoiceSupplyPrice ? formatCurrency(record.invoiceSupplyPrice) : '-'}</div>
+                            </div>
+                            <div>
+                              <div className="text-gray-400 mb-1">입금일</div>
+                              <div className="text-gray-200">{record.depositDate ? formatDate(record.depositDate) : '-'}</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  {allRecordsForDataTab.filter(r => !excludedIds.has(r.id || '')).length === 0 && (
+                    <div className="text-center text-gray-500 py-8">
+                      드래그하여 데이터를 추가하세요
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* 오른쪽: 매출 제외 */}
+              <div className="border border-red-500/30 rounded-lg p-4 bg-red-500/10">
+                <h4 className="text-lg font-semibold text-red-400 mb-3">매출 제외</h4>
+                <div 
+                  className="min-h-[400px] max-h-[600px] overflow-y-auto space-y-2"
+                  onDragOver={handleDragOver}
+                  onDrop={(e) => handleDrop(e, 'excluded')}
+                >
+                  {allRecordsForDataTab
+                    .filter(r => excludedIds.has(r.id || ''))
+                    .map((record) => (
+                      <div
+                        key={record.id}
+                        draggable
+                        onDragStart={(e) => handleDragStart(e, record.id || '', 'excluded')}
+                        onDragEnd={handleDragEnd}
+                        className="bg-slate-700/50 border border-red-500/30 rounded p-3 cursor-move hover:bg-slate-700/70 transition-colors flex items-center gap-2"
+                      >
+                        <GripVertical className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <div className="grid grid-cols-7 gap-2 text-xs">
+                            <div>
+                              <div className="text-gray-400 mb-1">거래유형</div>
+                              <div className="text-gray-200">{record.category || '-'}</div>
+                            </div>
+                            <div>
+                              <div className="text-gray-400 mb-1">프로젝트 유형</div>
+                              <div className="text-gray-200">{record.projectCategory || record.project || '-'}</div>
+                            </div>
+                            <div>
+                              <div className="text-gray-400 mb-1">Project Name</div>
+                              <div className="text-gray-200 truncate">{record.projectName || '-'}</div>
+                            </div>
+                            <div>
+                              <div className="text-gray-400 mb-1">브랜드명</div>
+                              <div className="text-gray-200">
+                                {Array.isArray(record.brandNames) && record.brandNames.length > 0
+                                  ? record.brandNames.join(', ')
+                                  : record.brandName || '-'}
+                              </div>
+                            </div>
+                            <div>
+                              <div className="text-gray-400 mb-1">입금액</div>
+                              <div className="text-gray-200">{formatCurrency(record.depositAmount || 0)}</div>
+                            </div>
+                            <div>
+                              <div className="text-gray-400 mb-1">세금계산서 발행 공급가</div>
+                              <div className="text-gray-200">{record.invoiceSupplyPrice ? formatCurrency(record.invoiceSupplyPrice) : '-'}</div>
+                            </div>
+                            <div>
+                              <div className="text-gray-400 mb-1">입금일</div>
+                              <div className="text-gray-200">{record.depositDate ? formatDate(record.depositDate) : '-'}</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  {allRecordsForDataTab.filter(r => excludedIds.has(r.id || '')).length === 0 && (
+                    <div className="text-center text-gray-500 py-8">
+                      드래그하여 데이터를 추가하세요
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+            <div className="mt-4 text-sm text-gray-400">
+              💡 드래그앤드롭으로 데이터를 이동하여 매출 집계에 포함/제외할 수 있습니다.
+            </div>
+          </div>
       </Card>
     </div>
   );

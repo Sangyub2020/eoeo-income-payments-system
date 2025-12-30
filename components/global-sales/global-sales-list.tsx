@@ -33,7 +33,7 @@ export function GlobalSalesList({ onSuccess }: GlobalSalesListProps) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [editingRecord, setEditingRecord] = useState<GlobalSalesTeam | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchColumns, setSearchColumns] = useState<string[]>(['companyName', 'brandName']); // 기본값: 회사이름, 브랜드명
+  const [searchColumns, setSearchColumns] = useState<string[]>(['companyName', 'projectName', 'brandName']); // 기본값: 회사명, 프로젝트명, 브랜드명
   const [sortField, setSortField] = useState<SortField>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [isColumnSelectorOpen, setIsColumnSelectorOpen] = useState(false);
@@ -42,6 +42,7 @@ export function GlobalSalesList({ onSuccess }: GlobalSalesListProps) {
   // 검색 가능한 컬럼 옵션
   const searchableColumns = [
     { value: 'companyName', label: '회사명' },
+    { value: 'projectName', label: '프로젝트명' },
     { value: 'brandName', label: '브랜드명' },
     { value: 'vendorCode', label: '거래처코드' },
     { value: 'category', label: '거래 유형' },
@@ -1305,7 +1306,7 @@ export function GlobalSalesList({ onSuccess }: GlobalSalesListProps) {
                     <td className="p-2 text-[13px] whitespace-nowrap truncate overflow-hidden" title={record.depositDate ? formatDate(record.depositDate) : ''}>{record.depositDate ? formatDate(record.depositDate) : '-'}</td>
                   )}
                   {visibleColumns.has('depositAmount') && (
-                    <td className="p-2 text-[13px] text-left font-medium whitespace-nowrap truncate overflow-hidden" title={record.depositAmount ? formatCurrency(record.depositAmount, record.depositCurrency) : ''}>{record.depositAmount ? formatCurrency(record.depositAmount, record.depositCurrency) : '-'}</td>
+                    <td className="p-2 text-[13px] text-left font-medium whitespace-nowrap truncate overflow-hidden" title={record.depositAmount ? formatCurrency(record.depositAmount, record.depositCurrency || 'KRW') : ''}>{record.depositAmount ? formatCurrency(record.depositAmount, record.depositCurrency || 'KRW') : '-'}</td>
                   )}
                   {visibleColumns.has('invoiceAttachment') && (
                     <td className="p-2 text-[13px] whitespace-nowrap">

@@ -126,17 +126,8 @@ export function GlobalMarketingBulkModal({ isOpen, onClose, onSuccess }: GlobalM
     if (!text.trim()) return parsedRecords;
 
     try {
-      // 허용된 거래유형 값 목록
-      const validCategories = [
-        '용역사업 - 서비스매출',
-        '파트너십/마케팅지원비',
-        '기재고사입',
-        '용역사업 - 수출바우처',
-        'other',
-        'B2B',
-        '배송비',
-        '기재고판매',
-      ];
+      // 허용된 거래유형 값 목록 (GLOBAL_MARKETING_CATEGORIES 상수 사용)
+      const validCategories = GLOBAL_MARKETING_CATEGORIES;
 
       // 구분자 확인
       const delimiter = text.includes('\t') ? '\t' : ',';
@@ -494,16 +485,7 @@ export function GlobalMarketingBulkModal({ isOpen, onClose, onSuccess }: GlobalM
           const delimiter = csvText.includes('\t') ? '\t' : ',';
           const headerLine = lines[0] || '';
           const headers = headerLine.split(delimiter).map(h => h.trim().replace(/^"|"$/g, ''));
-          const validCategories = [
-            '용역사업 - 서비스매출',
-            '파트너십/마케팅지원비',
-            '기재고사입',
-            '용역사업 - 수출바우처',
-            'other',
-            'B2B',
-            '배송비',
-            '기재고판매',
-          ];
+          const validCategories = GLOBAL_MARKETING_CATEGORIES;
           
           // 첫 번째 데이터 행 확인
           const firstDataLine = lines[1] || '';
@@ -681,11 +663,12 @@ export function GlobalMarketingBulkModal({ isOpen, onClose, onSuccess }: GlobalM
             ...record,
             brandNames: brandNames.length > 0 ? brandNames : undefined,
             invoiceCopy: invoiceCopyUrl,
+            invoiceAttachmentStatus: invoiceCopyUrl ? 'completed' : (record.invoiceAttachmentStatus || 'required'),
           };
         })
       );
 
-      const response = await fetch('/api/global-marketing-team/bulk', {
+      const response = await fetch('/api/income-records/bulk', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -694,27 +677,43 @@ export function GlobalMarketingBulkModal({ isOpen, onClose, onSuccess }: GlobalM
       });
 
       const data = await response.json();
+      console.log('일괄 등록 API 응답:', data);
 
-      if (!response.ok || !data.success) {
-        // 에러 상세 정보 표시
-        const errorDetails = data.result?.errors || [];
-        const errorMessage = errorDetails.length > 0
-          ? `일괄 등록 중 ${data.result?.failed || 0}개 실패:\n${errorDetails.slice(0, 10).join('\n')}${errorDetails.length > 10 ? `\n... 외 ${errorDetails.length - 10}개` : ''}`
-          : (data.error || '일괄 등록에 실패했습니다.');
-        throw new Error(errorMessage);
+      if (!response.ok) {
+        const errorMsg = data.error || data.message || '일괄 등록에 실패했습니다.';
+        console.error('일괄 등록 API 오류:', { status: response.status, data });
+        throw new Error(`일괄 등록 실패 (HTTP ${response.status}): ${errorMsg}`);
       }
 
-      // 성공/실패 통계 표시
-      if (data.result) {
-        const { success, failed, errors } = data.result;
-        if (failed > 0) {
-          const errorDetails = errors.slice(0, 10).join('\n');
-          setError(`성공: ${success}개, 실패: ${failed}개\n\n실패한 항목:\n${errorDetails}${errors.length > 10 ? `\n... 외 ${errors.length - 10}개` : ''}`);
+      // API 응답이 success: false인 경우
+      if (!data.success) {
+        const errorMsg = data.error || data.message || '일괄 등록에 실패했습니다.';
+        console.error('일괄 등록 API 실패:', data);
+        throw new Error(errorMsg);
+      }
+
+      // API가 성공했더라도 일부 항목이 실패했을 수 있음 (207 Multi-Status)
+      if (response.status === 207 || (data.failedCount && data.failedCount > 0)) {
+        const errorDetails = data.errors && data.errors.length > 0
+          ? data.errors.join('\n')
+          : `${data.failedCount || 0}개의 항목이 등록에 실패했습니다.`;
+        console.error('일부 항목 등록 실패:', { successCount: data.successCount, failedCount: data.failedCount, errors: data.errors, fullData: data });
+        
+        // 에러가 있으면 상세 정보 표시
+        if (data.errors && data.errors.length > 0) {
+          console.error('상세 에러 정보:', data.errors);
+          // 각 에러를 개별적으로 출력
+          data.errors.forEach((err: string, idx: number) => {
+            console.error(`에러 ${idx + 1}:`, err);
+          });
+          
+          const errorDetails = data.errors.slice(0, 10).join('\n');
+          setError(`성공: ${data.successCount || 0}개, 실패: ${data.failedCount || 0}개\n\n실패한 항목:\n${errorDetails}${data.errors.length > 10 ? `\n... 외 ${data.errors.length - 10}개` : ''}`);
         } else {
-          onSuccess();
-          onClose();
+          setError(`성공: ${data.successCount || 0}개, 실패: ${data.failedCount || 0}개`);
         }
       } else {
+        // 모든 항목이 성공
         onSuccess();
         onClose();
       }

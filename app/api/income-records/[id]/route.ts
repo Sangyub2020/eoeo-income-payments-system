@@ -63,11 +63,9 @@ export async function PUT(
       eoeoManager,
       contractLink,
       estimateLink,
-      installmentNumber,
       attributionYearMonth,
       advanceBalance,
       ratio,
-      count,
       expectedDepositDate,
       depositStatus,
       oneTimeExpenseAmount,
@@ -83,6 +81,11 @@ export async function PUT(
       issueNotes,
       taxStatus,
       invoiceSupplyPrice,
+      // 회계 데이터 관리 필드
+      projectPeriodStart,
+      projectPeriodEnd,
+      targetMarginRate,
+      finalMonthActualCost,
     } = body;
 
     const updateData: any = {};
@@ -119,11 +122,9 @@ export async function PUT(
     if (eoeoManager !== undefined) updateData.eoeo_manager = eoeoManager || null;
     if (contractLink !== undefined) updateData.contract_link = contractLink || null;
     if (estimateLink !== undefined) updateData.estimate_link = estimateLink || null;
-    if (installmentNumber !== undefined) updateData.installment_number = installmentNumber || null;
     if (attributionYearMonth !== undefined) updateData.attribution_year_month = attributionYearMonth || null;
     if (advanceBalance !== undefined) updateData.advance_balance = advanceBalance || null;
     if (ratio !== undefined) updateData.ratio = ratio || null;
-    if (count !== undefined) updateData.count = count || null;
     if (expectedDepositDate !== undefined) updateData.expected_deposit_date = expectedDepositDate || null;
     if (depositStatus !== undefined) updateData.deposit_status = depositStatus || null;
     if (oneTimeExpenseAmount !== undefined) updateData.one_time_expense_amount = oneTimeExpenseAmount || null;
@@ -139,6 +140,11 @@ export async function PUT(
     if (issueNotes !== undefined) updateData.issue_notes = issueNotes || null;
     if (taxStatus !== undefined) updateData.tax_status = taxStatus || null;
     if (invoiceSupplyPrice !== undefined) updateData.invoice_supply_price = invoiceSupplyPrice || null;
+    // 회계 데이터 관리 필드
+    if (projectPeriodStart !== undefined) updateData.project_period_start = projectPeriodStart || null;
+    if (projectPeriodEnd !== undefined) updateData.project_period_end = projectPeriodEnd || null;
+    if (targetMarginRate !== undefined) updateData.target_margin_rate = targetMarginRate || null;
+    if (finalMonthActualCost !== undefined) updateData.final_month_actual_cost = finalMonthActualCost || null;
 
     const { data, error } = await supabaseAdmin
       .from('income_records')
@@ -197,11 +203,9 @@ export async function PUT(
       eoeoManager: data.eoeo_manager,
       contractLink: data.contract_link,
       estimateLink: data.estimate_link,
-      installmentNumber: data.installment_number,
       attributionYearMonth: data.attribution_year_month,
       advanceBalance: data.advance_balance,
       ratio: data.ratio,
-      count: data.count,
       expectedDepositDate: data.expected_deposit_date,
       depositStatus: data.deposit_status,
       oneTimeExpenseAmount: data.one_time_expense_amount,
@@ -216,6 +220,11 @@ export async function PUT(
       issueNotes: data.issue_notes,
       taxStatus: data.tax_status,
       invoiceSupplyPrice: data.invoice_supply_price,
+      // 회계 데이터 관리 필드
+      projectPeriodStart: data.project_period_start,
+      projectPeriodEnd: data.project_period_end,
+      targetMarginRate: data.target_margin_rate,
+      finalMonthActualCost: data.final_month_actual_cost,
       createdAt: data.created_at,
       updatedAt: data.updated_at,
     };

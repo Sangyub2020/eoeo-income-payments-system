@@ -125,16 +125,8 @@ export function OtherIncomeBulkModal({ isOpen, onClose, onSuccess }: OtherIncome
 
     try {
       // 허용된 거래유형 값 목록
-      const validCategories = [
-        'ONE-TIME',
-        '파트너십/마케팅지원비',
-        '기재고사입',
-        '정부지원사업',
-        'other',
-        'B2B',
-        '배송비',
-        '기재고판매',
-      ];
+      // 허용된 거래유형 값 목록 (CATEGORIES 상수 사용)
+      const validCategories = CATEGORIES;
 
       // 구분자 확인
       const delimiter = text.includes('\t') ? '\t' : ',';
@@ -491,16 +483,7 @@ export function OtherIncomeBulkModal({ isOpen, onClose, onSuccess }: OtherIncome
           const delimiter = csvText.includes('\t') ? '\t' : ',';
           const headerLine = lines[0] || '';
           const headers = headerLine.split(delimiter).map(h => h.trim().replace(/^"|"$/g, ''));
-          const validCategories = [
-            'ONE-TIME',
-            '파트너십/마케팅지원비',
-            '기재고사입',
-            '정부지원사업',
-            'other',
-            'B2B',
-            '배송비',
-            '기재고판매',
-          ];
+          const validCategories = CATEGORIES;
           
           // 첫 번째 데이터 행 확인
           const firstDataLine = lines[1] || '';

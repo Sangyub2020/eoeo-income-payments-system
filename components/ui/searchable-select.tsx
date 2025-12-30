@@ -28,9 +28,16 @@ export function SearchableSelect({
   const inputRef = useRef<HTMLInputElement>(null);
 
   // 중복된 value를 가진 옵션 제거 (첫 번째 것만 유지)
+  // value가 동일하면 같은 옵션으로 간주
   const uniqueOptions = options.reduce((acc, opt) => {
     if (!acc.find(item => item.value === opt.value)) {
       acc.push(opt);
+    } else {
+      // 중복된 value 발견 시 로깅 (디버깅용)
+      console.warn('SearchableSelect: 중복된 value 발견', {
+        existing: acc.find(item => item.value === opt.value),
+        duplicate: opt,
+      });
     }
     return acc;
   }, [] as Array<{ value: string; label: string }>);
@@ -100,8 +107,8 @@ export function SearchableSelect({
       </button>
 
       {isOpen && (
-        <div className="absolute z-50 w-full mt-1 bg-black/80 backdrop-blur-xl border border-purple-500/30 rounded-md shadow-lg max-h-60 overflow-hidden">
-          <div className="p-2 border-b border-purple-500/20">
+        <div className="absolute z-50 w-full mt-1 bg-black/80 backdrop-blur-xl border border-purple-500/30 rounded-md shadow-lg max-h-[400px] overflow-hidden flex flex-col">
+          <div className="p-2 border-b border-purple-500/20 flex-shrink-0">
             <div className="relative">
               <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
@@ -115,7 +122,7 @@ export function SearchableSelect({
               />
             </div>
           </div>
-          <div className="max-h-48 overflow-y-auto">
+          <div className="overflow-y-auto overflow-x-hidden flex-1 min-h-0" style={{ maxHeight: '350px' }}>
             {filteredOptions.length === 0 ? (
               <div className="px-3 py-2 text-sm text-gray-400">검색 결과가 없습니다</div>
             ) : (
