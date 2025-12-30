@@ -194,7 +194,6 @@ export function GlobalMarketingBulkModal({ isOpen, onClose, onSuccess }: GlobalM
         '계약서 (LINK)': 'contractLink',
         '견적서': 'estimateLink',
         '견적서 (LINK)': 'estimateLink',
-        '차수': 'installmentNumber',
         '귀속년월': 'attributionYearMonth',
         '귀속연월': 'attributionYearMonth',
         '선/잔금': 'advanceBalance',
@@ -416,10 +415,9 @@ export function GlobalMarketingBulkModal({ isOpen, onClose, onSuccess }: GlobalM
           eoeoManager: get('eoeoManager'),
           contractLink: get('contractLink'),
           estimateLink: get('estimateLink'),
-          installmentNumber: get('installmentNumber') ? Number(get('installmentNumber')) : undefined,
           attributionYearMonth: get('attributionYearMonth'),
           advanceBalance: get('advanceBalance'),
-          ratio: get('ratio') ? Number(get('ratio')) : undefined,
+          ratio: get('ratio') || undefined,
           count: get('count') ? Number(get('count')) : undefined,
           expectedDepositDate: parseDate(get('expectedDepositDate')),
           oneTimeExpenseAmount: parseNumber(get('oneTimeExpenseAmount') || ''),
@@ -973,17 +971,6 @@ export function GlobalMarketingBulkModal({ isOpen, onClose, onSuccess }: GlobalM
                             )}
                           </div>
 
-                          <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-1">
-                              차수
-                            </label>
-                            <input
-                              type="number"
-                              value={record.installmentNumber || ''}
-                              onChange={(e) => updateRecord(index, { installmentNumber: e.target.value ? Number(e.target.value) : undefined })}
-                              className="w-full px-3 py-2 border border-purple-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 bg-black/40 backdrop-blur-sm text-gray-200 placeholder-gray-500"
-                            />
-                          </div>
 
                           <div>
                             <label className="block text-sm font-medium text-gray-300 mb-1">

@@ -516,7 +516,7 @@ export function OnlineCommerceBulkModal({ isOpen, onClose, onSuccess }: OnlineCo
         installmentNumber: get('installmentNumber') ? Number(get('installmentNumber')) : undefined,
         attributionYearMonth: get('attributionYearMonth'),
         advanceBalance: get('advanceBalance'),
-        ratio: get('ratio') ? Number(get('ratio')) : undefined,
+        ratio: get('ratio') || undefined,
         count: get('count') ? Number(get('count')) : undefined,
         expectedDepositDate: parseDate(get('expectedDepositDate')),
         oneTimeExpenseAmount: parseNumber(get('oneTimeExpenseAmount') || ''),

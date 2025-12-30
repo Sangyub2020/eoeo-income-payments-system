@@ -197,7 +197,6 @@ export function GlobalSalesBulkModal({ isOpen, onClose, onSuccess }: GlobalSales
         '인보이스': 'invoiceLink',
         '인보이스 (LINK)': 'invoiceLink',
         '인보이스링크': 'invoiceLink',
-        '차수': 'installmentNumber',
         '귀속년월': 'attributionYearMonth',
         '귀속연월': 'attributionYearMonth',
         '선/잔금': 'advanceBalance',
@@ -427,10 +426,9 @@ export function GlobalSalesBulkModal({ isOpen, onClose, onSuccess }: GlobalSales
           eoeoManager: get('eoeoManager'),
           contractLink: get('contractLink'),
           invoiceLink: get('invoiceLink'), // 글로벌 세일즈는 invoiceLink 사용
-          installmentNumber: get('installmentNumber') ? Number(get('installmentNumber')) : undefined,
           attributionYearMonth: get('attributionYearMonth'),
           advanceBalance: get('advanceBalance'),
-          ratio: get('ratio') ? Number(get('ratio')) : undefined,
+          ratio: get('ratio') || undefined,
           count: get('count') ? Number(get('count')) : undefined,
           expectedDepositDate: parseDate(get('expectedDepositDate')),
           oneTimeExpenseAmount: parseNumber(get('oneTimeExpenseAmount') || ''),
@@ -933,17 +931,6 @@ B2B,V002,XYZ트레이딩,987-65-43210,billing@xyztrade.com,P002,수출,미국 �
                             )}
                           </div>
 
-                          <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-1">
-                              차수
-                            </label>
-                            <input
-                              type="number"
-                              value={record.installmentNumber || ''}
-                              onChange={(e) => updateRecord(index, { installmentNumber: e.target.value ? Number(e.target.value) : undefined })}
-                              className="w-full px-3 py-2 border border-purple-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 bg-black/40 backdrop-blur-sm text-gray-200 placeholder-gray-500"
-                            />
-                          </div>
 
                           <div>
                             <label className="block text-sm font-medium text-gray-300 mb-1">
@@ -978,7 +965,7 @@ B2B,V002,XYZ트레이딩,987-65-43210,billing@xyztrade.com,P002,수출,미국 �
                               type="number"
                               step="0.01"
                               value={record.ratio || ''}
-                              onChange={(e) => updateRecord(index, { ratio: e.target.value ? Number(e.target.value) : undefined })}
+                              onChange={(e) => updateRecord(index, { ratio: e.target.value || undefined })}
                               className="w-full px-3 py-2 border border-purple-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 bg-black/40 backdrop-blur-sm text-gray-200 placeholder-gray-500"
                             />
                           </div>
