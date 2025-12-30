@@ -200,7 +200,6 @@ export function OnlineCommerceBulkModal({ isOpen, onClose, onSuccess }: OnlineCo
       '귀속연월': 'attributionYearMonth', // 변형 지원
       '선/잔금': 'advanceBalance',
       '비율': 'ratio',
-      '건수': 'count',
       '적요': 'description',
       '작성일': 'createdDate',
       '작성일자': 'createdDate', // 변형 지원
@@ -517,7 +516,6 @@ export function OnlineCommerceBulkModal({ isOpen, onClose, onSuccess }: OnlineCo
         attributionYearMonth: get('attributionYearMonth'),
         advanceBalance: get('advanceBalance'),
         ratio: get('ratio') || undefined,
-        count: get('count') ? Number(get('count')) : undefined,
         expectedDepositDate: parseDate(get('expectedDepositDate')),
         oneTimeExpenseAmount: parseNumber(get('oneTimeExpenseAmount') || ''),
         expectedDepositAmount: expectedDepositAmountData.amount,
