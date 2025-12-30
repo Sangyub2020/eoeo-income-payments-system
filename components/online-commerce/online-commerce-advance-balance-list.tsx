@@ -703,7 +703,7 @@ export function OnlineCommerceAdvanceBalanceList({ onSuccess }: OnlineCommerceAd
                       const depositStatus = getDepositStatus(record);
                   
                   return (
-                    <tr key={record.id || index} className="border-b border-purple-500/20 hover:bg-white/5">
+                    <tr key={record.id || recordIndex} className="border-b border-purple-500/20 hover:bg-white/5">
                       {visibleColumns.has('number') && (
                         <td className="p-2 text-xs text-gray-300" style={{ width: `${columnWidths.number}px` }}>{actualIndex}</td>
                       )}
