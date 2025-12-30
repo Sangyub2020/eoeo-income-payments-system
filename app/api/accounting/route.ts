@@ -46,7 +46,8 @@ export async function GET(request: Request) {
         projectPeriodEnd: string | null;
         targetMarginRate: number | null;
         finalMonthActualCost: number | null;
-        monthlyExpenses: Array<{ id?: string; month: string; expenseAmount: number }>;
+        finalMonthActualCostCurrency: string;
+        monthlyExpenses: Array<{ id?: string; month: string; expenseAmount: number; expenseCurrency?: string }>;
       }> = {};
 
       incomeRecords?.forEach(record => {
