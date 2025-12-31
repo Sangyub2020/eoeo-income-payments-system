@@ -232,6 +232,7 @@ export interface OtherIncome {
   depositDate?: string;
   depositAmount?: number;
   depositCurrency?: string;
+  depositStatus?: '입금완료' | '입금예정' | '입금지연';
   createdDate?: string;
   invoiceCopy?: string;
   invoiceAttachmentStatus?: 'required' | 'completed' | 'not_required'; // 첨부필요, 첨부완료, 첨부 불요
