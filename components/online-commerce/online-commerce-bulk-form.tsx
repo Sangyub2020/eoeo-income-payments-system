@@ -48,7 +48,7 @@ export function OnlineCommerceBulkForm({ onSuccess }: OnlineCommerceBulkFormProp
           estimateLink: parts[11] || undefined,
           attributionYearMonth: parts[12] || undefined,
           advanceBalance: parts[13] || undefined,
-          ratio: parts[14] ? Number(parts[14]) : undefined,
+          ratio: parts[14] || undefined,
           expectedDepositDate: parts[15] || undefined,
           oneTimeExpenseAmount: parseNumber(parts[16] || ''),
           expectedDepositAmount: parseNumber(parts[17] || ''),
