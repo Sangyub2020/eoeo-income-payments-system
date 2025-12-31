@@ -9,3 +9,4 @@ ALTER TABLE global_sales_team DROP COLUMN IF EXISTS installment_number;
 ALTER TABLE brand_planning_team DROP COLUMN IF EXISTS installment_number;
 ALTER TABLE other_income DROP COLUMN IF EXISTS installment_number;
 
+

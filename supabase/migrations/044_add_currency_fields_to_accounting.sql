@@ -7,3 +7,4 @@ ADD COLUMN IF NOT EXISTS final_month_actual_cost_currency VARCHAR(3) DEFAULT 'KR
 ALTER TABLE project_monthly_expenses
 ADD COLUMN IF NOT EXISTS expense_currency VARCHAR(3) DEFAULT 'KRW';
 
+

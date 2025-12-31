@@ -72,7 +72,6 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
     { key: 'eoeoManager', label: '담당자', alwaysVisible: false },
     { key: 'contractLink', label: '계약서', alwaysVisible: false },
     { key: 'estimateLink', label: '견적서', alwaysVisible: false },
-    { key: 'installmentNumber', label: '차수', alwaysVisible: false },
     { key: 'attributionYearMonth', label: '귀속년월', alwaysVisible: false },
     { key: 'advanceBalance', label: '선/잔금', alwaysVisible: false },
     { key: 'ratio', label: '비율', alwaysVisible: false },
@@ -83,11 +82,10 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
     { key: 'actions', label: '작업', alwaysVisible: true },
   ];
   
-  // 선택된 열 관리 (프로젝트 유형 코드, 차수, 건수, 작성일은 기본적으로 숨김)
+  // 선택된 열 관리 (프로젝트 유형 코드, 건수, 작성일은 기본적으로 숨김)
   const [visibleColumns, setVisibleColumns] = useState<Set<string>>(
     new Set(allColumns.filter(col => 
       col.key !== 'projectCode' && 
-      col.key !== 'installmentNumber' && 
       col.key !== 'count' && 
       col.key !== 'createdDate' &&
       col.key !== 'businessRegistrationNumber' &&
@@ -117,7 +115,6 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
     eoeoManager: 100,
     contractLink: 120,
     estimateLink: 120,
-    installmentNumber: 60,
     attributionYearMonth: 100,
     advanceBalance: 80,
     ratio: 80,
@@ -1051,18 +1048,6 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
                     />
                   </th>
                 )}
-                {visibleColumns.has('installmentNumber') && (
-                  <th 
-                    className="text-left p-2 font-medium text-gray-200 whitespace-nowrap relative"
-                    style={{ width: `${columnWidths.installmentNumber}px`, minWidth: '50px' }}
-                  >
-                    차수
-                    <div
-                      className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 bg-transparent z-10"
-                      onMouseDown={(e) => handleResizeStart('installmentNumber', e)}
-                    />
-                  </th>
-                )}
                 {visibleColumns.has('attributionYearMonth') && (
                   <th 
                     className="text-left p-2 font-medium text-gray-200 whitespace-nowrap relative"
@@ -1424,9 +1409,6 @@ export function OtherIncomeList({ onSuccess }: OtherIncomeListProps) {
                         </a>
                       ) : '-'}
                     </td>
-                  )}
-                  {visibleColumns.has('installmentNumber') && (
-                    <td className="p-2 text-[13px] whitespace-nowrap truncate overflow-hidden" title={record.installmentNumber ? String(record.installmentNumber) : ''}>{record.installmentNumber || '-'}</td>
                   )}
                   {visibleColumns.has('attributionYearMonth') && (
                     <td className="p-2 text-[13px] whitespace-nowrap truncate overflow-hidden" title={record.attributionYearMonth || ''}>{record.attributionYearMonth || '-'}</td>

@@ -195,7 +195,6 @@ export function OnlineCommerceBulkModal({ isOpen, onClose, onSuccess }: OnlineCo
       '담당자': 'eoeoManager',
       '계약서': 'contractLink',
       '견적서': 'estimateLink',
-      '차수': 'installmentNumber',
       '귀속년월': 'attributionYearMonth',
       '귀속연월': 'attributionYearMonth', // 변형 지원
       '선/잔금': 'advanceBalance',
@@ -512,7 +511,6 @@ export function OnlineCommerceBulkModal({ isOpen, onClose, onSuccess }: OnlineCo
         eoeoManager: get('eoeoManager'),
         contractLink: get('contractLink'),
         estimateLink: get('estimateLink'),
-        installmentNumber: get('installmentNumber') ? Number(get('installmentNumber')) : undefined,
         attributionYearMonth: get('attributionYearMonth'),
         advanceBalance: get('advanceBalance'),
         ratio: get('ratio') || undefined,

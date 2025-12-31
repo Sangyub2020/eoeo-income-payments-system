@@ -5,3 +5,4 @@ WHERE advance_balance = '일시불'
   AND (ratio IS NULL OR ratio != 100);
 
 
+
