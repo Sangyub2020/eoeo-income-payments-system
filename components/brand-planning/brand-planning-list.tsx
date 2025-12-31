@@ -76,7 +76,6 @@ export function BrandPlanningList({ onSuccess }: BrandPlanningListProps) {
     { key: 'attributionYearMonth', label: '귀속년월', alwaysVisible: false },
     { key: 'advanceBalance', label: '선/잔금', alwaysVisible: false },
     { key: 'ratio', label: '비율', alwaysVisible: false },
-    { key: 'count', label: '건수', alwaysVisible: false },
     { key: 'description', label: '적요', alwaysVisible: false },
     { key: 'createdDate', label: '작성일', alwaysVisible: false },
     { key: 'issueNotes', label: '이슈', alwaysVisible: false },
@@ -119,7 +118,6 @@ export function BrandPlanningList({ onSuccess }: BrandPlanningListProps) {
     attributionYearMonth: 100,
     advanceBalance: 80,
     ratio: 80,
-    count: 60,
     description: 200,
     createdDate: 110,
     issueNotes: 200,
@@ -1054,18 +1052,6 @@ export function BrandPlanningList({ onSuccess }: BrandPlanningListProps) {
                     />
                   </th>
                 )}
-                {visibleColumns.has('count') && (
-                  <th 
-                    className="text-left p-2 font-medium text-gray-200 whitespace-nowrap relative"
-                    style={{ width: `${columnWidths.count}px`, minWidth: '50px' }}
-                  >
-                    건수
-                    <div
-                      className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 bg-transparent z-10"
-                      onMouseDown={(e) => handleResizeStart('count', e)}
-                    />
-                  </th>
-                )}
                 {visibleColumns.has('oneTimeExpenseAmount') && (
                   <th 
                     className="text-left p-2 font-medium text-gray-200 whitespace-nowrap relative"
@@ -1412,9 +1398,6 @@ export function BrandPlanningList({ onSuccess }: BrandPlanningListProps) {
                   )}
                   {visibleColumns.has('ratio') && (
                     <td className="p-2 text-[13px] whitespace-nowrap truncate overflow-hidden" title={record.ratio ? String(record.ratio) : ''}>{record.ratio || '-'}</td>
-                  )}
-                  {visibleColumns.has('count') && (
-                    <td className="p-2 text-[13px] whitespace-nowrap truncate overflow-hidden" title={record.count ? String(record.count) : ''}>{record.count || '-'}</td>
                   )}
                   {visibleColumns.has('description') && (
                     <td className="p-2 text-[13px] whitespace-nowrap truncate overflow-hidden" title={record.description || ''}>{record.description || '-'}</td>
