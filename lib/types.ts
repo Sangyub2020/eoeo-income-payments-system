@@ -226,6 +226,7 @@ export interface OtherIncome {
   advanceBalance?: string;
   ratio?: string;
   expectedDepositDate?: string;
+  oneTimeExpenseAmount?: number;
   expectedDepositAmount?: number;
   expectedDepositCurrency?: string;
   description?: string;
