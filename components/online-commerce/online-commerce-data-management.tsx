@@ -1034,30 +1034,6 @@ export function OnlineCommerceDataManagement({ refreshKey }: OnlineCommerceDataM
 }
 
 // 헬퍼 함수들
-function generateMonthRange(start: string, end: string): string[] {
-  const months: string[] = [];
-  if (!start || !end || start.length !== 4 || end.length !== 4) return months;
-  
-  const startYear = parseInt(start.substring(0, 2));
-  const startMonth = parseInt(start.substring(2, 4));
-  const endYear = parseInt(end.substring(0, 2));
-  const endMonth = parseInt(end.substring(2, 4));
-  
-  let currentYear = startYear;
-  let currentMonth = startMonth;
-  
-  while (currentYear < endYear || (currentYear === endYear && currentMonth <= endMonth)) {
-    months.push(`${currentYear.toString().padStart(2, '0')}${currentMonth.toString().padStart(2, '0')}`);
-    currentMonth++;
-    if (currentMonth > 12) {
-      currentMonth = 1;
-      currentYear++;
-    }
-  }
-  
-  return months;
-}
-
 function formatMonth(month: string): string {
   if (!month || month.length !== 4) return month;
   const year = month.substring(0, 2);
