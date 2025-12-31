@@ -342,7 +342,6 @@ export function OnlineCommerceSingleForm({ onSuccess }: OnlineCommerceSingleForm
           </div>
 
           <div>
-          <div>
             <label htmlFor="expectedDepositDate" className="block text-sm font-medium text-gray-700 mb-1">
               입금예정일
             </label>
