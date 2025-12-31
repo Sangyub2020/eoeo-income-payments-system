@@ -427,11 +427,6 @@ export function OnlineCommerceEditModal({ record, onClose, onSuccess }: OnlineCo
           expectedDepositCurrency: hasDollar ? 'USD' : (hasWon ? 'KRW' : (prev.expectedDepositCurrency || 'KRW')),
         };
         
-        // 입금액이 입력되고 입금여부가 입금예정인 경우 자동으로 입금완료로 변경
-        if (name === 'depositAmount' && amount && amount > 0 && prev.depositStatus === '입금예정') {
-          newData.depositStatus = '입금완료';
-        }
-        
         return newData;
       });
       return;
